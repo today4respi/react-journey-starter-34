@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { router } from 'expo-router';
@@ -28,7 +27,10 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <Image
             source={{ uri: 'https://images.unsplash.com/photo-1617957718614-8c23f060c2d0?w=800&q=80' }}
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     height: 280,
