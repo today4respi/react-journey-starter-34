@@ -1,3 +1,4 @@
+
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { CircleAlert as AlertCircle, CircleCheck as CheckCircle } from 'lucide-react-native';
 

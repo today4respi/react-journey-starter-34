@@ -9,8 +9,6 @@ export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
   const insets = useSafeAreaInsets();
-  const screenHeight = Dimensions.get('window').height;
-  const screenWidth = Dimensions.get('window').width;
   
   // Sample route data - would come from your backend in a real app
   const route = [

@@ -1,3 +1,4 @@
+
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
 import { MessageSquare, Search } from 'lucide-react-native';
 import { useState } from 'react';
