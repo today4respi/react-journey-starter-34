@@ -15,7 +15,7 @@ export default function TabLayout() {
           paddingBottom: Platform.OS === 'ios' ? 28 : 24,
           paddingTop: 8,
         },
-        tabBarActiveTintColor: '#9b87f5', // Updated to purple for better visibility
+        tabBarActiveTintColor: '#9b87f5', // Purple for better visibility
         tabBarInactiveTintColor: '#94A3B8',
         tabBarItemStyle: {
           paddingVertical: 8,
@@ -76,7 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Meeessages',
+          title: 'Messages',
           tabBarIcon: ({ size, color }) => (
             <View style={{ position: 'relative' }}>
               <MessageSquare size={28} color={color} />
