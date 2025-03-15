@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const { generateApiDocs } = require('./scripts/generateApiDocs');
@@ -16,6 +17,84 @@ app.use('/docs', express.static('./docs'));
 
 // Generate API documentation on server start
 generateApiDocs();
+
+/**
+ * ======= AUTH ROUTES =======
+ */
+
+/**
+ * Route: POST /api/users/login
+ * Description: Authentifie un utilisateur existant
+ * 
+ * Cette route permet à un utilisateur de se connecter en fournissant
+ * son email et son mot de passe. En cas de succès, un token JWT est
+ * retourné pour les futures requêtes authentifiées.
+ * 
+ * @body {String} email - L'adresse email de l'utilisateur
+ * @body {String} password - Le mot de passe de l'utilisateur
+ * @returns {Object} Objet contenant un status, un token et les données de l'utilisateur
+ */
+app.post('/api/users/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  // Logique de vérification des identifiants (simplifiée pour la démonstration)
+  if (email && password) {
+    res.json({
+      status: 200,
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjE2NjE2MDE2LCJleHAiOjE2MTY3MDI0MTZ9.example-token',
+      user: {
+        id: 1,
+        name: 'John Doe',
+        email: email,
+        role: 'user',
+        createdAt: '2023-06-15T10:30:00Z'
+      }
+    });
+  } else {
+    res.status(401).json({
+      status: 401,
+      message: 'Email ou mot de passe invalide'
+    });
+  }
+});
+
+/**
+ * Route: POST /api/users/register
+ * Description: Enregistre un nouvel utilisateur
+ * 
+ * Cette route permet à un nouvel utilisateur de créer un compte.
+ * Les données requises incluent le nom, l'email et le mot de passe.
+ * Un token JWT est retourné pour permettre une connexion immédiate.
+ * 
+ * @body {String} name - Le nom complet de l'utilisateur
+ * @body {String} email - L'adresse email de l'utilisateur (unique)
+ * @body {String} password - Le mot de passe de l'utilisateur
+ * @returns {Object} Objet contenant un status, un token et les données du nouvel utilisateur
+ */
+app.post('/api/users/register', (req, res) => {
+  const { name, email, password } = req.body;
+  
+  // Vérification minimale
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      status: 400,
+      message: 'Veuillez fournir un nom, un email et un mot de passe'
+    });
+  }
+  
+  // Logique de création de compte (simplifiée pour la démonstration)
+  res.status(201).json({
+    status: 201,
+    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImVtYWlsIjoibmV3dXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjE2NjE2MDE2LCJleHAiOjE2MTY3MDI0MTZ9.example-register-token',
+    user: {
+      id: 3,
+      name: name || 'New User',
+      email: email || 'newuser@example.com',
+      role: 'user',
+      createdAt: new Date().toISOString()
+    }
+  });
+});
 
 /**
  * ======= USERS ROUTES =======

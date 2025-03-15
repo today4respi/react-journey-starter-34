@@ -7,6 +7,48 @@ const { API_CONFIG } = require('../config/apiConfig');
 
 // Define your API routes here - these will be used to generate the documentation
 const apiRoutes = [
+  // Authentication routes
+  {
+    method: 'post',
+    path: '/users/login',
+    description: 'Authentifie un utilisateur existant et retourne un token JWT.',
+    requestBody: {
+      email: 'john@example.com',
+      password: 'securepassword123'
+    },
+    response: {
+      status: 200,
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoiam9obkBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjE2NjE2MDE2LCJleHAiOjE2MTY3MDI0MTZ9.example-token',
+      user: {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        role: 'user',
+        createdAt: '2023-06-15T10:30:00Z'
+      }
+    }
+  },
+  {
+    method: 'post',
+    path: '/users/register',
+    description: 'Enregistre un nouvel utilisateur et retourne un token JWT.',
+    requestBody: {
+      name: 'New User',
+      email: 'newuser@example.com',
+      password: 'securepassword123'
+    },
+    response: {
+      status: 201,
+      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMsImVtYWlsIjoibmV3dXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNjE2NjE2MDE2LCJleHAiOjE2MTY3MDI0MTZ9.example-register-token',
+      user: {
+        id: 3,
+        name: 'New User',
+        email: 'newuser@example.com',
+        role: 'user',
+        createdAt: '2023-08-20T15:45:00Z'
+      }
+    }
+  },
   {
     method: 'get',
     path: '/users',

@@ -1,11 +1,12 @@
 
-// This is a simplified version to fix the template string issue
-const fs = require('fs');
-const path = require('path');
+const generateDocTemplate = (routes, entities) => {
+  // Get unique entities from routes
+  const uniqueEntities = [...new Set(routes.map(route => {
+    const parts = route.path.split('/');
+    return parts[1]; // First part after initial slash
+  }))];
 
-function generateDocTemplate(apiRoutes, entityDefinitions) {
-  // Create the base HTML structure
-  let html = `
+  return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -13,6 +14,8 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JenCity API Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-data/7.1.4/vis-data.min.js"></script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -68,14 +71,14 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             margin-bottom: 20px;
         }
         
-        /* Entity diagram styles */
-        .entity-diagram {
-            margin: 30px 0;
+        /* Diagram styles */
+        .diagram-container {
             background-color: white;
-            border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            margin-bottom: 30px;
             border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .diagram-header {
@@ -88,121 +91,128 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
         .diagram-title {
             font-size: 1.5rem;
             color: var(--secondary-color);
+            margin: 0;
         }
         
-        .diagram-controls {
+        .diagram-tabs {
             display: flex;
             gap: 10px;
         }
         
-        .diagram-btn {
-            padding: 8px 15px;
-            background-color: var(--light-gray);
+        .diagram-tab {
+            padding: 8px 16px;
+            background-color: #f5f7f9;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
         
-        .diagram-btn:hover {
+        .diagram-tab.active {
             background-color: var(--primary-color);
             color: white;
+            border-color: var(--primary-color);
         }
         
-        .diagram-btn.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .diagram-container {
-            overflow: auto;
+        #diagram-canvas {
+            height: 600px;
             border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: #fcfcfc;
-            min-height: 400px;
-            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
         }
         
-        .diagram-svg {
-            min-width: 100%;
-            min-height: 400px;
+        .table-entities, .relationship-list {
+            display: none;
         }
         
-        .entity-box {
-            stroke: var(--secondary-color);
-            stroke-width: 2;
-            fill: white;
-            rx: 5;
-            ry: 5;
+        .entity-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
         }
         
-        .entity-title-bg {
-            fill: var(--secondary-color);
-            rx: 5;
-            ry: 5;
+        .entity-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 15px;
+            font-size: 1.2rem;
         }
         
-        .entity-title-text {
-            fill: white;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
+        .entity-body {
+            padding: 15px;
         }
         
         .entity-field {
-            fill: var(--text-color);
-            text-anchor: start;
-            dominant-baseline: middle;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .entity-field:last-child {
+            border-bottom: none;
+        }
+        
+        .field-name {
+            font-weight: 600;
         }
         
         .field-type {
-            fill: #777;
-            text-anchor: end;
-            dominant-baseline: middle;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
+            color: #666;
+            background-color: #f5f7f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
         }
         
-        .entity-relation {
-            stroke: var(--primary-color);
-            stroke-width: 2;
-            fill: none;
-            marker-end: url(#arrowhead);
+        .relationship-item {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .relation-text {
-            fill: var(--primary-color);
-            font-size: 12px;
-            text-anchor: middle;
-            dominant-baseline: hanging;
-        }
-        
-        .entity-table {
-            margin-top: 30px;
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .entity-table th {
-            background-color: var(--secondary-color);
+        .relationship-type {
+            background-color: var(--primary-color);
             color: white;
-            padding: 10px;
-            text-align: left;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
         }
         
-        .entity-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
+        .diagram-loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #666;
         }
         
-        .entity-table tr:nth-child(even) {
-            background-color: var(--light-gray);
+        .diagram-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         
-        /* Rest of the styles */
+        .diagram-controls button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .diagram-controls button:hover {
+            background-color: #2980b9;
+        }
+        
         .server-config {
             background-color: white;
             padding: 20px;
@@ -328,6 +338,7 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             font-size: 1rem;
             transition: border-color 0.3s, box-shadow 0.3s;
             appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 10px center;
             padding-right: 30px;
@@ -660,6 +671,34 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
         .entity-messages-icon::before { content: "\\f4ad"; }
         .entity-reviews-icon::before { content: "\\f005"; }
         .entity-reservations-icon::before { content: "\\f145"; }
+        
+        /* Code Tabs */
+        .code-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .code-tab {
+            padding: 5px 10px;
+            background-color: #eee;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .code-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .code-content {
+            display: none;
+        }
+        
+        .code-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -668,59 +707,68 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             <h1><i class="fas fa-code"></i> JenCity API Documentation</h1>
             <p class="api-description">Documentation complète des API pour l'application JenCity</p>
         </header>
-  `;
-
-  // Add the entity diagram
-  html += `
-        <div class="entity-diagram">
+        
+        <!-- Class Diagram -->
+        <div class="diagram-container">
             <div class="diagram-header">
-                <h2 class="diagram-title"><i class="fas fa-project-diagram"></i> Modèle de Données</h2>
-                <div class="diagram-controls">
-                    <button class="diagram-btn active" id="view-diagram">Diagramme</button>
-                    <button class="diagram-btn" id="view-tables">Tables</button>
-                    <button class="diagram-btn" id="view-relations">Relations</button>
+                <h2 class="diagram-title"><i class="fas fa-project-diagram"></i> Diagramme de Classe</h2>
+                <div class="diagram-tabs">
+                    <div class="diagram-tab active" data-tab="diagram">Diagramme</div>
+                    <div class="diagram-tab" data-tab="entities">Tables</div>
+                    <div class="diagram-tab" data-tab="relationships">Relations</div>
                 </div>
             </div>
-            <div class="diagram-container">
-                <svg id="entity-diagram-svg" class="diagram-svg"></svg>
+            
+            <!-- Diagram Tab -->
+            <div class="diagram-content active" id="diagram-content">
+                <div class="diagram-controls">
+                    <button id="zoom-in"><i class="fas fa-search-plus"></i> Zoom In</button>
+                    <button id="zoom-out"><i class="fas fa-search-minus"></i> Zoom Out</button>
+                    <button id="reset-view"><i class="fas fa-sync"></i> Reset View</button>
+                </div>
+                <div id="diagram-canvas"></div>
             </div>
             
-            <div id="entity-tables" class="entity-table-container" style="display: none;">
-                <table class="entity-table">
-                    <thead>
-                        <tr>
-                            <th>Table</th>
-                            <th>Champs</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody id="entity-table-body">
-                        <!-- Tables will be generated here by JavaScript -->
-                    </tbody>
-                </table>
+            <!-- Tables Tab -->
+            <div class="diagram-content table-entities" id="entities-content">
+                <div class="entity-list">
+                    ${entities.map(entity => `
+                    <div class="entity-card">
+                        <div class="entity-header">
+                            ${entity.name}
+                        </div>
+                        <div class="entity-body">
+                            ${entity.fields.map(field => `
+                            <div class="entity-field">
+                                <span class="field-name">${field.name}${field.isPrimary ? ' <i class="fas fa-key" title="Primary Key"></i>' : ''}</span>
+                                <span class="field-type">${field.type}</span>
+                            </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `).join('')}
+                </div>
             </div>
             
-            <div id="entity-relations" class="entity-table-container" style="display: none;">
-                <table class="entity-table">
-                    <thead>
-                        <tr>
-                            <th>De</th>
-                            <th>Relation</th>
-                            <th>Vers</th>
-                            <th>Via</th>
-                        </tr>
-                    </thead>
-                    <tbody id="relation-table-body">
-                        <!-- Relations will be generated here by JavaScript -->
-                    </tbody>
-                </table>
+            <!-- Relationships Tab -->
+            <div class="diagram-content relationship-list" id="relationships-content">
+                ${entities.map(entity => 
+                    entity.relations ? 
+                    entity.relations.map(relation => `
+                    <div class="relationship-item">
+                        <div class="relationship-entities">
+                            <strong>${entity.name}</strong> <i class="fas fa-arrow-right"></i> <strong>${relation.entity}</strong>
+                        </div>
+                        <div class="relationship-details">
+                            <span class="relationship-type">${relation.type}</span>
+                            <span>via ${relation.via}</span>
+                        </div>
+                    </div>
+                    `).join('') : '').join('')}
             </div>
         </div>
-  `;
-
-  // Server configuration
-  html += `
+        
+        <!-- Server Configuration -->
         <div class="server-config">
             <h2><i class="fas fa-server"></i> Configuration du Serveur</h2>
             <div class="server-form">
@@ -734,27 +782,13 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             </div>
         </div>
         
+        <!-- API Filtering -->
         <div class="filter-container">
             <div class="filter-title"><i class="fas fa-filter"></i> Filtrer les API</div>
             <div class="filter-options">
                 <select id="entityFilter">
                     <option value="all">Toutes les entités</option>
-  `;
-
-  // Extract unique entities from routes
-  const entities = new Set();
-  apiRoutes.forEach(route => {
-    const entity = route.path.split('/')[1];
-    if (entity) entities.add(entity);
-  });
-
-  // Add entity options
-  entities.forEach(entity => {
-    html += `                    <option value="${entity}">${entity.charAt(0).toUpperCase() + entity.slice(1)}</option>
-    `;
-  });
-
-  html += `
+                    ${uniqueEntities.map(entity => `<option value="${entity}">${entity.charAt(0).toUpperCase() + entity.slice(1)}</option>`).join('')}
                 </select>
                 <select id="methodFilter">
                     <option value="all">Toutes les méthodes</option>
@@ -766,175 +800,190 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             </div>
         </div>
         
+        <!-- API Endpoints -->
         <div class="endpoint-list">
-  `;
-
-  // Group routes by entity
-  const routesByEntity = {};
-  entities.forEach(entity => {
-    routesByEntity[entity] = apiRoutes.filter(route => route.path.startsWith(`/${entity}`));
-  });
-
-  // Add endpoints grouped by entity
-  entities.forEach(entity => {
-    const entityEndpoints = routesByEntity[entity];
-    const entityIcon = getEntityIcon(entity);
-    
-    html += `
-            <h2 class="entity-title" id="entity-${entity}">
-                <span class="entity-icon"><i class="${entityIcon}"></i></span>
-                ${entity.charAt(0).toUpperCase() + entity.slice(1)}
-                <span class="endpoint-counter">(${entityEndpoints.length} endpoints)</span>
-            </h2>
-            <div class="entity-group" data-entity="${entity}">
-    `;
-
-    entityEndpoints.forEach(route => {
-      const methodClass = route.method.toLowerCase();
-      const routePath = route.path;
-      const fullPath = `/api${routePath}`;
-      
-      html += `
-                <div class="endpoint" data-method="${methodClass}">
-                    <div class="endpoint-header">
-                        <span class="method ${methodClass}">${route.method.toUpperCase()}</span>
-                        <div class="endpoint-path">
-                            <span>${fullPath}</span>
-                            <button class="copy-btn" onclick="copyToClipboard('${fullPath}')"><i class="fas fa-copy"></i> Copier</button>
-                        </div>
-                        <button class="try-btn" onclick="prepareForPostman('${route.method.toUpperCase()}', '${fullPath}')">
-                            <i class="fas fa-play"></i> Tester dans Postman
-                        </button>
-                    </div>
-                    <div class="endpoint-body">
-                        <div class="endpoint-description">
-                            ${route.description}
-                        </div>
-      `;
-      
-      // Parameters section (if any)
-      if (route.params && route.params.length > 0) {
-        html += `
-                        <div class="params-section">
-                            <h3 class="section-title"><i class="fas fa-list-ul"></i> Paramètres</h3>
-                            <table class="param-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Type</th>
-                                        <th>Obligatoire</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-        `;
-        
-        route.params.forEach(param => {
-          html += `
-                                    <tr>
-                                        <td>${param.name}</td>
-                                        <td>${param.type}</td>
-                                        <td>${param.required ? '<i class="fas fa-check" style="color: var(--success-color);"></i>' : '<i class="fas fa-times" style="color: var(--accent-color);"></i>'}</td>
-                                        <td>${param.description}</td>
-                                    </tr>
-          `;
-        });
-        
-        html += `
-                                </tbody>
-                            </table>
-                        </div>
-        `;
-      }
-      
-      // Create tabs for request/response
-      html += `
-                        <div class="tabs">
-                            <div class="tab ${route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'request-${route.method}-${routePath.replace(/\//g, '-')}')">
-                                <i class="fas fa-paper-plane"></i> Requête
+            ${uniqueEntities.map(entity => {
+                const entityRoutes = routes.filter(route => route.path.startsWith('/'+entity));
+                return `
+                <h2 class="entity-title" id="entity-${entity}">
+                    <span class="entity-icon"><i class="fas ${entity === 'users' ? 'fa-users' : 
+                                                 entity === 'places' ? 'fa-map-marker-alt' : 
+                                                 entity === 'events' ? 'fa-calendar-alt' : 
+                                                 entity === 'messages' ? 'fa-comments' : 
+                                                 entity === 'reviews' ? 'fa-star' : 
+                                                 entity === 'reservations' ? 'fa-ticket-alt' : 'fa-code'}"></i></span>
+                    ${entity.charAt(0).toUpperCase() + entity.slice(1)}
+                    <span class="endpoint-counter">(${entityRoutes.length} endpoints)</span>
+                </h2>
+                <div class="entity-group" data-entity="${entity}">
+                    ${entityRoutes.map(route => {
+                        const methodClass = route.method.toLowerCase();
+                        const path = route.path;
+                        
+                        let curlCommand = "curl -X " + route.method.toUpperCase() + " \"http://localhost:3000/api" + path + "\"";
+                        
+                        if (route.requestBody) {
+                            curlCommand += " -H \"Content-Type: application/json\" -d '" + JSON.stringify(route.requestBody) + "'";
+                        }
+                        
+                        return `
+                        <div class="endpoint" data-method="${methodClass}">
+                            <div class="endpoint-header">
+                                <span class="method ${methodClass}">${route.method.toUpperCase()}</span>
+                                <div class="endpoint-path">
+                                    <span>/api${path}</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('/api${path}')">
+                                        <i class="fas fa-copy"></i> Copier
+                                    </button>
+                                </div>
+                                <button class="try-btn" onclick="prepareForPostman('${route.method.toUpperCase()}', '/api${path}')">
+                                    <i class="fas fa-play"></i> Tester dans Postman
+                                </button>
                             </div>
-                            <div class="tab ${!route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'response-${route.method}-${routePath.replace(/\//g, '-')}')">
-                                <i class="fas fa-reply"></i> Réponse
-                            </div>
-                        </div>
-      `;
-      
-      // Request body tab content
-      html += `
-                        <div id="request-${route.method}-${routePath.replace(/\//g, '-')}" class="tab-content ${route.requestBody ? 'active' : ''}">
-      `;
-      
-      // Request body section (if any)
-      if (route.requestBody) {
-        html += `
-                            <div class="body-section">
-                                <h3 class="section-title"><i class="fas fa-file-code"></i> Corps de la Requête</h3>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span>JSON</span>
-                                        <button class="copy-btn" onclick="copyToClipboard('${JSON.stringify(route.requestBody, null, 2).replace(/'/g, "\\'")}')">
-                                            <i class="fas fa-copy"></i> Copier
-                                        </button>
+                            <div class="endpoint-body">
+                                <div class="endpoint-description">
+                                    ${route.description}
+                                </div>
+                                
+                                ${route.params && route.params.length > 0 ? `
+                                <div class="params-section">
+                                    <h3 class="section-title"><i class="fas fa-list-ul"></i> Paramètres</h3>
+                                    <table class="param-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Nom</th>
+                                                <th>Type</th>
+                                                <th>Obligatoire</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${route.params.map(param => `
+                                            <tr>
+                                                <td>${param.name}</td>
+                                                <td>${param.type}</td>
+                                                <td>${param.required ? '<i class="fas fa-check" style="color: var(--success-color);"></i>' : '<i class="fas fa-times" style="color: var(--accent-color);"></i>'}</td>
+                                                <td>${param.description}</td>
+                                            </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                ` : ''}
+                                
+                                <div class="code-tabs">
+                                    <div class="code-tab active" onclick="switchCodeTab(this, 'curl-${methodClass}-${path.replace(/\//g, '-')}')">cURL</div>
+                                    <div class="code-tab" onclick="switchCodeTab(this, 'fetch-${methodClass}-${path.replace(/\//g, '-')}')">Fetch</div>
+                                    <div class="code-tab" onclick="switchCodeTab(this, 'axios-${methodClass}-${path.replace(/\//g, '-')}')">Axios</div>
+                                </div>
+                                
+                                <div id="curl-${methodClass}-${path.replace(/\//g, '-')}" class="code-content active">
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span>cURL</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(\`${curlCommand}\`)">
+                                                <i class="fas fa-copy"></i> Copier
+                                            </button>
+                                        </div>
+                                        <pre><code>${curlCommand}</code></pre>
                                     </div>
-                                    <pre><code>${JSON.stringify(route.requestBody, null, 2)}</code></pre>
                                 </div>
-                            </div>
-        `;
-      } else {
-        html += `
-                            <div class="body-section">
-                                <p>Aucun corps de requête nécessaire pour cette méthode.</p>
-                            </div>
-        `;
-      }
-      
-      html += `
-                        </div>
-      `;
-      
-      // Response tab content
-      html += `
-                        <div id="response-${route.method}-${routePath.replace(/\//g, '-')}" class="tab-content ${!route.requestBody ? 'active' : ''}">
-                            <div class="response-section">
-                                <h3 class="section-title"><i class="fas fa-reply-all"></i> Réponse</h3>
-      `;
-                          
-      // Add status class based on response status code
-      let statusClass = 'status-success';
-      if (route.response.status >= 400) {
-        statusClass = 'status-error';
-      } else if (route.response.status >= 300) {
-        statusClass = 'status-warning';
-      }
-      
-      html += `
-                                <div class="response-status ${statusClass}">
-                                    <i class="fas fa-${route.response.status < 300 ? 'check-circle' : (route.response.status < 400 ? 'exclamation-triangle' : 'times-circle')}"></i>
-                                    Status: ${route.response.status}
-                                </div>
-                                <div class="code-block">
-                                    <div class="code-header">
-                                        <span>JSON</span>
-                                        <button class="copy-btn" onclick="copyToClipboard('${JSON.stringify(route.response, null, 2).replace(/'/g, "\\'")}')">
-                                            <i class="fas fa-copy"></i> Copier
-                                        </button>
+                                
+                                <div id="fetch-${methodClass}-${path.replace(/\//g, '-')}" class="code-content">
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span>JavaScript (Fetch API)</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(document.querySelector('#fetch-${methodClass}-${path.replace(/\//g, '-')} pre code').textContent)">
+                                                <i class="fas fa-copy"></i> Copier
+                                            </button>
+                                        </div>
+                                        <pre><code>${getFetchCode(route)}</code></pre>
                                     </div>
-                                    <pre><code>${JSON.stringify(route.response, null, 2)}</code></pre>
+                                </div>
+                                
+                                <div id="axios-${methodClass}-${path.replace(/\//g, '-')}" class="code-content">
+                                    <div class="code-block">
+                                        <div class="code-header">
+                                            <span>JavaScript (Axios)</span>
+                                            <button class="copy-btn" onclick="copyToClipboard(document.querySelector('#axios-${methodClass}-${path.replace(/\//g, '-')} pre code').textContent)">
+                                                <i class="fas fa-copy"></i> Copier
+                                            </button>
+                                        </div>
+                                        <pre><code>${getAxiosCode(route)}</code></pre>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tabs for request/response -->
+                                <div class="tabs">
+                                    <div class="tab ${route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'request-${methodClass}-${path.replace(/\//g, '-')}')">
+                                        <i class="fas fa-paper-plane"></i> Requête
+                                    </div>
+                                    <div class="tab ${!route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'response-${methodClass}-${path.replace(/\//g, '-')}')">
+                                        <i class="fas fa-reply"></i> Réponse
+                                    </div>
+                                </div>
+                                
+                                <!-- Request Body Tab -->
+                                <div id="request-${methodClass}-${path.replace(/\//g, '-')}" class="tab-content ${route.requestBody ? 'active' : ''}">
+                                    ${route.requestBody ? `
+                                    <div class="body-section">
+                                        <h3 class="section-title"><i class="fas fa-file-code"></i> Corps de la Requête</h3>
+                                        <div class="code-block">
+                                            <div class="code-header">
+                                                <span>JSON</span>
+                                                <button class="copy-btn" onclick="copyToClipboard(JSON.stringify(${JSON.stringify(route.requestBody)}, null, 2))">
+                                                    <i class="fas fa-copy"></i> Copier
+                                                </button>
+                                            </div>
+                                            <pre><code>${JSON.stringify(route.requestBody, null, 2)}</code></pre>
+                                        </div>
+                                    </div>
+                                    ` : `
+                                    <div class="body-section">
+                                        <p>Aucun corps de requête nécessaire pour cette méthode.</p>
+                                    </div>
+                                    `}
+                                </div>
+                                
+                                <!-- Response Tab -->
+                                <div id="response-${methodClass}-${path.replace(/\//g, '-')}" class="tab-content ${!route.requestBody ? 'active' : ''}">
+                                    <div class="response-section">
+                                        <h3 class="section-title"><i class="fas fa-reply-all"></i> Réponse</h3>
+                                        
+                                        ${(() => {
+                                            let statusClass = 'status-success';
+                                            if (route.response.status >= 400) {
+                                                statusClass = 'status-error';
+                                            } else if (route.response.status >= 300) {
+                                                statusClass = 'status-warning';
+                                            }
+                                            
+                                            return `
+                                            <div class="response-status ${statusClass}">
+                                                <i class="fas fa-${route.response.status < 300 ? 'check-circle' : (route.response.status < 400 ? 'exclamation-triangle' : 'times-circle')}"></i>
+                                                Status: ${route.response.status}
+                                            </div>
+                                            `;
+                                        })()}
+                                        
+                                        <div class="code-block">
+                                            <div class="code-header">
+                                                <span>JSON</span>
+                                                <button class="copy-btn" onclick="copyToClipboard(JSON.stringify(${JSON.stringify(route.response)}, null, 2))">
+                                                    <i class="fas fa-copy"></i> Copier
+                                                </button>
+                                            </div>
+                                            <pre><code>${JSON.stringify(route.response, null, 2)}</code></pre>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        `;
+                    }).join('')}
                 </div>
-      `;
-    });
-    
-    html += `
-            </div>
-    `;
-  });
-
-  // Complete the HTML
-  html += `
+                `;
+            }).join('')}
         </div>
         
         <footer>
@@ -949,335 +998,115 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
     </div>
     
     <script>
-        // Global variables for the entity diagram
-        const entityDefinitions = ${JSON.stringify(entityDefinitions)};
-        
-        // Initialize the diagram when the page loads
+        // Network diagram visualization
         document.addEventListener('DOMContentLoaded', function() {
-            // Set up entity diagram
-            initializeEntityDiagram();
+            // Create data for the diagram
+            const nodes = new vis.DataSet(${JSON.stringify(entities.map((entity, index) => ({
+                id: entity.name,
+                label: entity.name,
+                shape: 'box',
+                color: {
+                    background: '#3498db',
+                    border: '#2980b9',
+                    highlight: {
+                        background: '#2980b9',
+                        border: '#1c6ea4'
+                    }
+                },
+                font: { color: 'white' }
+            })))});
             
-            // Set up view toggle buttons
-            document.getElementById('view-diagram').addEventListener('click', function() {
-                document.getElementById('entity-diagram-svg').parentNode.style.display = 'block';
-                document.getElementById('entity-tables').style.display = 'none';
-                document.getElementById('entity-relations').style.display = 'none';
-                
-                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
+            // Create edges from relationships
+            const edges = new vis.DataSet(
+                ${JSON.stringify(entities.flatMap(entity => 
+                    entity.relations ? 
+                    entity.relations.map(relation => ({
+                        from: entity.name,
+                        to: relation.entity,
+                        label: relation.type,
+                        arrows: relation.type.includes('hasMany') ? 'to' : (relation.type.includes('belongsTo') ? 'from' : 'to, from'),
+                        color: { color: '#3498db' },
+                        font: { align: 'middle' }
+                    })) : []
+                ))}
+            );
+            
+            // Create a network
+            const container = document.getElementById('diagram-canvas');
+            const data = { nodes, edges };
+            const options = {
+                nodes: {
+                    shape: 'box',
+                    margin: 10,
+                    widthConstraint: {
+                        maximum: 150
+                    }
+                },
+                edges: {
+                    smooth: {
+                        type: 'cubicBezier',
+                        forceDirection: 'horizontal',
+                        roundness: 0.5
+                    }
+                },
+                layout: {
+                    hierarchical: {
+                        direction: 'LR',
+                        sortMethod: 'directed',
+                        nodeSpacing: 150,
+                        levelSeparation: 150
+                    }
+                },
+                physics: {
+                    hierarchicalRepulsion: {
+                        nodeDistance: 200
+                    }
+                }
+            };
+            const network = new vis.Network(container, data, options);
+            
+            // Zoom controls
+            document.getElementById('zoom-in').addEventListener('click', function() {
+                const scale = network.getScale() * 1.2;
+                network.moveTo({ scale: scale });
             });
             
-            document.getElementById('view-tables').addEventListener('click', function() {
-                document.getElementById('entity-diagram-svg').parentNode.style.display = 'none';
-                document.getElementById('entity-tables').style.display = 'block';
-                document.getElementById('entity-relations').style.display = 'none';
-                
-                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                generateEntityTables();
+            document.getElementById('zoom-out').addEventListener('click', function() {
+                const scale = network.getScale() * 0.8;
+                network.moveTo({ scale: scale });
             });
             
-            document.getElementById('view-relations').addEventListener('click', function() {
-                document.getElementById('entity-diagram-svg').parentNode.style.display = 'none';
-                document.getElementById('entity-tables').style.display = 'none';
-                document.getElementById('entity-relations').style.display = 'block';
-                
-                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                generateRelationTables();
+            document.getElementById('reset-view').addEventListener('click', function() {
+                network.fit();
+            });
+            
+            // Tab switching
+            const diagramTabs = document.querySelectorAll('.diagram-tab');
+            diagramTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    diagramTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all content
+                    document.querySelectorAll('.diagram-content').forEach(content => {
+                        content.classList.remove('active');
+                        
+                        if (this.dataset.tab === 'diagram') {
+                            document.getElementById('diagram-content').classList.add('active');
+                        } else if (this.dataset.tab === 'entities') {
+                            document.getElementById('entities-content').style.display = 'block';
+                            document.getElementById('entities-content').classList.add('active');
+                        } else if (this.dataset.tab === 'relationships') {
+                            document.getElementById('relationships-content').style.display = 'block';
+                            document.getElementById('relationships-content').classList.add('active');
+                        }
+                    });
+                });
             });
         });
-        
-        function initializeEntityDiagram() {
-            const svg = document.getElementById('entity-diagram-svg');
-            
-            // Define the SVG namespace
-            const svgNS = "http://www.w3.org/2000/svg";
-            
-            // Clear existing content
-            while (svg.firstChild) {
-                svg.removeChild(svg.firstChild);
-            }
-            
-            // Add marker definition for arrows
-            const defs = document.createElementNS(svgNS, "defs");
-            svg.appendChild(defs);
-            
-            const marker = document.createElementNS(svgNS, "marker");
-            marker.setAttribute("id", "arrowhead");
-            marker.setAttribute("markerWidth", "10");
-            marker.setAttribute("markerHeight", "7");
-            marker.setAttribute("refX", "10");
-            marker.setAttribute("refY", "3.5");
-            marker.setAttribute("orient", "auto");
-            defs.appendChild(marker);
-            
-            const polygon = document.createElementNS(svgNS, "polygon");
-            polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
-            polygon.setAttribute("fill", "#3498db");
-            marker.appendChild(polygon);
-            
-            // Calculate layout
-            const padding = 30;
-            const entityWidth = 220;
-            const entityHeaderHeight = 40;
-            const fieldHeight = 25;
-            const hSpacing = 100;
-            const vSpacing = 70;
-            
-            let maxCols = Math.min(3, entityDefinitions.length);
-            let cols = Math.min(maxCols, entityDefinitions.length);
-            let rows = Math.ceil(entityDefinitions.length / cols);
-            
-            // Calculate total width and height
-            const totalWidth = cols * entityWidth + (cols - 1) * hSpacing + 2 * padding;
-            
-            // Positioning variables
-            const entityPositions = {};
-            const entitySizes = {};
-            
-            // First pass: create entity boxes and calculate their positions and sizes
-            entityDefinitions.forEach((entity, index) => {
-                const col = index % cols;
-                const row = Math.floor(index / cols);
-                
-                const x = padding + col * (entityWidth + hSpacing);
-                const fields = entity.fields || [];
-                const entityHeight = entityHeaderHeight + fields.length * fieldHeight + 10;
-                
-                let y = padding + row * (vSpacing);
-                
-                // Maximum height for an entity in a row
-                const rowEntities = entityDefinitions.slice(row * cols, Math.min((row + 1) * cols, entityDefinitions.length));
-                const maxHeightInRow = Math.max(...rowEntities.map(e => (e.fields || []).length)) * fieldHeight + entityHeaderHeight + 10;
-                
-                y += row * maxHeightInRow;
-                
-                entityPositions[entity.name] = { x, y };
-                entitySizes[entity.name] = { width: entityWidth, height: entityHeight };
-                
-                // Create the entity box
-                const entityBox = document.createElementNS(svgNS, "rect");
-                entityBox.setAttribute("x", x);
-                entityBox.setAttribute("y", y);
-                entityBox.setAttribute("width", entityWidth);
-                entityBox.setAttribute("height", entityHeight);
-                entityBox.setAttribute("class", "entity-box");
-                svg.appendChild(entityBox);
-                
-                // Create the entity title background
-                const titleBg = document.createElementNS(svgNS, "rect");
-                titleBg.setAttribute("x", x);
-                titleBg.setAttribute("y", y);
-                titleBg.setAttribute("width", entityWidth);
-                titleBg.setAttribute("height", entityHeaderHeight);
-                titleBg.setAttribute("class", "entity-title-bg");
-                svg.appendChild(titleBg);
-                
-                // Create the entity title
-                const titleText = document.createElementNS(svgNS, "text");
-                titleText.setAttribute("x", x + entityWidth / 2);
-                titleText.setAttribute("y", y + entityHeaderHeight / 2);
-                titleText.setAttribute("class", "entity-title-text");
-                titleText.textContent = entity.name;
-                svg.appendChild(titleText);
-                
-                // Add fields
-                fields.forEach((field, fieldIndex) => {
-                    const fieldY = y + entityHeaderHeight + fieldIndex * fieldHeight + fieldHeight / 2 + 5;
-                    
-                    // Field name
-                    const fieldText = document.createElementNS(svgNS, "text");
-                    fieldText.setAttribute("x", x + 10);
-                    fieldText.setAttribute("y", fieldY);
-                    fieldText.setAttribute("class", "entity-field");
-                    fieldText.textContent = field.isPrimary ? "* " + field.name : field.name;
-                    svg.appendChild(fieldText);
-                    
-                    // Field type
-                    const typeText = document.createElementNS(svgNS, "text");
-                    typeText.setAttribute("x", x + entityWidth - 10);
-                    typeText.setAttribute("y", fieldY);
-                    typeText.setAttribute("class", "field-type");
-                    typeText.textContent = field.type;
-                    svg.appendChild(typeText);
-                });
-            });
-            
-            // Calculate total diagram height based on entity positions and sizes
-            let maxBottom = 0;
-            Object.keys(entityPositions).forEach(entityName => {
-                const pos = entityPositions[entityName];
-                const size = entitySizes[entityName];
-                const bottom = pos.y + size.height;
-                if (bottom > maxBottom) maxBottom = bottom;
-            });
-            
-            const totalHeight = maxBottom + padding;
-            
-            // Set SVG dimensions
-            svg.setAttribute("width", totalWidth);
-            svg.setAttribute("height", totalHeight);
-            svg.setAttribute("viewBox", "0 0 " + totalWidth + " " + totalHeight);
-            
-            // Second pass: draw relations
-            entityDefinitions.forEach(entity => {
-                if (!entity.relations) return;
-                
-                entity.relations.forEach(relation => {
-                    const sourcePos = entityPositions[entity.name];
-                    const targetPos = entityPositions[relation.entity];
-                    
-                    if (!sourcePos || !targetPos) return;
-                    
-                    const sourceSize = entitySizes[entity.name];
-                    const targetSize = entitySizes[relation.entity];
-                    
-                    // Calculate edge points
-                    const sourceX = sourcePos.x + sourceSize.width / 2;
-                    const sourceY = sourcePos.y + sourceSize.height / 2;
-                    const targetX = targetPos.x + targetSize.width / 2;
-                    const targetY = targetPos.y + targetSize.height / 2;
-                    
-                    // Determine connection points on entity boxes
-                    let startX, startY, endX, endY;
-                    
-                    // Simple logic: connect from sides or top/bottom based on relative positions
-                    if (Math.abs(sourceX - targetX) > Math.abs(sourceY - targetY)) {
-                        // Connect horizontally
-                        if (sourceX < targetX) {
-                            // Source is to the left of target
-                            startX = sourcePos.x + sourceSize.width;
-                            startY = sourcePos.y + sourceSize.height / 2;
-                            endX = targetPos.x;
-                            endY = targetPos.y + targetSize.height / 2;
-                        } else {
-                            // Source is to the right of target
-                            startX = sourcePos.x;
-                            startY = sourcePos.y + sourceSize.height / 2;
-                            endX = targetPos.x + targetSize.width;
-                            endY = targetPos.y + targetSize.height / 2;
-                        }
-                    } else {
-                        // Connect vertically
-                        if (sourceY < targetY) {
-                            // Source is above target
-                            startX = sourcePos.x + sourceSize.width / 2;
-                            startY = sourcePos.y + sourceSize.height;
-                            endX = targetPos.x + targetSize.width / 2;
-                            endY = targetPos.y;
-                        } else {
-                            // Source is below target
-                            startX = sourcePos.x + sourceSize.width / 2;
-                            startY = sourcePos.y;
-                            endX = targetPos.x + targetSize.width / 2;
-                            endY = targetPos.y + targetSize.height;
-                        }
-                    }
-                    
-                    // Create the relation line with a control point for a curve
-                    const midX = (startX + endX) / 2;
-                    const midY = (startY + endY) / 2;
-                    
-                    const path = document.createElementNS(svgNS, "path");
-                    path.setAttribute("d", "M" + startX + "," + startY + " Q" + midX + "," + midY + " " + endX + "," + endY);
-                    path.setAttribute("class", "entity-relation");
-                    path.setAttribute("marker-end", "url(#arrowhead)");
-                    svg.appendChild(path);
-                    
-                    // Add relation type text
-                    const relationText = document.createElementNS(svgNS, "text");
-                    relationText.setAttribute("x", midX);
-                    relationText.setAttribute("y", midY - 10);
-                    relationText.setAttribute("class", "relation-text");
-                    relationText.textContent = relation.type;
-                    svg.appendChild(relationText);
-                });
-            });
-        }
-        
-        function generateEntityTables() {
-            const tableBody = document.getElementById('entity-table-body');
-            tableBody.innerHTML = '';
-            
-            entityDefinitions.forEach(entity => {
-                if (!entity.fields) return;
-                
-                // Group rows by entity with a header row
-                const headerRow = document.createElement('tr');
-                headerRow.style.backgroundColor = '#f0f0f0';
-                
-                const entityNameCell = document.createElement('td');
-                entityNameCell.colSpan = 4;
-                entityNameCell.style.fontWeight = 'bold';
-                entityNameCell.textContent = entity.name;
-                headerRow.appendChild(entityNameCell);
-                
-                tableBody.appendChild(headerRow);
-                
-                // Add field rows
-                entity.fields.forEach(field => {
-                    const row = document.createElement('tr');
-                    
-                    const tableCell = document.createElement('td');
-                    tableCell.textContent = '';
-                    row.appendChild(tableCell);
-                    
-                    const fieldCell = document.createElement('td');
-                    fieldCell.textContent = field.isPrimary ? "* " + field.name : field.name;
-                    row.appendChild(fieldCell);
-                    
-                    const typeCell = document.createElement('td');
-                    typeCell.textContent = field.type;
-                    row.appendChild(typeCell);
-                    
-                    const descCell = document.createElement('td');
-                    descCell.textContent = field.description || '';
-                    if (field.isPrivate) {
-                        descCell.textContent += ' (Privé)';
-                    }
-                    if (field.reference) {
-                        descCell.textContent += ' (Référence: ' + field.reference + ')';
-                    }
-                    row.appendChild(descCell);
-                    
-                    tableBody.appendChild(row);
-                });
-            });
-        }
-        
-        function generateRelationTables() {
-            const relationBody = document.getElementById('relation-table-body');
-            relationBody.innerHTML = '';
-            
-            entityDefinitions.forEach(entity => {
-                if (!entity.relations) return;
-                
-                entity.relations.forEach(relation => {
-                    const row = document.createElement('tr');
-                    
-                    const fromCell = document.createElement('td');
-                    fromCell.textContent = entity.name;
-                    row.appendChild(fromCell);
-                    
-                    const relationCell = document.createElement('td');
-                    relationCell.textContent = relation.type;
-                    row.appendChild(relationCell);
-                    
-                    const toCell = document.createElement('td');
-                    toCell.textContent = relation.entity;
-                    row.appendChild(toCell);
-                    
-                    const viaCell = document.createElement('td');
-                    viaCell.textContent = relation.via || '';
-                    row.appendChild(viaCell);
-                    
-                    relationBody.appendChild(row);
-                });
-            });
-        }
         
         // Copy to clipboard functionality
         function copyToClipboard(text) {
@@ -1289,7 +1118,7 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             document.body.removeChild(tempInput);
             
             // Show toast notification
-            showToast('API copiée avec succès!');
+            showToast('Copié avec succès!');
         }
         
         // Toast notification
@@ -1357,7 +1186,7 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
         document.getElementById('updateServerBtn').addEventListener('click', function() {
             const host = document.getElementById('serverHost').value || 'localhost';
             const port = document.getElementById('serverPort').value || '3000';
-            const baseUrl = 'http://' + host + ':' + port + '/api';
+            const baseUrl = \`http://\${host}:\${port}/api\`;
             document.getElementById('baseUrlDisplay').textContent = baseUrl;
             
             showToast('Configuration du serveur mise à jour!');
@@ -1381,6 +1210,25 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             // Hide all tab content in the same endpoint
             const endpoint = tabContainer.closest('.endpoint');
             const tabContents = endpoint.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Show the selected tab content
+            document.getElementById(contentId).classList.add('active');
+        }
+        
+        // Switch code tabs
+        function switchCodeTab(tabElement, contentId) {
+            // Remove active class from all tabs in the same group
+            const tabContainer = tabElement.parentElement;
+            const tabs = tabContainer.querySelectorAll('.code-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            tabElement.classList.add('active');
+            
+            // Hide all tab content in the same endpoint
+            const endpoint = tabContainer.closest('.endpoint-body');
+            const tabContents = endpoint.querySelectorAll('.code-content');
             tabContents.forEach(content => content.classList.remove('active'));
             
             // Show the selected tab content
@@ -1419,7 +1267,7 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
                 });
                 
                 entityTitles.forEach(title => {
-                    if (title.id === 'entity-' + selectedEntity) {
+                    if (title.id === \`entity-\${selectedEntity}\`) {
                         title.classList.remove('hidden');
                     } else {
                         title.classList.add('hidden');
@@ -1450,32 +1298,63 @@ function generateDocTemplate(apiRoutes, entityDefinitions) {
             entityGroups.forEach(group => {
                 const entityName = group.dataset.entity;
                 const visibleEndpoints = group.querySelectorAll('.endpoint:not(.hidden)').length;
-                const counterElement = document.querySelector('#entity-' + entityName + ' .endpoint-counter');
+                const counterElement = document.querySelector(\`#entity-\${entityName} .endpoint-counter\`);
                 
                 if (counterElement) {
-                    counterElement.textContent = '(' + visibleEndpoints + ' endpoints)';
+                    counterElement.textContent = \`(\${visibleEndpoints} endpoints)\`;
                 }
             });
         }
     </script>
 </body>
 </html>`;
+};
 
-  return html;
-}
-
-// Helper function to get the icon class for an entity
-function getEntityIcon(entity) {
-  const icons = {
-    users: 'fas fa-users',
-    places: 'fas fa-map-marker-alt',
-    events: 'fas fa-calendar-alt',
-    messages: 'fas fa-comments',
-    reviews: 'fas fa-star',
-    reservations: 'fas fa-ticket-alt'
-  };
+// Helper function to generate Fetch code examples
+const getFetchCode = (route) => {
+  const { method, path, requestBody } = route;
+  const url = \`http://localhost:3000/api\${path}\`;
   
-  return icons[entity] || 'fas fa-code';
-}
+  let code = \`const response = await fetch('\${url}', {
+  method: '\${method.toUpperCase()}',\`;
+  
+  if (requestBody) {
+    code += \`
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(\${JSON.stringify(requestBody, null, 2)}),\`;
+  }
+  
+  code += \`
+});\n
+const data = await response.json();
+console.log(data);\`;
+  
+  return code;
+};
+
+// Helper function to generate Axios code examples
+const getAxiosCode = (route) => {
+  const { method, path, requestBody } = route;
+  const url = \`http://localhost:3000/api\${path}\`;
+  
+  let code = \`import axios from 'axios';\n\n\`;
+  
+  code += \`try {
+  const response = await axios.\${method.toLowerCase()}('\${url}'`;
+  
+  if (requestBody && (method.toLowerCase() === 'post' || method.toLowerCase() === 'put')) {
+    code += \`, \${JSON.stringify(requestBody, null, 2)}\`;
+  }
+  
+  code += \`);\n
+  console.log(response.data);
+} catch (error) {
+  console.error('Error:', error);
+}\`;
+  
+  return code;
+};
 
 module.exports = { generateDocTemplate };
