@@ -1,993 +1,1481 @@
 
-// Template for API documentation with class diagram
-const generateDocTemplate = (routes, entities) => {
-  return `
+// This is a simplified version to fix the template string issue
+const fs = require('fs');
+const path = require('path');
+
+function generateDocTemplate(apiRoutes, entityDefinitions) {
+  // Create the base HTML structure
+  let html = `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JendoubaLife API Documentation</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <style>
-    :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --success-color: #27ae60;
-      --danger-color: #e74c3c;
-      --warning-color: #f39c12;
-      --info-color: #2980b9;
-      --light-bg: #f8f9fa;
-      --dark-bg: #343a40;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      background-color: var(--light-bg);
-      padding-top: 20px;
-    }
-    .navbar {
-      background-color: var(--primary-color);
-      box-shadow: 0 2px 4px rgba(0,0,0,.1);
-    }
-    .jumbotron {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 2rem;
-      border-radius: 0.5rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,.1);
-    }
-    .api-title {
-      color: white;
-      font-weight: 600;
-    }
-    .api-description {
-      opacity: 0.9;
-    }
-    .card {
-      border: none;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,.05);
-      border-radius: 0.5rem;
-      overflow: hidden;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 12px rgba(0,0,0,.1);
-    }
-    .card-header {
-      background-color: white;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(0,0,0,.125);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .endpoint {
-      display: flex;
-      align-items: center;
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-    }
-    .http-method {
-      padding: 0.4rem 0.75rem;
-      border-radius: 4px;
-      color: white;
-      font-weight: bold;
-      margin-right: 1rem;
-      min-width: 80px;
-      text-align: center;
-    }
-    .method-get { background-color: var(--info-color); }
-    .method-post { background-color: var(--success-color); }
-    .method-put { background-color: var(--warning-color); }
-    .method-delete { background-color: var(--danger-color); }
-    .endpoint-path {
-      font-size: 1.1rem;
-      word-break: break-all;
-    }
-    .card-body {
-      padding: 1.5rem;
-    }
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--primary-color);
-    }
-    .description {
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
-    }
-    .code-block {
-      background-color: #1e1e1e;
-      border-radius: 0.5rem;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      overflow: auto;
-      position: relative;
-    }
-    .code-block pre {
-      margin: 0;
-      padding-top: 1rem;
-      padding-bottom: 1rem;
-    }
-    .copy-button {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background-color: rgba(255,255,255,0.1);
-      border: none;
-      color: #ddd;
-      border-radius: 4px;
-      padding: 0.4rem 0.75rem;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-    }
-    .copy-button:hover {
-      background-color: rgba(255,255,255,0.2);
-      color: white;
-    }
-    .param-name {
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-      color: var(--primary-color);
-    }
-    .param-type {
-      color: var(--info-color);
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-    }
-    .status {
-      font-weight: 600;
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      color: white;
-    }
-    .status-200, .status-201 { background-color: var(--success-color); }
-    .status-204 { background-color: var(--info-color); }
-    .status-400, .status-404 { background-color: var(--warning-color); }
-    .status-500 { background-color: var(--danger-color); }
-    .sidebar {
-      position: sticky;
-      top: 20px;
-      height: calc(100vh - 40px);
-      overflow-y: auto;
-      padding-right: 15px;
-    }
-    .nav-link {
-      padding: 0.5rem 0;
-      color: var(--primary-color);
-      border-left: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .nav-link:hover, .nav-link.active {
-      color: var(--secondary-color);
-      border-left-color: var(--secondary-color);
-      padding-left: 0.5rem;
-    }
-    .entity-badge {
-      background-color: var(--light-bg);
-      color: var(--primary-color);
-      border: 1px solid var(--primary-color);
-      padding: 0.25rem 0.5rem;
-      margin-right: 0.5rem;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .entity-badge.active {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    .postman-button {
-      background-color: #FF6C37;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 0.4rem 0.75rem;
-      margin-left: 1rem;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.2s;
-    }
-    .postman-button:hover {
-      background-color: #E05320;
-    }
-    .required-badge {
-      background-color: rgba(231, 76, 60, 0.2);
-      color: var(--danger-color);
-      border-radius: 4px;
-      padding: 0.15rem 0.5rem;
-      margin-left: 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .search-box {
-      position: relative;
-      margin-bottom: 1rem;
-    }
-    .search-box input {
-      width: 100%;
-      padding: 0.5rem 2.5rem 0.5rem 1rem;
-      border: 1px solid #ced4da;
-      border-radius: 0.25rem;
-    }
-    .search-box i {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #6c757d;
-    }
-    .mermaid {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .tab-content {
-      margin-top: 1rem;
-    }
-    .class-diagram-container {
-      margin-bottom: 3rem;
-      background-color: white;
-      border-radius: 0.5rem;
-      padding: 2rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,.05);
-    }
-    .tab-pane {
-      padding: 1.5rem;
-      background-color: white;
-      border-radius: 0 0 0.5rem 0.5rem;
-      box-shadow: 0 4px 6px rgba(0,0,0,.05);
-    }
-    .nav-tabs .nav-link {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 0.5rem 0.5rem 0 0;
-      font-weight: 500;
-      color: var(--primary-color);
-    }
-    .nav-tabs .nav-link.active {
-      background-color: white;
-      color: var(--secondary-color);
-      border-bottom: 3px solid var(--secondary-color);
-    }
-    .toast-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-    }
-    .toast {
-      margin-bottom: 10px;
-    }
-    @media (max-width: 767px) {
-      .sidebar {
-        position: relative;
-        height: auto;
-        margin-bottom: 2rem;
-      }
-      .endpoint {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .http-method {
-        margin-bottom: 0.5rem;
-      }
-      .endpoints-container {
-        margin-top: 2rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JenCity API Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+            --text-color: #333;
+            --method-get: #61affe;
+            --method-post: #49cc90;
+            --method-put: #fca130;
+            --method-delete: #f93e3e;
+            --success-color: #4caf50;
+            --success-bg: #e8f5e9;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .api-description {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Entity diagram styles */
+        .entity-diagram {
+            margin: 30px 0;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .diagram-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .diagram-title {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+        }
+        
+        .diagram-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .diagram-btn {
+            padding: 8px 15px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .diagram-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .diagram-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .diagram-container {
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #fcfcfc;
+            min-height: 400px;
+            padding: 10px;
+        }
+        
+        .diagram-svg {
+            min-width: 100%;
+            min-height: 400px;
+        }
+        
+        .entity-box {
+            stroke: var(--secondary-color);
+            stroke-width: 2;
+            fill: white;
+            rx: 5;
+            ry: 5;
+        }
+        
+        .entity-title-bg {
+            fill: var(--secondary-color);
+            rx: 5;
+            ry: 5;
+        }
+        
+        .entity-title-text {
+            fill: white;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        
+        .entity-field {
+            fill: var(--text-color);
+            text-anchor: start;
+            dominant-baseline: middle;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .field-type {
+            fill: #777;
+            text-anchor: end;
+            dominant-baseline: middle;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+        
+        .entity-relation {
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        
+        .relation-text {
+            fill: var(--primary-color);
+            font-size: 12px;
+            text-anchor: middle;
+            dominant-baseline: hanging;
+        }
+        
+        .entity-table {
+            margin-top: 30px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .entity-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .entity-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .entity-table tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        /* Rest of the styles */
+        .server-config {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .server-config h2 {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 8px;
+        }
+        
+        .server-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .server-form input {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            flex: 1;
+            min-width: 120px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .server-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .server-form button {
+            padding: 10px 18px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .server-form button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .server-form button:active {
+            transform: translateY(0);
+        }
+        
+        .base-url {
+            font-size: 1.1rem;
+            padding: 15px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .copy-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .filter-container {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .filter-title {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .filter-container select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: white;
+            flex-grow: 1;
+            max-width: 300px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            appearance: none;
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        
+        .filter-container select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .endpoint-list {
+            margin-bottom: 40px;
+        }
+        
+        .endpoint {
+            margin-bottom: 25px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .endpoint:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .endpoint-header {
+            display: flex;
+            padding: 15px;
+            background-color: #f5f7f9;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .method {
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .method.get { background-color: var(--method-get); }
+        .method.post { background-color: var(--method-post); }
+        .method.put { background-color: var(--method-put); }
+        .method.delete { background-color: var(--method-delete); }
+        
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            flex-grow: 1;
+            position: relative;
+            padding: 8px 15px;
+            background-color: white;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .endpoint-body {
+            padding: 20px;
+        }
+        
+        .endpoint-description {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            color: #444;
+            line-height: 1.7;
+        }
+        
+        .params-section, .body-section, .response-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title i {
+            color: var(--primary-color);
+        }
+        
+        .param-table, .response-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .param-table th, .response-table th {
+            background-color: #f5f7f9;
+            text-align: left;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .param-table td, .response-table td {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .param-table tr:nth-child(even), .response-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .code-block {
+            background-color: #f5f7f9;
+            padding: 15px;
+            border-radius: 6px;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            font-family: 'Courier New', monospace;
+        }
+        
+        .response-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-right: 10px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .status-success {
+            background-color: var(--success-bg);
+            color: var(--success-color);
+        }
+        
+        .status-error {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .status-warning {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #777;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        
+        .entity-title {
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .entity-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast i {
+            font-size: 1.2rem;
+        }
+        
+        .endpoint-counter {
+            font-size: 0.9rem;
+            color: #666;
+            margin-left: 10px;
+        }
+        
+        .try-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .try-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        @media (max-width: 768px) {
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .endpoint-path {
+                width: 100%;
+            }
+            
+            .server-form {
+                flex-direction: column;
+            }
+            
+            .method {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        /* Tabs for request/response */
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background-color: #f5f7f9;
+            border-color: var(--border-color);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Icons for endpoints */
+        .entity-users-icon::before { content: "\\f007"; }
+        .entity-places-icon::before { content: "\\f3c5"; }
+        .entity-events-icon::before { content: "\\f073"; }
+        .entity-messages-icon::before { content: "\\f4ad"; }
+        .entity-reviews-icon::before { content: "\\f005"; }
+        .entity-reservations-icon::before { content: "\\f145"; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="jumbotron">
-      <h1 class="api-title">JendoubaLife API Documentation</h1>
-      <p class="api-description">Une documentation complète de l'API JendoubaLife pour les développeurs.</p>
-      <div class="d-flex mt-4">
-        <select id="environmentSelector" class="form-select me-2" style="max-width: 200px;">
-          <option value="local">Local Environment</option>
-          <option value="development">Development</option>
-          <option value="production">Production</option>
-        </select>
-        <div>
-          <span class="badge bg-primary" id="baseUrlBadge">Base URL: http://localhost:3000/api</span>
-        </div>
-      </div>
-    </div>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-code"></i> JenCity API Documentation</h1>
+            <p class="api-description">Documentation complète des API pour l'application JenCity</p>
+        </header>
+  `;
 
-    <div class="class-diagram-container">
-      <ul class="nav nav-tabs" id="diagramTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button" role="tab" aria-controls="classes" aria-selected="true">Diagramme de Classes</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="tables-tab" data-bs-toggle="tab" data-bs-target="#tables" type="button" role="tab" aria-controls="tables" aria-selected="false">Tables de Base de Données</button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="relations-tab" data-bs-toggle="tab" data-bs-target="#relations" type="button" role="tab" aria-controls="relations" aria-selected="false">Relations</button>
-        </li>
-      </ul>
-      <div class="tab-content" id="diagramTabsContent">
-        <div class="tab-pane fade show active" id="classes" role="tabpanel" aria-labelledby="classes-tab">
-          <div class="mermaid">
-            classDiagram
-            ${generateClassDiagram(entities)}
-          </div>
-        </div>
-        <div class="tab-pane fade" id="tables" role="tabpanel" aria-labelledby="tables-tab">
-          <div class="mermaid">
-            classDiagram
-            ${generateTableDiagram(entities)}
-          </div>
-        </div>
-        <div class="tab-pane fade" id="relations" role="tabpanel" aria-labelledby="relations-tab">
-          <div class="mermaid">
-            flowchart TD
-            ${generateRelationsDiagram(entities)}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-3">
-        <div class="sidebar">
-          <h5>Filtrer</h5>
-          <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Rechercher une API..." class="form-control">
-            <i class="bi bi-search"></i>
-          </div>
-          
-          <h6 class="mt-3">Par entité</h6>
-          <div id="entityFilter" class="d-flex flex-wrap mb-3">
-            <span class="entity-badge active" data-entity="all">Toutes</span>
-            ${getUniqueEntities(routes).map(entity => `<span class="entity-badge" data-entity="${entity}">${entity}</span>`).join('')}
-          </div>
-          
-          <h6>Par méthode</h6>
-          <div id="methodFilter" class="d-flex flex-wrap mb-3">
-            <span class="entity-badge active" data-method="all">Toutes</span>
-            <span class="entity-badge" data-method="get">GET</span>
-            <span class="entity-badge" data-method="post">POST</span>
-            <span class="entity-badge" data-method="put">PUT</span>
-            <span class="entity-badge" data-method="delete">DELETE</span>
-          </div>
-          
-          <h5>Endpoints</h5>
-          <nav id="sidebar-nav">
-            <ul class="nav flex-column">
-              ${routes.map((route, index) => `
-                <li class="nav-item">
-                  <a class="nav-link" href="#endpoint-${index}" data-entity="${getEntityFromPath(route.path)}" data-method="${route.method}">
-                    <span class="badge method-${route.method}">${route.method.toUpperCase()}</span>
-                    ${route.path}
-                  </a>
-                </li>
-              `).join('')}
-            </ul>
-          </nav>
-        </div>
-      </div>
-      
-      <div class="col-md-9 endpoints-container">
-        ${routes.map((route, index) => {
-          return `
-            <div class="card endpoint-card" id="endpoint-${index}" data-entity="${getEntityFromPath(route.path)}" data-method="${route.method}">
-              <div class="card-header">
-                <div class="endpoint">
-                  <span class="http-method method-${route.method}">${route.method.toUpperCase()}</span>
-                  <span class="endpoint-path">${route.path}</span>
+  // Add the entity diagram
+  html += `
+        <div class="entity-diagram">
+            <div class="diagram-header">
+                <h2 class="diagram-title"><i class="fas fa-project-diagram"></i> Modèle de Données</h2>
+                <div class="diagram-controls">
+                    <button class="diagram-btn active" id="view-diagram">Diagramme</button>
+                    <button class="diagram-btn" id="view-tables">Tables</button>
+                    <button class="diagram-btn" id="view-relations">Relations</button>
                 </div>
-                <div>
-                  <button class="postman-button" data-endpoint="${index}">Test in Postman</button>
-                  <button class="copy-button" data-endpoint="${index}">Copy</button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="description">${route.description}</div>
-                
-                ${route.params ? `
-                <div class="section-title">Paramètres d'URL</div>
-                <table class="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${route.params.map(param => `
-                      <tr>
-                        <td>
-                          <span class="param-name">${param.name}</span>
-                          ${param.required ? '<span class="required-badge">Requis</span>' : ''}
-                        </td>
-                        <td><span class="param-type">${param.type}</span></td>
-                        <td>${param.description}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-                ` : ''}
-                
-                ${route.requestBody ? `
-                <div class="section-title">Corps de la requête</div>
-                <div class="code-block">
-                  <button class="copy-button" data-type="request" data-endpoint="${index}">Copy</button>
-                  <pre><code class="language-json">${JSON.stringify(route.requestBody, null, 2)}</code></pre>
-                </div>
-                ` : ''}
-                
-                <div class="section-title">Réponse</div>
-                <div class="d-flex align-items-center mb-3">
-                  <span class="status status-${route.response.status}">${route.response.status}</span>
-                  <span class="ms-2">${getStatusText(route.response.status)}</span>
-                </div>
-                
-                <div class="code-block">
-                  <button class="copy-button" data-type="response" data-endpoint="${index}">Copy</button>
-                  <pre><code class="language-json">${JSON.stringify(route.response, null, 2)}</code></pre>
-                </div>
-                
-                <div class="section-title">Exemple de requête</div>
-                <ul class="nav nav-tabs" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#curl-${index}" type="button" role="tab">cURL</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#js-${index}" type="button" role="tab">JavaScript</button>
-                  </li>
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#python-${index}" type="button" role="tab">Python</button>
-                  </li>
-                </ul>
-                <div class="tab-content">
-                  <div class="tab-pane fade show active" id="curl-${index}" role="tabpanel">
-                    <div class="code-block">
-                      <button class="copy-button" data-type="curl" data-endpoint="${index}">Copy</button>
-                      <pre><code class="language-bash">${generateCurlExample(route)}</code></pre>
-                    </div>
-                  </div>
-                  <div class="tab-pane fade" id="js-${index}" role="tabpanel">
-                    <div class="code-block">
-                      <button class="copy-button" data-type="js" data-endpoint="${index}">Copy</button>
-                      <pre><code class="language-javascript">${generateJSExample(route)}</code></pre>
-                    </div>
-                  </div>
-                  <div class="tab-pane fade" id="python-${index}" role="tabpanel">
-                    <div class="code-block">
-                      <button class="copy-button" data-type="python" data-endpoint="${index}">Copy</button>
-                      <pre><code class="language-python">${generatePythonExample(route)}</code></pre>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
+            <div class="diagram-container">
+                <svg id="entity-diagram-svg" class="diagram-svg"></svg>
+            </div>
+            
+            <div id="entity-tables" class="entity-table-container" style="display: none;">
+                <table class="entity-table">
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Champs</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="entity-table-body">
+                        <!-- Tables will be generated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="entity-relations" class="entity-table-container" style="display: none;">
+                <table class="entity-table">
+                    <thead>
+                        <tr>
+                            <th>De</th>
+                            <th>Relation</th>
+                            <th>Vers</th>
+                            <th>Via</th>
+                        </tr>
+                    </thead>
+                    <tbody id="relation-table-body">
+                        <!-- Relations will be generated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+  `;
+
+  // Server configuration
+  html += `
+        <div class="server-config">
+            <h2><i class="fas fa-server"></i> Configuration du Serveur</h2>
+            <div class="server-form">
+                <input type="text" id="serverHost" placeholder="Hôte (ex: localhost)" value="localhost">
+                <input type="number" id="serverPort" placeholder="Port (ex: 3000)" value="3000">
+                <button id="updateServerBtn"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
+            </div>
+            <div class="base-url">
+                <span id="baseUrlDisplay">http://localhost:3000/api</span>
+                <button class="copy-btn" id="copyBaseUrlBtn"><i class="fas fa-copy"></i> Copier</button>
+            </div>
+        </div>
+        
+        <div class="filter-container">
+            <div class="filter-title"><i class="fas fa-filter"></i> Filtrer les API</div>
+            <div class="filter-options">
+                <select id="entityFilter">
+                    <option value="all">Toutes les entités</option>
+  `;
+
+  // Extract unique entities from routes
+  const entities = new Set();
+  apiRoutes.forEach(route => {
+    const entity = route.path.split('/')[1];
+    if (entity) entities.add(entity);
+  });
+
+  // Add entity options
+  entities.forEach(entity => {
+    html += `                    <option value="${entity}">${entity.charAt(0).toUpperCase() + entity.slice(1)}</option>
+    `;
+  });
+
+  html += `
+                </select>
+                <select id="methodFilter">
+                    <option value="all">Toutes les méthodes</option>
+                    <option value="get">GET</option>
+                    <option value="post">POST</option>
+                    <option value="put">PUT</option>
+                    <option value="delete">DELETE</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="endpoint-list">
+  `;
+
+  // Group routes by entity
+  const routesByEntity = {};
+  entities.forEach(entity => {
+    routesByEntity[entity] = apiRoutes.filter(route => route.path.startsWith(`/${entity}`));
+  });
+
+  // Add endpoints grouped by entity
+  entities.forEach(entity => {
+    const entityEndpoints = routesByEntity[entity];
+    const entityIcon = getEntityIcon(entity);
+    
+    html += `
+            <h2 class="entity-title" id="entity-${entity}">
+                <span class="entity-icon"><i class="${entityIcon}"></i></span>
+                ${entity.charAt(0).toUpperCase() + entity.slice(1)}
+                <span class="endpoint-counter">(${entityEndpoints.length} endpoints)</span>
+            </h2>
+            <div class="entity-group" data-entity="${entity}">
+    `;
+
+    entityEndpoints.forEach(route => {
+      const methodClass = route.method.toLowerCase();
+      const routePath = route.path;
+      const fullPath = `/api${routePath}`;
+      
+      html += `
+                <div class="endpoint" data-method="${methodClass}">
+                    <div class="endpoint-header">
+                        <span class="method ${methodClass}">${route.method.toUpperCase()}</span>
+                        <div class="endpoint-path">
+                            <span>${fullPath}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${fullPath}')"><i class="fas fa-copy"></i> Copier</button>
+                        </div>
+                        <button class="try-btn" onclick="prepareForPostman('${route.method.toUpperCase()}', '${fullPath}')">
+                            <i class="fas fa-play"></i> Tester dans Postman
+                        </button>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            ${route.description}
+                        </div>
+      `;
+      
+      // Parameters section (if any)
+      if (route.params && route.params.length > 0) {
+        html += `
+                        <div class="params-section">
+                            <h3 class="section-title"><i class="fas fa-list-ul"></i> Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+        `;
+        
+        route.params.forEach(param => {
+          html += `
+                                    <tr>
+                                        <td>${param.name}</td>
+                                        <td>${param.type}</td>
+                                        <td>${param.required ? '<i class="fas fa-check" style="color: var(--success-color);"></i>' : '<i class="fas fa-times" style="color: var(--accent-color);"></i>'}</td>
+                                        <td>${param.description}</td>
+                                    </tr>
           `;
-        }).join('')}
-      </div>
-    </div>
-  </div>
-
-  <div class="toast-container"></div>
-
-  <script>
-    // Initialize syntax highlighting
-    document.addEventListener('DOMContentLoaded', () => {
-      hljs.highlightAll();
-      
-      // Initialize mermaid diagrams
-      mermaid.initialize({
-        startOnLoad: true,
-        theme: 'neutral',
-        securityLevel: 'loose',
-        fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
-      });
-    });
-
-    // Environment selector
-    const environmentSelector = document.getElementById('environmentSelector');
-    const baseUrlBadge = document.getElementById('baseUrlBadge');
-    
-    const environments = {
-      local: 'http://localhost:3000/api',
-      development: 'https://dev-api.jendoubalife.com/api',
-      production: 'https://api.jendoubalife.com/api'
-    };
-    
-    environmentSelector.addEventListener('change', function() {
-      const env = this.value;
-      baseUrlBadge.textContent = 'Base URL: ' + environments[env];
-      
-      // Update all code examples with the new base URL
-      document.querySelectorAll('.code-block pre code').forEach(codeBlock => {
-        const codeText = codeBlock.textContent;
-        const updatedCode = updateBaseUrlInCode(codeText, environments[env]);
-        codeBlock.textContent = updatedCode;
-      });
-      
-      hljs.highlightAll();
-    });
-    
-    function updateBaseUrlInCode(code, newBaseUrl) {
-      Object.keys(environments).forEach(env => {
-        code = code.replace(new RegExp(environments[env], 'g'), newBaseUrl);
-      });
-      return code;
-    }
-
-    // Copy code buttons
-    document.querySelectorAll('.copy-button').forEach(button => {
-      button.addEventListener('click', function() {
-        const endpointId = this.dataset.endpoint;
-        const type = this.dataset.type || 'endpoint';
-        let textToCopy = '';
+        });
         
-        if (type === 'endpoint') {
-          const endpoint = document.querySelector(\`#endpoint-\${endpointId} .endpoint-path\`).textContent;
-          const method = document.querySelector(\`#endpoint-\${endpointId} .http-method\`).textContent;
-          const baseUrl = baseUrlBadge.textContent.replace('Base URL: ', '');
-          textToCopy = \`\${method} \${baseUrl}\${endpoint}\`;
-        } else {
-          const codeBlock = this.nextElementSibling;
-          textToCopy = codeBlock.textContent;
-        }
-        
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => showToast('Copié !', 'Success'))
-          .catch(err => showToast('Erreur lors de la copie', 'danger'));
-      });
-    });
-    
-    // Postman test buttons
-    document.querySelectorAll('.postman-button').forEach(button => {
-      button.addEventListener('click', function() {
-        const endpointId = this.dataset.endpoint;
-        const endpoint = document.querySelector(\`#endpoint-\${endpointId} .endpoint-path\`).textContent;
-        const method = document.querySelector(\`#endpoint-\${endpointId} .http-method\`).textContent.toLowerCase();
-        const baseUrl = baseUrlBadge.textContent.replace('Base URL: ', '');
-        
-        // Generate Postman collection JSON
-        const postmanCollection = generatePostmanCollection(baseUrl, endpoint, method, endpointId);
-        
-        // Create data URL to download collection
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(postmanCollection));
-        
-        // Create download link
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", \`jendoubalife_\${endpoint.replace(/\\//g, '_')}.postman_collection.json\`);
-        document.body.appendChild(downloadAnchorNode); // required for firefox
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        
-        showToast('Collection Postman générée!', 'success');
-      });
-    });
-    
-    function generatePostmanCollection(baseUrl, endpoint, method, endpointId) {
-      // Get request body if exists
-      let requestBody = null;
-      const requestCodeBlock = document.querySelector(\`#endpoint-\${endpointId} .code-block[data-type="request"] pre code\`);
-      if (requestCodeBlock) {
-        try {
-          requestBody = JSON.parse(requestCodeBlock.textContent);
-        } catch (e) {
-          console.error("Error parsing request body", e);
-        }
+        html += `
+                                </tbody>
+                            </table>
+                        </div>
+        `;
       }
       
-      return {
-        "info": {
-          "_postman_id": generateUUID(),
-          "name": \`JendoubaLife API - \${endpoint}\`,
-          "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-        },
-        "item": [
-          {
-            "name": endpoint,
-            "request": {
-              "method": method.toUpperCase(),
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "url": {
-                "raw": \`\${baseUrl}\${endpoint}\`,
-                "host": [baseUrl.replace(/https?:\\/\\//, '').replace('/api', '')],
-                "path": ["api", ...endpoint.split('/').filter(p => p)]
-              },
-              "body": requestBody ? {
-                "mode": "raw",
-                "raw": JSON.stringify(requestBody, null, 2)
-              } : undefined
-            },
-            "response": []
-          }
-        ]
-      };
-    }
-    
-    function generateUUID() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    }
-    
-    // Toast notification
-    function showToast(message, type = 'success') {
-      const toastContainer = document.querySelector('.toast-container');
-      const toastId = 'toast-' + Date.now();
+      // Create tabs for request/response
+      html += `
+                        <div class="tabs">
+                            <div class="tab ${route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'request-${route.method}-${routePath.replace(/\//g, '-')}')">
+                                <i class="fas fa-paper-plane"></i> Requête
+                            </div>
+                            <div class="tab ${!route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'response-${route.method}-${routePath.replace(/\//g, '-')}')">
+                                <i class="fas fa-reply"></i> Réponse
+                            </div>
+                        </div>
+      `;
       
-      const toastHTML = \`
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="\${toastId}">
-          <div class="toast-header">
-            <strong class="me-auto">JendoubaLife API</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-          </div>
-          <div class="toast-body bg-\${type} text-white">
-            \${message}
-          </div>
+      // Request body tab content
+      html += `
+                        <div id="request-${route.method}-${routePath.replace(/\//g, '-')}" class="tab-content ${route.requestBody ? 'active' : ''}">
+      `;
+      
+      // Request body section (if any)
+      if (route.requestBody) {
+        html += `
+                            <div class="body-section">
+                                <h3 class="section-title"><i class="fas fa-file-code"></i> Corps de la Requête</h3>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>JSON</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('${JSON.stringify(route.requestBody, null, 2).replace(/'/g, "\\'")}')">
+                                            <i class="fas fa-copy"></i> Copier
+                                        </button>
+                                    </div>
+                                    <pre><code>${JSON.stringify(route.requestBody, null, 2)}</code></pre>
+                                </div>
+                            </div>
+        `;
+      } else {
+        html += `
+                            <div class="body-section">
+                                <p>Aucun corps de requête nécessaire pour cette méthode.</p>
+                            </div>
+        `;
+      }
+      
+      html += `
+                        </div>
+      `;
+      
+      // Response tab content
+      html += `
+                        <div id="response-${route.method}-${routePath.replace(/\//g, '-')}" class="tab-content ${!route.requestBody ? 'active' : ''}">
+                            <div class="response-section">
+                                <h3 class="section-title"><i class="fas fa-reply-all"></i> Réponse</h3>
+      `;
+                          
+      // Add status class based on response status code
+      let statusClass = 'status-success';
+      if (route.response.status >= 400) {
+        statusClass = 'status-error';
+      } else if (route.response.status >= 300) {
+        statusClass = 'status-warning';
+      }
+      
+      html += `
+                                <div class="response-status ${statusClass}">
+                                    <i class="fas fa-${route.response.status < 300 ? 'check-circle' : (route.response.status < 400 ? 'exclamation-triangle' : 'times-circle')}"></i>
+                                    Status: ${route.response.status}
+                                </div>
+                                <div class="code-block">
+                                    <div class="code-header">
+                                        <span>JSON</span>
+                                        <button class="copy-btn" onclick="copyToClipboard('${JSON.stringify(route.response, null, 2).replace(/'/g, "\\'")}')">
+                                            <i class="fas fa-copy"></i> Copier
+                                        </button>
+                                    </div>
+                                    <pre><code>${JSON.stringify(route.response, null, 2)}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+      `;
+    });
+    
+    html += `
+            </div>
+    `;
+  });
+
+  // Complete the HTML
+  html += `
         </div>
-      \`;
-      
-      toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-      const toastElement = document.getElementById(toastId);
-      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-      toast.show();
-      
-      // Remove toast from DOM after it's hidden
-      toastElement.addEventListener('hidden.bs.toast', function() {
-        toastElement.remove();
-      });
-    }
-    
-    // Filter functionality
-    const searchInput = document.getElementById('searchInput');
-    const entityBadges = document.querySelectorAll('#entityFilter .entity-badge');
-    const methodBadges = document.querySelectorAll('#methodFilter .entity-badge');
-    const endpointCards = document.querySelectorAll('.endpoint-card');
-    const navLinks = document.querySelectorAll('#sidebar-nav .nav-link');
-    
-    function filterEndpoints() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const activeEntity = document.querySelector('#entityFilter .entity-badge.active').dataset.entity;
-      const activeMethod = document.querySelector('#methodFilter .entity-badge.active').dataset.method;
-      
-      endpointCards.forEach(card => {
-        const cardEntity = card.dataset.entity;
-        const cardMethod = card.dataset.method;
-        const cardContent = card.textContent.toLowerCase();
         
-        const matchesSearch = searchTerm === '' || cardContent.includes(searchTerm);
-        const matchesEntity = activeEntity === 'all' || cardEntity === activeEntity;
-        const matchesMethod = activeMethod === 'all' || cardMethod === activeMethod;
-        
-        if (matchesSearch && matchesEntity && matchesMethod) {
-          card.style.display = 'block';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-      
-      // Also filter sidebar nav links
-      navLinks.forEach(link => {
-        const linkEntity = link.dataset.entity;
-        const linkMethod = link.dataset.method;
-        const linkContent = link.textContent.toLowerCase();
-        
-        const matchesSearch = searchTerm === '' || linkContent.includes(searchTerm);
-        const matchesEntity = activeEntity === 'all' || linkEntity === activeEntity;
-        const matchesMethod = activeMethod === 'all' || linkMethod === activeMethod;
-        
-        if (matchesSearch && matchesEntity && matchesMethod) {
-          link.style.display = 'block';
-        } else {
-          link.style.display = 'none';
-        }
-      });
-    }
+        <footer>
+            <p>JenCity API Documentation - Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
+            <p>Version 1.0</p>
+        </footer>
+    </div>
     
-    searchInput.addEventListener('input', filterEndpoints);
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message"></span>
+    </div>
     
-    entityBadges.forEach(badge => {
-      badge.addEventListener('click', function() {
-        document.querySelector('#entityFilter .entity-badge.active').classList.remove('active');
-        this.classList.add('active');
-        filterEndpoints();
-      });
-    });
-    
-    methodBadges.forEach(badge => {
-      badge.addEventListener('click', function() {
-        document.querySelector('#methodFilter .entity-badge.active').classList.remove('active');
-        this.classList.add('active');
-        filterEndpoints();
-      });
-    });
-    
-    // Smooth scrolling for navigation
-    document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
-      link.addEventListener('click', function(e) {
-        e.preventDefault();
+    <script>
+        // Global variables for the entity diagram
+        const entityDefinitions = ${JSON.stringify(entityDefinitions)};
         
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-        
-        window.scrollTo({
-          top: targetElement.offsetTop - 20,
-          behavior: 'smooth'
-        });
-        
-        // Highlight active link
-        document.querySelectorAll('#sidebar-nav .nav-link').forEach(navLink => {
-          navLink.classList.remove('active');
-        });
-        this.classList.add('active');
-      });
-    });
-    
-    // Highlight nav item on scroll
-    window.addEventListener('scroll', function() {
-      const scrollPosition = window.scrollY;
-      
-      endpointCards.forEach((card, index) => {
-        if (card.style.display !== 'none') {
-          const cardTop = card.offsetTop - 100;
-          const cardBottom = cardTop + card.offsetHeight;
-          
-          if (scrollPosition >= cardTop && scrollPosition < cardBottom) {
-            document.querySelectorAll('#sidebar-nav .nav-link').forEach(link => {
-              link.classList.remove('active');
+        // Initialize the diagram when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up entity diagram
+            initializeEntityDiagram();
+            
+            // Set up view toggle buttons
+            document.getElementById('view-diagram').addEventListener('click', function() {
+                document.getElementById('entity-diagram-svg').parentNode.style.display = 'block';
+                document.getElementById('entity-tables').style.display = 'none';
+                document.getElementById('entity-relations').style.display = 'none';
+                
+                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
             });
             
-            const correspondingLink = document.querySelector(\`#sidebar-nav .nav-link[href="#endpoint-\${index}"]\`);
-            if (correspondingLink) {
-              correspondingLink.classList.add('active');
+            document.getElementById('view-tables').addEventListener('click', function() {
+                document.getElementById('entity-diagram-svg').parentNode.style.display = 'none';
+                document.getElementById('entity-tables').style.display = 'block';
+                document.getElementById('entity-relations').style.display = 'none';
+                
+                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                generateEntityTables();
+            });
+            
+            document.getElementById('view-relations').addEventListener('click', function() {
+                document.getElementById('entity-diagram-svg').parentNode.style.display = 'none';
+                document.getElementById('entity-tables').style.display = 'none';
+                document.getElementById('entity-relations').style.display = 'block';
+                
+                document.querySelectorAll('.diagram-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                generateRelationTables();
+            });
+        });
+        
+        function initializeEntityDiagram() {
+            const svg = document.getElementById('entity-diagram-svg');
+            
+            // Define the SVG namespace
+            const svgNS = "http://www.w3.org/2000/svg";
+            
+            // Clear existing content
+            while (svg.firstChild) {
+                svg.removeChild(svg.firstChild);
             }
-          }
+            
+            // Add marker definition for arrows
+            const defs = document.createElementNS(svgNS, "defs");
+            svg.appendChild(defs);
+            
+            const marker = document.createElementNS(svgNS, "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("markerWidth", "10");
+            marker.setAttribute("markerHeight", "7");
+            marker.setAttribute("refX", "10");
+            marker.setAttribute("refY", "3.5");
+            marker.setAttribute("orient", "auto");
+            defs.appendChild(marker);
+            
+            const polygon = document.createElementNS(svgNS, "polygon");
+            polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+            polygon.setAttribute("fill", "#3498db");
+            marker.appendChild(polygon);
+            
+            // Calculate layout
+            const padding = 30;
+            const entityWidth = 220;
+            const entityHeaderHeight = 40;
+            const fieldHeight = 25;
+            const hSpacing = 100;
+            const vSpacing = 70;
+            
+            let maxCols = Math.min(3, entityDefinitions.length);
+            let cols = Math.min(maxCols, entityDefinitions.length);
+            let rows = Math.ceil(entityDefinitions.length / cols);
+            
+            // Calculate total width and height
+            const totalWidth = cols * entityWidth + (cols - 1) * hSpacing + 2 * padding;
+            
+            // Positioning variables
+            const entityPositions = {};
+            const entitySizes = {};
+            
+            // First pass: create entity boxes and calculate their positions and sizes
+            entityDefinitions.forEach((entity, index) => {
+                const col = index % cols;
+                const row = Math.floor(index / cols);
+                
+                const x = padding + col * (entityWidth + hSpacing);
+                const fields = entity.fields || [];
+                const entityHeight = entityHeaderHeight + fields.length * fieldHeight + 10;
+                
+                let y = padding + row * (vSpacing);
+                
+                // Maximum height for an entity in a row
+                const rowEntities = entityDefinitions.slice(row * cols, Math.min((row + 1) * cols, entityDefinitions.length));
+                const maxHeightInRow = Math.max(...rowEntities.map(e => (e.fields || []).length)) * fieldHeight + entityHeaderHeight + 10;
+                
+                y += row * maxHeightInRow;
+                
+                entityPositions[entity.name] = { x, y };
+                entitySizes[entity.name] = { width: entityWidth, height: entityHeight };
+                
+                // Create the entity box
+                const entityBox = document.createElementNS(svgNS, "rect");
+                entityBox.setAttribute("x", x);
+                entityBox.setAttribute("y", y);
+                entityBox.setAttribute("width", entityWidth);
+                entityBox.setAttribute("height", entityHeight);
+                entityBox.setAttribute("class", "entity-box");
+                svg.appendChild(entityBox);
+                
+                // Create the entity title background
+                const titleBg = document.createElementNS(svgNS, "rect");
+                titleBg.setAttribute("x", x);
+                titleBg.setAttribute("y", y);
+                titleBg.setAttribute("width", entityWidth);
+                titleBg.setAttribute("height", entityHeaderHeight);
+                titleBg.setAttribute("class", "entity-title-bg");
+                svg.appendChild(titleBg);
+                
+                // Create the entity title
+                const titleText = document.createElementNS(svgNS, "text");
+                titleText.setAttribute("x", x + entityWidth / 2);
+                titleText.setAttribute("y", y + entityHeaderHeight / 2);
+                titleText.setAttribute("class", "entity-title-text");
+                titleText.textContent = entity.name;
+                svg.appendChild(titleText);
+                
+                // Add fields
+                fields.forEach((field, fieldIndex) => {
+                    const fieldY = y + entityHeaderHeight + fieldIndex * fieldHeight + fieldHeight / 2 + 5;
+                    
+                    // Field name
+                    const fieldText = document.createElementNS(svgNS, "text");
+                    fieldText.setAttribute("x", x + 10);
+                    fieldText.setAttribute("y", fieldY);
+                    fieldText.setAttribute("class", "entity-field");
+                    fieldText.textContent = field.isPrimary ? "* " + field.name : field.name;
+                    svg.appendChild(fieldText);
+                    
+                    // Field type
+                    const typeText = document.createElementNS(svgNS, "text");
+                    typeText.setAttribute("x", x + entityWidth - 10);
+                    typeText.setAttribute("y", fieldY);
+                    typeText.setAttribute("class", "field-type");
+                    typeText.textContent = field.type;
+                    svg.appendChild(typeText);
+                });
+            });
+            
+            // Calculate total diagram height based on entity positions and sizes
+            let maxBottom = 0;
+            Object.keys(entityPositions).forEach(entityName => {
+                const pos = entityPositions[entityName];
+                const size = entitySizes[entityName];
+                const bottom = pos.y + size.height;
+                if (bottom > maxBottom) maxBottom = bottom;
+            });
+            
+            const totalHeight = maxBottom + padding;
+            
+            // Set SVG dimensions
+            svg.setAttribute("width", totalWidth);
+            svg.setAttribute("height", totalHeight);
+            svg.setAttribute("viewBox", "0 0 " + totalWidth + " " + totalHeight);
+            
+            // Second pass: draw relations
+            entityDefinitions.forEach(entity => {
+                if (!entity.relations) return;
+                
+                entity.relations.forEach(relation => {
+                    const sourcePos = entityPositions[entity.name];
+                    const targetPos = entityPositions[relation.entity];
+                    
+                    if (!sourcePos || !targetPos) return;
+                    
+                    const sourceSize = entitySizes[entity.name];
+                    const targetSize = entitySizes[relation.entity];
+                    
+                    // Calculate edge points
+                    const sourceX = sourcePos.x + sourceSize.width / 2;
+                    const sourceY = sourcePos.y + sourceSize.height / 2;
+                    const targetX = targetPos.x + targetSize.width / 2;
+                    const targetY = targetPos.y + targetSize.height / 2;
+                    
+                    // Determine connection points on entity boxes
+                    let startX, startY, endX, endY;
+                    
+                    // Simple logic: connect from sides or top/bottom based on relative positions
+                    if (Math.abs(sourceX - targetX) > Math.abs(sourceY - targetY)) {
+                        // Connect horizontally
+                        if (sourceX < targetX) {
+                            // Source is to the left of target
+                            startX = sourcePos.x + sourceSize.width;
+                            startY = sourcePos.y + sourceSize.height / 2;
+                            endX = targetPos.x;
+                            endY = targetPos.y + targetSize.height / 2;
+                        } else {
+                            // Source is to the right of target
+                            startX = sourcePos.x;
+                            startY = sourcePos.y + sourceSize.height / 2;
+                            endX = targetPos.x + targetSize.width;
+                            endY = targetPos.y + targetSize.height / 2;
+                        }
+                    } else {
+                        // Connect vertically
+                        if (sourceY < targetY) {
+                            // Source is above target
+                            startX = sourcePos.x + sourceSize.width / 2;
+                            startY = sourcePos.y + sourceSize.height;
+                            endX = targetPos.x + targetSize.width / 2;
+                            endY = targetPos.y;
+                        } else {
+                            // Source is below target
+                            startX = sourcePos.x + sourceSize.width / 2;
+                            startY = sourcePos.y;
+                            endX = targetPos.x + targetSize.width / 2;
+                            endY = targetPos.y + targetSize.height;
+                        }
+                    }
+                    
+                    // Create the relation line with a control point for a curve
+                    const midX = (startX + endX) / 2;
+                    const midY = (startY + endY) / 2;
+                    
+                    const path = document.createElementNS(svgNS, "path");
+                    path.setAttribute("d", "M" + startX + "," + startY + " Q" + midX + "," + midY + " " + endX + "," + endY);
+                    path.setAttribute("class", "entity-relation");
+                    path.setAttribute("marker-end", "url(#arrowhead)");
+                    svg.appendChild(path);
+                    
+                    // Add relation type text
+                    const relationText = document.createElementNS(svgNS, "text");
+                    relationText.setAttribute("x", midX);
+                    relationText.setAttribute("y", midY - 10);
+                    relationText.setAttribute("class", "relation-text");
+                    relationText.textContent = relation.type;
+                    svg.appendChild(relationText);
+                });
+            });
         }
-      });
-    });
-  </script>
+        
+        function generateEntityTables() {
+            const tableBody = document.getElementById('entity-table-body');
+            tableBody.innerHTML = '';
+            
+            entityDefinitions.forEach(entity => {
+                if (!entity.fields) return;
+                
+                // Group rows by entity with a header row
+                const headerRow = document.createElement('tr');
+                headerRow.style.backgroundColor = '#f0f0f0';
+                
+                const entityNameCell = document.createElement('td');
+                entityNameCell.colSpan = 4;
+                entityNameCell.style.fontWeight = 'bold';
+                entityNameCell.textContent = entity.name;
+                headerRow.appendChild(entityNameCell);
+                
+                tableBody.appendChild(headerRow);
+                
+                // Add field rows
+                entity.fields.forEach(field => {
+                    const row = document.createElement('tr');
+                    
+                    const tableCell = document.createElement('td');
+                    tableCell.textContent = '';
+                    row.appendChild(tableCell);
+                    
+                    const fieldCell = document.createElement('td');
+                    fieldCell.textContent = field.isPrimary ? "* " + field.name : field.name;
+                    row.appendChild(fieldCell);
+                    
+                    const typeCell = document.createElement('td');
+                    typeCell.textContent = field.type;
+                    row.appendChild(typeCell);
+                    
+                    const descCell = document.createElement('td');
+                    descCell.textContent = field.description || '';
+                    if (field.isPrivate) {
+                        descCell.textContent += ' (Privé)';
+                    }
+                    if (field.reference) {
+                        descCell.textContent += ' (Référence: ' + field.reference + ')';
+                    }
+                    row.appendChild(descCell);
+                    
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+        
+        function generateRelationTables() {
+            const relationBody = document.getElementById('relation-table-body');
+            relationBody.innerHTML = '';
+            
+            entityDefinitions.forEach(entity => {
+                if (!entity.relations) return;
+                
+                entity.relations.forEach(relation => {
+                    const row = document.createElement('tr');
+                    
+                    const fromCell = document.createElement('td');
+                    fromCell.textContent = entity.name;
+                    row.appendChild(fromCell);
+                    
+                    const relationCell = document.createElement('td');
+                    relationCell.textContent = relation.type;
+                    row.appendChild(relationCell);
+                    
+                    const toCell = document.createElement('td');
+                    toCell.textContent = relation.entity;
+                    row.appendChild(toCell);
+                    
+                    const viaCell = document.createElement('td');
+                    viaCell.textContent = relation.via || '';
+                    row.appendChild(viaCell);
+                    
+                    relationBody.appendChild(row);
+                });
+            });
+        }
+        
+        // Copy to clipboard functionality
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show toast notification
+            showToast('API copiée avec succès!');
+        }
+        
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Prepare for Postman
+        function prepareForPostman(method, url) {
+            const baseUrl = document.getElementById('baseUrlDisplay').textContent;
+            const fullUrl = baseUrl.substring(0, baseUrl.indexOf('/api')) + url;
+            
+            // Create Postman collection JSON
+            const postmanCollection = {
+                "info": {
+                    "name": "JenCity API - " + url,
+                    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                },
+                "item": [
+                    {
+                        "name": method + " " + url,
+                        "request": {
+                            "method": method,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "url": {
+                                "raw": fullUrl,
+                                "protocol": fullUrl.startsWith("https") ? "https" : "http",
+                                "host": fullUrl.replace(/^https?:\\/\\//, '').split('/')[0].split(':')[0].split('.'),
+                                "port": baseUrl.split(':')[2] ? baseUrl.split(':')[2].split('/')[0] : "",
+                                "path": fullUrl.replace(/^https?:\\/\\/[^\\/]+/, '').split('/').filter(p => p)
+                            }
+                        }
+                    }
+                ]
+            };
+            
+            // Create a data URI for the Postman collection
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(postmanCollection));
+            
+            // Create a link to download the collection
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "JenCity_API_" + url.replace(/\\//g, '_') + ".postman_collection.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            showToast('Collection Postman créée!');
+        }
+        
+        // Server configuration update
+        document.getElementById('updateServerBtn').addEventListener('click', function() {
+            const host = document.getElementById('serverHost').value || 'localhost';
+            const port = document.getElementById('serverPort').value || '3000';
+            const baseUrl = 'http://' + host + ':' + port + '/api';
+            document.getElementById('baseUrlDisplay').textContent = baseUrl;
+            
+            showToast('Configuration du serveur mise à jour!');
+        });
+        
+        // Copy base URL
+        document.getElementById('copyBaseUrlBtn').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('baseUrlDisplay').textContent);
+        });
+        
+        // Switch tabs
+        function switchTab(tabElement, contentId) {
+            // Remove active class from all tabs in the same group
+            const tabContainer = tabElement.parentElement;
+            const tabs = tabContainer.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            tabElement.classList.add('active');
+            
+            // Hide all tab content in the same endpoint
+            const endpoint = tabContainer.closest('.endpoint');
+            const tabContents = endpoint.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Show the selected tab content
+            document.getElementById(contentId).classList.add('active');
+        }
+        
+        // Entity filtering
+        document.getElementById('entityFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+        
+        // Method filtering
+        document.getElementById('methodFilter').addEventListener('change', function() {
+            applyFilters();
+        });
+        
+        function applyFilters() {
+            const selectedEntity = document.getElementById('entityFilter').value;
+            const selectedMethod = document.getElementById('methodFilter').value;
+            
+            const entityGroups = document.querySelectorAll('.entity-group');
+            const entityTitles = document.querySelectorAll('.entity-title');
+            const endpoints = document.querySelectorAll('.endpoint');
+            
+            // First, handle entity filtering
+            if (selectedEntity === 'all') {
+                entityGroups.forEach(group => group.classList.remove('hidden'));
+                entityTitles.forEach(title => title.classList.remove('hidden'));
+            } else {
+                entityGroups.forEach(group => {
+                    if (group.dataset.entity === selectedEntity) {
+                        group.classList.remove('hidden');
+                    } else {
+                        group.classList.add('hidden');
+                    }
+                });
+                
+                entityTitles.forEach(title => {
+                    if (title.id === 'entity-' + selectedEntity) {
+                        title.classList.remove('hidden');
+                    } else {
+                        title.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // Then, handle method filtering
+            if (selectedMethod !== 'all') {
+                endpoints.forEach(endpoint => {
+                    if (endpoint.dataset.method === selectedMethod) {
+                        endpoint.classList.remove('hidden');
+                    } else {
+                        endpoint.classList.add('hidden');
+                    }
+                });
+            } else {
+                endpoints.forEach(endpoint => endpoint.classList.remove('hidden'));
+            }
+            
+            // Update endpoint counters
+            updateEndpointCounters();
+        }
+        
+        function updateEndpointCounters() {
+            const entityGroups = document.querySelectorAll('.entity-group:not(.hidden)');
+            
+            entityGroups.forEach(group => {
+                const entityName = group.dataset.entity;
+                const visibleEndpoints = group.querySelectorAll('.endpoint:not(.hidden)').length;
+                const counterElement = document.querySelector('#entity-' + entityName + ' .endpoint-counter');
+                
+                if (counterElement) {
+                    counterElement.textContent = '(' + visibleEndpoints + ' endpoints)';
+                }
+            });
+        }
+    </script>
 </body>
-</html>
-  `;
-};
+</html>`;
 
-// Helper function to generate class diagram
-function generateClassDiagram(entities) {
-  let diagram = '';
-  entities.forEach(entity => {
-    diagram += `class ${entity.name} {\n`;
-    
-    // Add fields
-    entity.fields.forEach(field => {
-      const fieldType = field.type === 'object' ? 'Object' : 
-                       field.type === 'array' ? 'Array' : 
-                       field.type.charAt(0).toUpperCase() + field.type.slice(1);
-      diagram += `    ${field.isPrimary ? '+' : '-'}${field.name}: ${fieldType}\n`;
-    });
-    
-    diagram += '}\n';
-  });
-  
-  // Add relationships
-  entities.forEach(entity => {
-    if (entity.relations) {
-      entity.relations.forEach(relation => {
-        if (relation.type === 'hasMany') {
-          diagram += `${entity.name} "1" -- "n" ${relation.entity} : has many\n`;
-        } else if (relation.type === 'belongsTo') {
-          diagram += `${entity.name} "n" -- "1" ${relation.entity} : belongs to\n`;
-        }
-      });
-    }
-  });
-  
-  return diagram;
+  return html;
 }
 
-// Helper function to generate table diagram
-function generateTableDiagram(entities) {
-  let diagram = '';
-  entities.forEach(entity => {
-    diagram += `class ${entity.name} {\n`;
-    
-    // Add fields with more database-specific details
-    entity.fields.forEach(field => {
-      let fieldType = field.type === 'object' ? 'JSON' : 
-                     field.type === 'array' ? 'ARRAY' : 
-                     field.type === 'string' ? 'VARCHAR(255)' :
-                     field.type === 'text' ? 'TEXT' :
-                     field.type === 'number' ? 'INTEGER' :
-                     field.type === 'date' ? 'TIMESTAMP' :
-                     field.type === 'boolean' ? 'BOOLEAN' :
-                     field.type.toUpperCase();
-      
-      let constraints = [];
-      if (field.isPrimary) constraints.push('PK');
-      if (field.reference) constraints.push('FK');
-      if (!field.isOptional && !field.isPrimary) constraints.push('NOT NULL');
-      
-      const constraintStr = constraints.length > 0 ? ` <<${constraints.join(',')}>>`  : '';
-      
-      diagram += `    ${field.name}: ${fieldType}${constraintStr}\n`;
-    });
-    
-    diagram += '}\n';
-  });
-  
-  return diagram;
-}
-
-// Helper function to generate relation diagram
-function generateRelationsDiagram(entities) {
-  let diagram = '';
-  
-  // Add nodes
-  entities.forEach(entity => {
-    diagram += `    ${entity.name}["${entity.name}"]\n`;
-  });
-  
-  // Add relationships
-  entities.forEach(entity => {
-    if (entity.relations) {
-      entity.relations.forEach(relation => {
-        if (relation.type === 'hasMany') {
-          diagram += `    ${entity.name} -->|"1:n"| ${relation.entity}\n`;
-        } else if (relation.type === 'belongsTo') {
-          diagram += `    ${entity.name} -->|"n:1"| ${relation.entity}\n`;
-        }
-      });
-    }
-  });
-  
-  return diagram;
-}
-
-// Helper function to get unique entities from routes
-function getUniqueEntities(routes) {
-  const entities = new Set();
-  routes.forEach(route => {
-    const entity = getEntityFromPath(route.path);
-    if (entity) {
-      entities.add(entity);
-    }
-  });
-  return Array.from(entities);
-}
-
-// Helper function to extract entity name from route path
-function getEntityFromPath(path) {
-  const parts = path.split('/');
-  // The entity is typically the first part after the initial slash
-  return parts[1] || 'other';
-}
-
-// Helper function to generate curl example
-function generateCurlExample(route) {
-  const baseUrl = 'http://localhost:3000/api';
-  let path = route.path;
-  
-  // Replace path parameters with placeholders
-  if (route.params) {
-    route.params.forEach(param => {
-      path = path.replace(`:${param.name}`, param.name === 'id' ? '1' : param.name);
-    });
-  }
-  
-  let curlCommand = \`curl -X \${route.method.toUpperCase()} "\${baseUrl}\${path}"\`;
-  
-  if (route.requestBody) {
-    curlCommand += \` \\
-  -H "Content-Type: application/json" \\
-  -d '\${JSON.stringify(route.requestBody, null, 2)}'\`;
-  }
-  
-  return curlCommand;
-}
-
-// Helper function to generate JavaScript example
-function generateJSExample(route) {
-  const baseUrl = 'http://localhost:3000/api';
-  let path = route.path;
-  
-  // Replace path parameters with placeholders
-  if (route.params) {
-    route.params.forEach(param => {
-      path = path.replace(`:${param.name}`, param.name === 'id' ? '1' : param.name);
-    });
-  }
-  
-  let jsExample = '';
-  
-  if (route.method.toLowerCase() === 'get') {
-    jsExample = \`fetch("\${baseUrl}\${path}")
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));\`;
-  } else {
-    jsExample = \`fetch("\${baseUrl}\${path}", {
-  method: "\${route.method.toUpperCase()}",
-  headers: {
-    "Content-Type": "application/json",
-  },\${route.requestBody ? \`
-  body: JSON.stringify(\${JSON.stringify(route.requestBody, null, 2)}),\` : ''}
-})
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));\`;
-  }
-  
-  return jsExample;
-}
-
-// Helper function to generate Python example
-function generatePythonExample(route) {
-  const baseUrl = 'http://localhost:3000/api';
-  let path = route.path;
-  
-  // Replace path parameters with placeholders
-  if (route.params) {
-    route.params.forEach(param => {
-      path = path.replace(`:${param.name}`, param.name === 'id' ? '1' : param.name);
-    });
-  }
-  
-  let pythonExample = \`import requests
-
-url = "\${baseUrl}\${path}"\`;
-  
-  if (route.method.toLowerCase() === 'get') {
-    pythonExample += \`
-
-response = requests.get(url)
-print(response.json())\`;
-  } else {
-    pythonExample += \`
-
-payload = \${JSON.stringify(route.requestBody, null, 2) || '{}'}
-headers = {"Content-Type": "application/json"}
-
-response = requests.\${route.method.toLowerCase()}(url, json=payload, headers=headers)
-print(response.json())\`;
-  }
-  
-  return pythonExample;
-}
-
-// Helper function to get HTTP status text
-function getStatusText(status) {
-  const statusTexts = {
-    200: 'OK',
-    201: 'Created',
-    204: 'No Content',
-    400: 'Bad Request',
-    401: 'Unauthorized',
-    403: 'Forbidden',
-    404: 'Not Found',
-    500: 'Internal Server Error'
+// Helper function to get the icon class for an entity
+function getEntityIcon(entity) {
+  const icons = {
+    users: 'fas fa-users',
+    places: 'fas fa-map-marker-alt',
+    events: 'fas fa-calendar-alt',
+    messages: 'fas fa-comments',
+    reviews: 'fas fa-star',
+    reservations: 'fas fa-ticket-alt'
   };
   
-  return statusTexts[status] || '';
+  return icons[entity] || 'fas fa-code';
 }
 
 module.exports = { generateDocTemplate };
