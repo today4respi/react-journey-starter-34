@@ -17,5 +17,12 @@ export default defineConfig({
   server: {
     port: 8080,
     open: true,
+    // Serve the docs directory at /docs
+    fs: {
+      strict: false,
+      allow: ['..'],
+    },
   },
+  // Add static assets to be included in the build
+  publicDir: 'public',
 });
