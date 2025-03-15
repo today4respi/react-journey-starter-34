@@ -1,0 +1,2648 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JenCity API Documentation</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+            --text-color: #333;
+            --method-get: #61affe;
+            --method-post: #49cc90;
+            --method-put: #fca130;
+            --method-delete: #f93e3e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 5px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .api-description {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .server-config {
+            background-color: var(--light-gray);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .server-config h2 {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .server-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .server-form input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .server-form button {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .server-form button:hover {
+            background-color: #2980b9;
+        }
+        
+        .base-url {
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .filter-container select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+        
+        .endpoint-list {
+            margin-bottom: 30px;
+        }
+        
+        .endpoint {
+            margin-bottom: 25px;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+        
+        .endpoint-header {
+            display: flex;
+            padding: 15px;
+            background-color: #f5f7f9;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .method {
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .method.get { background-color: var(--method-get); }
+        .method.post { background-color: var(--method-post); }
+        .method.put { background-color: var(--method-put); }
+        .method.delete { background-color: var(--method-delete); }
+        
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 1.1rem;
+            flex-grow: 1;
+            position: relative;
+            padding: 5px 10px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .endpoint-body {
+            padding: 15px;
+        }
+        
+        .endpoint-description {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .params-section, .body-section, .response-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        
+        .param-table, .response-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .param-table th, .response-table th {
+            background-color: #f5f7f9;
+            text-align: left;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .param-table td, .response-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .code-block {
+            background-color: #f5f7f9;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            font-family: monospace;
+            position: relative;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        
+        code {
+            font-family: monospace;
+        }
+        
+        .response-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-weight: bold;
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        @media (max-width: 768px) {
+            .endpoint-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .endpoint-path {
+                width: 100%;
+            }
+            
+            .server-form {
+                flex-direction: column;
+            }
+        }
+        
+        .entity-title {
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--secondary-color);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JenCity API Documentation</h1>
+            <p class="api-description">Documentation complète des API pour l'application JenCity</p>
+        </header>
+        
+        <div class="server-config">
+            <h2>Configuration du Serveur</h2>
+            <div class="server-form">
+                <input type="text" id="serverHost" placeholder="Hôte (ex: localhost)" value="localhost">
+                <input type="number" id="serverPort" placeholder="Port (ex: 3000)" value="3000">
+                <button id="updateServerBtn">Mettre à jour</button>
+            </div>
+            <div class="base-url">
+                <span id="baseUrlDisplay">http://localhost:3000/api</span>
+                <button class="copy-btn" id="copyBaseUrlBtn">Copier</button>
+            </div>
+        </div>
+        
+        <div class="filter-container">
+            <label for="entityFilter">Filtrer par entité:</label>
+            <select id="entityFilter">
+                <option value="all">Toutes les entités</option>
+                <option value="users">users</option><option value="places">places</option><option value="events">events</option><option value="messages">messages</option><option value="reviews">reviews</option><option value="reservations">reservations</option>
+            </select>
+        </div>
+        
+        <div class="endpoint-list">
+
+            <h2 class="entity-title" id="entity-users">Users</h2>
+            <div class="entity-group" data-entity="users">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/users</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/users')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de tous les utilisateurs avec leurs informations de base comme le nom, l'email et le rôle.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "admin"
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "role": "admin"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/users/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/users/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère les informations détaillées d'un utilisateur en fonction de son identifiant unique.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'utilisateur</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "user",
+    "createdAt": "2023-06-15T10:30:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "user",
+    "createdAt": "2023-06-15T10:30:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/users</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/users')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Crée un nouvel utilisateur dans la base de données avec un rôle par défaut "user".
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "name": "New User",
+  "email": "newuser@example.com",
+  "password": "securepassword123"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "name": "New User",
+  "email": "newuser@example.com",
+  "password": "securepassword123"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "name": "New User",
+    "email": "newuser@example.com",
+    "role": "user",
+    "createdAt": "2023-08-20T15:45:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "name": "New User",
+    "email": "newuser@example.com",
+    "role": "user",
+    "createdAt": "2023-08-20T15:45:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/users/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/users/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Modifie les informations d'un utilisateur existant comme le nom et l'email.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'utilisateur</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "name": "Updated Name",
+  "email": "updated@example.com"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "name": "Updated Name",
+  "email": "updated@example.com"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Updated Name",
+    "email": "updated@example.com",
+    "role": "user",
+    "updatedAt": "2023-08-21T09:12:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Updated Name",
+    "email": "updated@example.com",
+    "role": "user",
+    "updatedAt": "2023-08-21T09:12:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/users/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/users/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Supprime définitivement un utilisateur de la base de données.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'utilisateur</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "User deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "User deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+            <h2 class="entity-title" id="entity-places">Places</h2>
+            <div class="entity-group" data-entity="places">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/places</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/places')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de tous les lieux touristiques disponibles incluant leur nom, type, emplacement et description.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "Bulla Regia",
+      "type": "historical",
+      "location": {
+        "latitude": 36.5594,
+        "longitude": 8.7553
+      },
+      "description": "Ancient Roman city with unique underground villas"
+    },
+    {
+      "id": 2,
+      "name": "Ain Draham",
+      "type": "natural",
+      "location": {
+        "latitude": 36.7828,
+        "longitude": 8.6875
+      },
+      "description": "Mountain town known for its forests and cool climate"
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "Bulla Regia",
+      "type": "historical",
+      "location": {
+        "latitude": 36.5594,
+        "longitude": 8.7553
+      },
+      "description": "Ancient Roman city with unique underground villas"
+    },
+    {
+      "id": 2,
+      "name": "Ain Draham",
+      "type": "natural",
+      "location": {
+        "latitude": 36.7828,
+        "longitude": 8.6875
+      },
+      "description": "Mountain town known for its forests and cool climate"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/places/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/places/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère les informations détaillées d'un lieu touristique incluant les images, horaires, tarifs et autres informations pratiques.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du lieu</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Bulla Regia",
+    "type": "historical",
+    "location": {
+      "latitude": 36.5594,
+      "longitude": 8.7553
+    },
+    "description": "Ancient Roman city with unique underground villas",
+    "images": [
+      "https://example.com/bulla-regia-1.jpg",
+      "https://example.com/bulla-regia-2.jpg"
+    ],
+    "openingHours": {
+      "monday": "9:00 - 17:00",
+      "tuesday": "9:00 - 17:00",
+      "wednesday": "9:00 - 17:00",
+      "thursday": "9:00 - 17:00",
+      "friday": "9:00 - 17:00",
+      "saturday": "9:00 - 17:00",
+      "sunday": "9:00 - 17:00"
+    },
+    "entranceFee": {
+      "adult": 10,
+      "child": 5,
+      "student": 7,
+      "senior": 7
+    }
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Bulla Regia",
+    "type": "historical",
+    "location": {
+      "latitude": 36.5594,
+      "longitude": 8.7553
+    },
+    "description": "Ancient Roman city with unique underground villas",
+    "images": [
+      "https://example.com/bulla-regia-1.jpg",
+      "https://example.com/bulla-regia-2.jpg"
+    ],
+    "openingHours": {
+      "monday": "9:00 - 17:00",
+      "tuesday": "9:00 - 17:00",
+      "wednesday": "9:00 - 17:00",
+      "thursday": "9:00 - 17:00",
+      "friday": "9:00 - 17:00",
+      "saturday": "9:00 - 17:00",
+      "sunday": "9:00 - 17:00"
+    },
+    "entranceFee": {
+      "adult": 10,
+      "child": 5,
+      "student": 7,
+      "senior": 7
+    }
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/places</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/places')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Crée un nouveau lieu touristique dans la base de données avec ses informations de base.
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "name": "New Place",
+  "type": "cultural",
+  "location": {
+    "latitude": 36.5,
+    "longitude": 8.8
+  },
+  "description": "A new cultural attraction"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "name": "New Place",
+  "type": "cultural",
+  "location": {
+    "latitude": 36.5,
+    "longitude": 8.8
+  },
+  "description": "A new cultural attraction"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "name": "New Place",
+    "type": "cultural",
+    "location": {
+      "latitude": 36.5,
+      "longitude": 8.8
+    },
+    "description": "A new cultural attraction",
+    "createdAt": "2023-08-22T11:30:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "name": "New Place",
+    "type": "cultural",
+    "location": {
+      "latitude": 36.5,
+      "longitude": 8.8
+    },
+    "description": "A new cultural attraction",
+    "createdAt": "2023-08-22T11:30:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/places/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/places/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Met à jour les informations d'un lieu touristique existant.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du lieu</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "name": "Updated Place",
+  "type": "historical",
+  "description": "Updated description for this attraction"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "name": "Updated Place",
+  "type": "historical",
+  "description": "Updated description for this attraction"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Updated Place",
+    "type": "historical",
+    "location": {
+      "latitude": 36.5594,
+      "longitude": 8.7553
+    },
+    "description": "Updated description for this attraction",
+    "updatedAt": "2023-08-23T14:20:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "Updated Place",
+    "type": "historical",
+    "location": {
+      "latitude": 36.5594,
+      "longitude": 8.7553
+    },
+    "description": "Updated description for this attraction",
+    "updatedAt": "2023-08-23T14:20:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/places/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/places/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Supprime un lieu touristique de la base de données.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du lieu</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "Place deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "Place deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+            <h2 class="entity-title" id="entity-events">Events</h2>
+            <div class="entity-group" data-entity="events">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/events</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/events')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de tous les événements programmés incluant leur titre, description, dates et emplacement.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "title": "Cultural Festival",
+      "description": "Annual cultural festival in Jendouba",
+      "startDate": "2023-09-15T18:00:00Z",
+      "endDate": "2023-09-17T22:00:00Z",
+      "location": "Jendouba City Center"
+    },
+    {
+      "id": 2,
+      "title": "Hiking Trip",
+      "description": "Guided hiking trip in Ain Draham mountains",
+      "startDate": "2023-10-05T09:00:00Z",
+      "endDate": "2023-10-05T16:00:00Z",
+      "location": "Ain Draham"
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "title": "Cultural Festival",
+      "description": "Annual cultural festival in Jendouba",
+      "startDate": "2023-09-15T18:00:00Z",
+      "endDate": "2023-09-17T22:00:00Z",
+      "location": "Jendouba City Center"
+    },
+    {
+      "id": 2,
+      "title": "Hiking Trip",
+      "description": "Guided hiking trip in Ain Draham mountains",
+      "startDate": "2023-10-05T09:00:00Z",
+      "endDate": "2023-10-05T16:00:00Z",
+      "location": "Ain Draham"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/events/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/events/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère les détails d'un événement spécifique.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'événement</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "title": "Cultural Festival",
+    "description": "Annual cultural festival in Jendouba with local artists and traditional food",
+    "startDate": "2023-09-15T18:00:00Z",
+    "endDate": "2023-09-17T22:00:00Z",
+    "location": "Jendouba City Center",
+    "organizer": "Jendouba Cultural Association",
+    "ticketPrice": 10,
+    "capacity": 500,
+    "images": [
+      "https://example.com/festival1.jpg",
+      "https://example.com/festival2.jpg"
+    ]
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "title": "Cultural Festival",
+    "description": "Annual cultural festival in Jendouba with local artists and traditional food",
+    "startDate": "2023-09-15T18:00:00Z",
+    "endDate": "2023-09-17T22:00:00Z",
+    "location": "Jendouba City Center",
+    "organizer": "Jendouba Cultural Association",
+    "ticketPrice": 10,
+    "capacity": 500,
+    "images": [
+      "https://example.com/festival1.jpg",
+      "https://example.com/festival2.jpg"
+    ]
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/events</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/events')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Crée un nouvel événement dans la base de données.
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "title": "New Event",
+  "description": "Description of the new event",
+  "startDate": "2023-11-10T19:00:00Z",
+  "endDate": "2023-11-10T23:00:00Z",
+  "location": "Bulla Regia Site"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "title": "New Event",
+  "description": "Description of the new event",
+  "startDate": "2023-11-10T19:00:00Z",
+  "endDate": "2023-11-10T23:00:00Z",
+  "location": "Bulla Regia Site"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "title": "New Event",
+    "description": "Description of the new event",
+    "startDate": "2023-11-10T19:00:00Z",
+    "endDate": "2023-11-10T23:00:00Z",
+    "location": "Bulla Regia Site",
+    "createdAt": "2023-08-24T10:15:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "title": "New Event",
+    "description": "Description of the new event",
+    "startDate": "2023-11-10T19:00:00Z",
+    "endDate": "2023-11-10T23:00:00Z",
+    "location": "Bulla Regia Site",
+    "createdAt": "2023-08-24T10:15:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/events/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/events/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Met à jour les informations d'un événement existant.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'événement</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "title": "Updated Event Title",
+  "description": "Updated event description",
+  "location": "New location"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "title": "Updated Event Title",
+  "description": "Updated event description",
+  "location": "New location"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "title": "Updated Event Title",
+    "description": "Updated event description",
+    "startDate": "2023-09-15T18:00:00Z",
+    "endDate": "2023-09-17T22:00:00Z",
+    "location": "New location",
+    "updatedAt": "2023-08-25T11:20:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "title": "Updated Event Title",
+    "description": "Updated event description",
+    "startDate": "2023-09-15T18:00:00Z",
+    "endDate": "2023-09-17T22:00:00Z",
+    "location": "New location",
+    "updatedAt": "2023-08-25T11:20:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/events/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/events/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Supprime un événement de la base de données.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'événement</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "Event deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "Event deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+            <h2 class="entity-title" id="entity-messages">Messages</h2>
+            <div class="entity-group" data-entity="messages">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/messages</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/messages')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de tous les messages envoyés dans l'application JenCity.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "senderId": 1,
+      "receiverId": 2,
+      "content": "Bonjour, j'ai une question sur Bulla Regia.",
+      "createdAt": "2023-08-15T14:30:00Z",
+      "read": true
+    },
+    {
+      "id": 2,
+      "senderId": 2,
+      "receiverId": 1,
+      "content": "Bien sûr, comment puis-je vous aider?",
+      "createdAt": "2023-08-15T14:35:00Z",
+      "read": false
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "senderId": 1,
+      "receiverId": 2,
+      "content": "Bonjour, j'ai une question sur Bulla Regia.",
+      "createdAt": "2023-08-15T14:30:00Z",
+      "read": true
+    },
+    {
+      "id": 2,
+      "senderId": 2,
+      "receiverId": 1,
+      "content": "Bien sûr, comment puis-je vous aider?",
+      "createdAt": "2023-08-15T14:35:00Z",
+      "read": false
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/messages/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/messages/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère un message spécifique par son identifiant.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du message</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "senderId": 1,
+    "receiverId": 2,
+    "content": "Bonjour, j'ai une question sur Bulla Regia.",
+    "createdAt": "2023-08-15T14:30:00Z",
+    "read": true
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "senderId": 1,
+    "receiverId": 2,
+    "content": "Bonjour, j'ai une question sur Bulla Regia.",
+    "createdAt": "2023-08-15T14:30:00Z",
+    "read": true
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/messages</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/messages')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Envoie un nouveau message à un utilisateur.
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "senderId": 1,
+  "receiverId": 2,
+  "content": "Je voudrais plus d'informations sur l'événement du 15 septembre."
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "senderId": 1,
+  "receiverId": 2,
+  "content": "Je voudrais plus d'informations sur l'événement du 15 septembre."
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "senderId": 1,
+    "receiverId": 2,
+    "content": "Je voudrais plus d'informations sur l'événement du 15 septembre.",
+    "createdAt": "2023-08-26T16:40:00Z",
+    "read": false
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "senderId": 1,
+    "receiverId": 2,
+    "content": "Je voudrais plus d'informations sur l'événement du 15 septembre.",
+    "createdAt": "2023-08-26T16:40:00Z",
+    "read": false
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/messages/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/messages/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Met à jour le statut de lecture d'un message.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du message</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "read": true
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "read": true
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "senderId": 2,
+    "receiverId": 1,
+    "content": "Bien sûr, comment puis-je vous aider?",
+    "createdAt": "2023-08-15T14:35:00Z",
+    "read": true,
+    "updatedAt": "2023-08-26T17:05:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "senderId": 2,
+    "receiverId": 1,
+    "content": "Bien sûr, comment puis-je vous aider?",
+    "createdAt": "2023-08-15T14:35:00Z",
+    "read": true,
+    "updatedAt": "2023-08-26T17:05:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/messages/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/messages/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Supprime un message de la base de données.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique du message</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "Message deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "Message deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+            <h2 class="entity-title" id="entity-reviews">Reviews</h2>
+            <div class="entity-group" data-entity="reviews">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/reviews</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reviews')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de toutes les avis et évaluations sur les lieux touristiques.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "userId": 1,
+      "placeId": 1,
+      "rating": 5,
+      "comment": "Un site historique fascinant, je recommande vivement!",
+      "createdAt": "2023-07-20T10:15:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "placeId": 2,
+      "rating": 4,
+      "comment": "Très beau paysage, mais un peu difficile d'accès.",
+      "createdAt": "2023-08-05T16:30:00Z"
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "userId": 1,
+      "placeId": 1,
+      "rating": 5,
+      "comment": "Un site historique fascinant, je recommande vivement!",
+      "createdAt": "2023-07-20T10:15:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "placeId": 2,
+      "rating": 4,
+      "comment": "Très beau paysage, mais un peu difficile d'accès.",
+      "createdAt": "2023-08-05T16:30:00Z"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/reviews/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reviews/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère un avis spécifique par son identifiant.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'avis</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "placeId": 1,
+    "rating": 5,
+    "comment": "Un site historique fascinant, je recommande vivement!",
+    "createdAt": "2023-07-20T10:15:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "placeId": 1,
+    "rating": 5,
+    "comment": "Un site historique fascinant, je recommande vivement!",
+    "createdAt": "2023-07-20T10:15:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/reviews</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reviews')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Ajoute un nouvel avis sur un lieu touristique.
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "userId": 3,
+  "placeId": 1,
+  "rating": 4,
+  "comment": "Très intéressant, bonne visite guidée."
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "userId": 3,
+  "placeId": 1,
+  "rating": 4,
+  "comment": "Très intéressant, bonne visite guidée."
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "userId": 3,
+    "placeId": 1,
+    "rating": 4,
+    "comment": "Très intéressant, bonne visite guidée.",
+    "createdAt": "2023-08-27T09:45:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "userId": 3,
+    "placeId": 1,
+    "rating": 4,
+    "comment": "Très intéressant, bonne visite guidée.",
+    "createdAt": "2023-08-27T09:45:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/reviews/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reviews/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Modifie un avis existant.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'avis</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "rating": 5,
+  "comment": "J'ai changé d'avis, c'était vraiment excellent!"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "rating": 5,
+  "comment": "J'ai changé d'avis, c'était vraiment excellent!"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "userId": 2,
+    "placeId": 2,
+    "rating": 5,
+    "comment": "J'ai changé d'avis, c'était vraiment excellent!",
+    "createdAt": "2023-08-05T16:30:00Z",
+    "updatedAt": "2023-08-27T14:10:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "userId": 2,
+    "placeId": 2,
+    "rating": 5,
+    "comment": "J'ai changé d'avis, c'était vraiment excellent!",
+    "createdAt": "2023-08-05T16:30:00Z",
+    "updatedAt": "2023-08-27T14:10:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/reviews/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reviews/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Supprime un avis de la base de données.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de l'avis</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "Review deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "Review deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+            <h2 class="entity-title" id="entity-reservations">Reservations</h2>
+            <div class="entity-group" data-entity="reservations">
+      
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/reservations</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reservations')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère la liste de toutes les réservations d'événements ou de visites.
+                        </div>
+        
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "userId": 1,
+      "eventId": 1,
+      "numberOfTickets": 2,
+      "totalPrice": 20,
+      "status": "confirmed",
+      "createdAt": "2023-08-10T11:20:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "placeId": 1,
+      "visitDate": "2023-09-20T10:00:00Z",
+      "numberOfPersons": 3,
+      "totalPrice": 30,
+      "status": "pending",
+      "createdAt": "2023-08-15T09:45:00Z"
+    }
+  ]
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "userId": 1,
+      "eventId": 1,
+      "numberOfTickets": 2,
+      "totalPrice": 20,
+      "status": "confirmed",
+      "createdAt": "2023-08-10T11:20:00Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "placeId": 1,
+      "visitDate": "2023-09-20T10:00:00Z",
+      "numberOfPersons": 3,
+      "totalPrice": 30,
+      "status": "pending",
+      "createdAt": "2023-08-15T09:45:00Z"
+    }
+  ]
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <div class="endpoint-path">
+                            <span>/api/reservations/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reservations/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Récupère les détails d'une réservation spécifique.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de la réservation</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "eventId": 1,
+    "numberOfTickets": 2,
+    "totalPrice": 20,
+    "status": "confirmed",
+    "createdAt": "2023-08-10T11:20:00Z",
+    "paymentMethod": "credit card",
+    "paymentId": "pay_1234567"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "eventId": 1,
+    "numberOfTickets": 2,
+    "totalPrice": 20,
+    "status": "confirmed",
+    "createdAt": "2023-08-10T11:20:00Z",
+    "paymentMethod": "credit card",
+    "paymentId": "pay_1234567"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <div class="endpoint-path">
+                            <span>/api/reservations</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reservations')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Crée une nouvelle réservation pour un événement ou une visite.
+                        </div>
+        
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "userId": 3,
+  "eventId": 2,
+  "numberOfTickets": 1,
+  "paymentMethod": "paypal"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "userId": 3,
+  "eventId": 2,
+  "numberOfTickets": 1,
+  "paymentMethod": "paypal"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 201</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "userId": 3,
+    "eventId": 2,
+    "numberOfTickets": 1,
+    "totalPrice": 10,
+    "status": "pending",
+    "paymentMethod": "paypal",
+    "createdAt": "2023-08-28T15:30:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 201,
+  "data": {
+    "id": 3,
+    "userId": 3,
+    "eventId": 2,
+    "numberOfTickets": 1,
+    "totalPrice": 10,
+    "status": "pending",
+    "paymentMethod": "paypal",
+    "createdAt": "2023-08-28T15:30:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <div class="endpoint-path">
+                            <span>/api/reservations/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reservations/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Met à jour le statut ou les détails d'une réservation.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de la réservation</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="body-section">
+                            <h3 class="section-title">Corps de la Requête</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": "confirmed",
+  "paymentId": "pay_9876543"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": "confirmed",
+  "paymentId": "pay_9876543"
+}</code></pre>
+                            </div>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 200</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "userId": 2,
+    "placeId": 1,
+    "visitDate": "2023-09-20T10:00:00Z",
+    "numberOfPersons": 3,
+    "totalPrice": 30,
+    "status": "confirmed",
+    "paymentId": "pay_9876543",
+    "updatedAt": "2023-08-28T16:15:00Z"
+  }
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 200,
+  "data": {
+    "id": 2,
+    "userId": 2,
+    "placeId": 1,
+    "visitDate": "2023-09-20T10:00:00Z",
+    "numberOfPersons": 3,
+    "totalPrice": 30,
+    "status": "confirmed",
+    "paymentId": "pay_9876543",
+    "updatedAt": "2023-08-28T16:15:00Z"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <div class="endpoint-path">
+                            <span>/api/reservations/:id</span>
+                            <button class="copy-btn" onclick="copyToClipboard('/api/reservations/:id')">Copier</button>
+                        </div>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="endpoint-description">
+                            Annule et supprime une réservation.
+                        </div>
+        
+                        <div class="params-section">
+                            <h3 class="section-title">Paramètres</h3>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Obligatoire</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+          
+                                    <tr>
+                                        <td>id</td>
+                                        <td>number</td>
+                                        <td>Oui</td>
+                                        <td>L'identifiant unique de la réservation</td>
+                                    </tr>
+            
+                                </tbody>
+                            </table>
+                        </div>
+          
+                        <div class="response-section">
+                            <h3 class="section-title">Réponse</h3>
+                            <div class="response-status">Status: 204</div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>JSON</span>
+                                    <button class="copy-btn" onclick="copyToClipboard('{
+  "status": 204,
+  "message": "Reservation cancelled and deleted successfully"
+}')">Copier</button>
+                                </div>
+                                <pre><code>{
+  "status": 204,
+  "message": "Reservation cancelled and deleted successfully"
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+            </div>
+      
+        </div>
+        
+        <footer>
+            <p>JenCity API Documentation - Généré le 15/03/2025</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Copy to clipboard functionality
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show a temporary "Copied!" message
+            const activeButton = document.activeElement;
+            const originalText = activeButton.textContent;
+            activeButton.textContent = 'Copié!';
+            setTimeout(() => {
+                activeButton.textContent = originalText;
+            }, 1500);
+        }
+        
+        // Server configuration update
+        document.getElementById('updateServerBtn').addEventListener('click', function() {
+            const host = document.getElementById('serverHost').value || 'localhost';
+            const port = document.getElementById('serverPort').value || '3000';
+            const baseUrl = `http://${host}:${port}/api`;
+            document.getElementById('baseUrlDisplay').textContent = baseUrl;
+            
+            // Update all endpoint paths with the new base URL
+            const paths = document.querySelectorAll('.endpoint-path span');
+            paths.forEach(pathEl => {
+                const endpointPath = pathEl.textContent.split('/api')[1];
+                pathEl.textContent = `/api${endpointPath}`;
+            });
+        });
+        
+        // Copy base URL
+        document.getElementById('copyBaseUrlBtn').addEventListener('click', function() {
+            copyToClipboard(document.getElementById('baseUrlDisplay').textContent);
+        });
+        
+        // Entity filtering
+        document.getElementById('entityFilter').addEventListener('change', function() {
+            const selectedEntity = this.value;
+            const entityGroups = document.querySelectorAll('.entity-group');
+            const entityTitles = document.querySelectorAll('.entity-title');
+            
+            if (selectedEntity === 'all') {
+                entityGroups.forEach(group => group.classList.remove('hidden'));
+                entityTitles.forEach(title => title.classList.remove('hidden'));
+            } else {
+                entityGroups.forEach(group => {
+                    if (group.dataset.entity === selectedEntity) {
+                        group.classList.remove('hidden');
+                    } else {
+                        group.classList.add('hidden');
+                    }
+                });
+                
+                entityTitles.forEach(title => {
+                    if (title.id === `entity-${selectedEntity}`) {
+                        title.classList.remove('hidden');
+                    } else {
+                        title.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
