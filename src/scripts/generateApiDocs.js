@@ -829,6 +829,9 @@ function generateApiDocs() {
 if (require.main === module) {
   generateApiDocs();
   console.log('API Documentation generation completed!');
+  console.log('\nTo view the documentation:');
+  console.log('1. Start the server with: npm run dev');
+  console.log('2. Open http://localhost:3000/docs/api-documentation.html in your browser');
 }
 
 module.exports = { generateApiDocs };

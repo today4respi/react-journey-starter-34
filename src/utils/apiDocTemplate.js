@@ -1,1360 +1,1232 @@
 
+// API Documentation Template
 const generateDocTemplate = (routes, entities) => {
-  // Get unique entities from routes
-  const uniqueEntities = [...new Set(routes.map(route => {
-    const parts = route.path.split('/');
-    return parts[1]; // First part after initial slash
-  }))];
-
+  // Base styles and shared utilities  
+  const baseUrl = '/api';
+  
   return `
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JenCity API Documentation</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/vis-network.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-data/7.1.4/vis-data.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --light-gray: #f5f5f5;
-            --border-color: #ddd;
-            --text-color: #333;
-            --method-get: #61affe;
-            --method-post: #49cc90;
-            --method-put: #fca130;
-            --method-delete: #f93e3e;
-            --success-color: #4caf50;
-            --success-bg: #e8f5e9;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            color: var(--text-color);
-            line-height: 1.6;
-            background-color: #f9f9f9;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .api-description {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-        
-        /* Diagram styles */
-        .diagram-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .diagram-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .diagram-title {
-            font-size: 1.5rem;
-            color: var(--secondary-color);
-            margin: 0;
-        }
-        
-        .diagram-tabs {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .diagram-tab {
-            padding: 8px 16px;
-            background-color: #f5f7f9;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .diagram-tab.active {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        #diagram-canvas {
-            height: 600px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
-        
-        .table-entities, .relationship-list {
-            display: none;
-        }
-        
-        .entity-card {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        
-        .entity-header {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 10px 15px;
-            font-size: 1.2rem;
-        }
-        
-        .entity-body {
-            padding: 15px;
-        }
-        
-        .entity-field {
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .entity-field:last-child {
-            border-bottom: none;
-        }
-        
-        .field-name {
-            font-weight: 600;
-        }
-        
-        .field-type {
-            color: #666;
-            background-color: #f5f7f9;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        
-        .relationship-item {
-            background-color: white;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .relationship-type {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .diagram-loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2rem;
-            color: #666;
-        }
-        
-        .diagram-controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .diagram-controls button {
-            padding: 8px 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .diagram-controls button:hover {
-            background-color: #2980b9;
-        }
-        
-        .server-config {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .server-config h2 {
-            margin-bottom: 15px;
-            color: var(--secondary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 8px;
-        }
-        
-        .server-form {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        
-        .server-form input {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            flex: 1;
-            min-width: 120px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        
-        .server-form input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .server-form button {
-            padding: 10px 18px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .server-form button:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        .server-form button:active {
-            transform: translateY(0);
-        }
-        
-        .base-url {
-            font-size: 1.1rem;
-            padding: 15px;
-            background-color: var(--light-gray);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .copy-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .copy-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        .filter-container {
-            margin-bottom: 25px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid var(--border-color);
-        }
-        
-        .filter-title {
-            margin-bottom: 10px;
-            color: var(--secondary-color);
-            font-weight: 600;
-        }
-        
-        .filter-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .filter-container select {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: white;
-            flex-grow: 1;
-            max-width: 300px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
-        }
-        
-        .filter-container select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .endpoint-list {
-            margin-bottom: 40px;
-        }
-        
-        .endpoint {
-            margin-bottom: 25px;
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .endpoint:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .endpoint-header {
-            display: flex;
-            padding: 15px;
-            background-color: #f5f7f9;
-            border-bottom: 1px solid var(--border-color);
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        
-        .method {
-            padding: 6px 12px;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            text-transform: uppercase;
-            min-width: 80px;
-            text-align: center;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-        }
-        
-        .method.get { background-color: var(--method-get); }
-        .method.post { background-color: var(--method-post); }
-        .method.put { background-color: var(--method-put); }
-        .method.delete { background-color: var(--method-delete); }
-        
-        .endpoint-path {
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-            flex-grow: 1;
-            position: relative;
-            padding: 8px 15px;
-            background-color: white;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .endpoint-body {
-            padding: 20px;
-        }
-        
-        .endpoint-description {
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            color: #444;
-            line-height: 1.7;
-        }
-        
-        .params-section, .body-section, .response-section {
-            margin-bottom: 25px;
-        }
-        
-        .section-title {
-            margin-bottom: 15px;
-            color: var(--secondary-color);
-            font-size: 1.2rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .section-title i {
-            color: var(--primary-color);
-        }
-        
-        .param-table, .response-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .param-table th, .response-table th {
-            background-color: #f5f7f9;
-            text-align: left;
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            color: var(--secondary-color);
-            font-weight: 600;
-        }
-        
-        .param-table td, .response-table td {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .param-table tr:nth-child(even), .response-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .code-block {
-            background-color: #f5f7f9;
-            padding: 15px;
-            border-radius: 6px;
-            overflow: auto;
-            font-family: 'Courier New', monospace;
-            position: relative;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .code-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            font-weight: 600;
-            color: var(--secondary-color);
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        
-        pre {
-            margin: 0;
-            white-space: pre-wrap;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        code {
-            font-family: 'Courier New', monospace;
-        }
-        
-        .response-status {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 6px;
-            margin-right: 10px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
-        .status-success {
-            background-color: var(--success-bg);
-            color: var(--success-color);
-        }
-        
-        .status-error {
-            background-color: #ffebee;
-            color: #d32f2f;
-        }
-        
-        .status-warning {
-            background-color: #fff8e1;
-            color: #ff8f00;
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            color: #777;
-            padding: 20px;
-            border-top: 1px solid var(--border-color);
-            font-size: 0.9rem;
-        }
-        
-        .entity-title {
-            margin: 40px 0 20px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary-color);
-            color: var(--secondary-color);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .entity-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 12px 25px;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: transform 0.3s, opacity 0.3s;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        
-        .toast i {
-            font-size: 1.2rem;
-        }
-        
-        .endpoint-counter {
-            font-size: 0.9rem;
-            color: #666;
-            margin-left: 10px;
-        }
-        
-        .try-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            margin-left: 10px;
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .try-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        @media (max-width: 768px) {
-            .endpoint-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .endpoint-path {
-                width: 100%;
-            }
-            
-            .server-form {
-                flex-direction: column;
-            }
-            
-            .method {
-                width: 100%;
-                text-align: center;
-            }
-        }
-        
-        /* Tabs for request/response */
-        .tabs {
-            display: flex;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .tab {
-            padding: 8px 15px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            border-bottom: none;
-            border-radius: 6px 6px 0 0;
-            margin-right: 5px;
-            transition: all 0.3s;
-        }
-        
-        .tab.active {
-            background-color: #f5f7f9;
-            border-color: var(--border-color);
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* Icons for endpoints */
-        .entity-users-icon::before { content: "\\f007"; }
-        .entity-places-icon::before { content: "\\f3c5"; }
-        .entity-events-icon::before { content: "\\f073"; }
-        .entity-messages-icon::before { content: "\\f4ad"; }
-        .entity-reviews-icon::before { content: "\\f005"; }
-        .entity-reservations-icon::before { content: "\\f145"; }
-        
-        /* Code Tabs */
-        .code-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .code-tab {
-            padding: 5px 10px;
-            background-color: #eee;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        
-        .code-tab.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .code-content {
-            display: none;
-        }
-        
-        .code-content.active {
-            display: block;
-        }
+      :root {
+        --primary: #3498db;
+        --primary-dark: #2980b9;
+        --secondary: #2ecc71;
+        --dark: #34495e;
+        --danger: #e74c3c;
+        --warning: #f39c12;
+        --light: #f5f5f5;
+        --gray: #95a5a6;
+        --white: #ffffff;
+        --border: #e0e0e0;
+        --success: #27ae60;
+        --code-bg: #f8f9fa;
+      }
+      
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f8f9fa;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      
+      header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      
+      .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .api-stats {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+      
+      .stat-item {
+        background-color: rgba(255,255,255,0.2);
+        padding: 10px 20px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(5px);
+      }
+      
+      .stat-item i {
+        margin-right: 10px;
+      }
+      
+      .tabs {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0;
+        gap: 10px;
+      }
+      
+      .tab {
+        padding: 10px 20px;
+        background-color: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .tab:hover {
+        background-color: var(--light);
+      }
+      
+      .tab.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+      
+      .tab-content {
+        display: none;
+      }
+      
+      .tab-content.active {
+        display: block;
+      }
+      
+      .entity-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 40px;
+      }
+      
+      .entities-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+      
+      .entity-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: calc(33.333% - 20px);
+        min-width: 300px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      
+      .entity-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      }
+      
+      .entity-header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 15px;
+      }
+      
+      .entity-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+      
+      .entity-body {
+        padding: 15px;
+      }
+      
+      .entity-field {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .entity-field:last-child {
+        border-bottom: none;
+      }
+      
+      .field-name {
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+      }
+      
+      .field-type {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+      
+      .primary-key {
+        background-color: var(--primary);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        margin-left: 8px;
+      }
+      
+      .optional-field {
+        background-color: var(--warning);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        margin-left: 8px;
+      }
+      
+      .private-field {
+        background-color: var(--danger);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        margin-left: 8px;
+      }
+      
+      .relations-section {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed var(--border);
+      }
+      
+      .relation {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+        padding: 8px;
+        background-color: var(--light);
+        border-radius: 4px;
+      }
+      
+      .relation-type {
+        font-size: 0.8rem;
+        background-color: var(--secondary);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-right: 10px;
+      }
+      
+      .relationship-diagram {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: auto;
+      }
+      
+      #diagram-container {
+        min-height: 500px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .api-section {
+        margin: 40px 0;
+      }
+      
+      .section-title {
+        font-size: 2rem;
+        color: var(--dark);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--primary);
+      }
+      
+      .endpoint-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+      
+      .endpoint-card {
+        background-color: var(--white);
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        overflow: hidden;
+        width: calc(50% - 15px);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      
+      @media (max-width: 768px) {
+        .endpoint-card {
+          width: 100%;
+        }
+      }
+      
+      .endpoint-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      }
+      
+      .endpoint-header {
+        display: flex;
+        padding: 15px;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .http-method {
+        font-weight: bold;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        min-width: 60px;
+        text-align: center;
+        margin-right: 15px;
+      }
+      
+      .get {
+        background-color: #61affe;
+        color: white;
+      }
+      
+      .post {
+        background-color: #49cc90;
+        color: white;
+      }
+      
+      .put {
+        background-color: #fca130;
+        color: white;
+      }
+      
+      .delete {
+        background-color: #f93e3e;
+        color: white;
+      }
+      
+      .endpoint-path {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 500;
+        flex-grow: 1;
+      }
+      
+      .endpoint-body {
+        padding: 15px;
+      }
+      
+      .endpoint-description {
+        margin-bottom: 15px;
+        color: #555;
+      }
+      
+      .params-section, .request-body-section, .response-section {
+        margin-top: 15px;
+      }
+      
+      .section-heading {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 10px;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+      }
+      
+      .section-heading i {
+        margin-right: 8px;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+      }
+      
+      th {
+        background-color: var(--light);
+        text-align: left;
+        padding: 10px;
+        border: 1px solid var(--border);
+      }
+      
+      td {
+        padding: 10px;
+        border: 1px solid var(--border);
+      }
+      
+      .param-name, .body-field {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 600;
+      }
+      
+      .param-required {
+        color: var(--danger);
+        font-weight: 500;
+      }
+      
+      pre {
+        background-color: var(--code-bg);
+        padding: 15px;
+        border-radius: 4px;
+        overflow: auto;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.9rem;
+        position: relative;
+      }
+      
+      .copy-button {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: var(--dark);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+      }
+      
+      .copy-button:hover {
+        opacity: 1;
+      }
+      
+      .try-it-button {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 15px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        transition: background-color 0.3s ease;
+        margin-top: 10px;
+      }
+      
+      .try-it-button i {
+        margin-right: 8px;
+      }
+      
+      .try-it-button:hover {
+        background-color: var(--primary-dark);
+      }
+      
+      .search-container {
+        margin: 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      
+      .search-box {
+        display: flex;
+        flex-grow: 1;
+        max-width: 500px;
+      }
+      
+      .search-input {
+        flex-grow: 1;
+        padding: 10px 15px;
+        border: 1px solid var(--border);
+        border-radius: 4px 0 0 4px;
+        font-size: 1rem;
+      }
+      
+      .search-button {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        padding: 0 15px;
+        cursor: pointer;
+      }
+      
+      .filter-controls {
+        display: flex;
+        gap: 10px;
+      }
+      
+      .filter-button {
+        padding: 8px 15px;
+        background-color: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .filter-button.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+      
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--primary);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        opacity: 0;
+        visibility: hidden;
+      }
+      
+      .back-to-top.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      .back-to-top:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-3px);
+      }
+      
+      footer {
+        text-align: center;
+        margin-top: 50px;
+        padding: 20px;
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+      
+      /* Canvas for drawing relationships */
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+      
+      /* Environmental selector */
+      .env-selector {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      
+      .env-button {
+        padding: 8px 15px;
+        background-color: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .env-button.active {
+        background-color: var(--secondary);
+        color: white;
+        border-color: var(--secondary);
+      }
+      
+      /* Animation for the diagram */
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      
+      /* For the entity relationship diagram */
+      .entity-relation-diagram {
+        width: 100%;
+        padding: 20px;
+        overflow: auto;
+        border-radius: 8px;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .relation-line {
+        stroke: var(--dark);
+        stroke-width: 2;
+      }
+      
+      .relation-arrow {
+        fill: var(--dark);
+      }
+      
+      .entity-box {
+        stroke: var(--primary);
+        stroke-width: 2;
+        fill: white;
+      }
+      
+      .entity-title {
+        fill: var(--primary-dark);
+        font-weight: bold;
+        font-size: 14px;
+      }
+      
+      .entity-field-text {
+        fill: var(--dark);
+        font-size: 12px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <h1>JenCity API Documentation</h1>
+        <p class="subtitle">Explore and integrate with the JenCity Tourist Guide API</p>
+        
+        <div class="api-stats">
+          <div class="stat-item">
+            <i class="fas fa-cogs"></i>
+            <span>${routes.length} Endpoints</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-database"></i>
+            <span>${entities.length} Entities</span>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-code"></i>
+            <span>REST API</span>
+          </div>
+        </div>
+      </div>
+    </header>
+    
     <div class="container">
-        <header>
-            <h1><i class="fas fa-code"></i> JenCity API Documentation</h1>
-            <p class="api-description">Documentation complète des API pour l'application JenCity</p>
-        </header>
-        
-        <!-- Class Diagram -->
-        <div class="diagram-container">
-            <div class="diagram-header">
-                <h2 class="diagram-title"><i class="fas fa-project-diagram"></i> Diagramme de Classe</h2>
-                <div class="diagram-tabs">
-                    <div class="diagram-tab active" data-tab="diagram">Diagramme</div>
-                    <div class="diagram-tab" data-tab="entities">Tables</div>
-                    <div class="diagram-tab" data-tab="relationships">Relations</div>
-                </div>
-            </div>
-            
-            <!-- Diagram Tab -->
-            <div class="diagram-content active" id="diagram-content">
-                <div class="diagram-controls">
-                    <button id="zoom-in"><i class="fas fa-search-plus"></i> Zoom In</button>
-                    <button id="zoom-out"><i class="fas fa-search-minus"></i> Zoom Out</button>
-                    <button id="reset-view"><i class="fas fa-sync"></i> Reset View</button>
-                </div>
-                <div id="diagram-canvas"></div>
-            </div>
-            
-            <!-- Tables Tab -->
-            <div class="diagram-content table-entities" id="entities-content">
-                <div class="entity-list">
-                    ${entities.map(entity => `
-                    <div class="entity-card">
-                        <div class="entity-header">
-                            ${entity.name}
-                        </div>
-                        <div class="entity-body">
-                            ${entity.fields.map(field => `
-                            <div class="entity-field">
-                                <span class="field-name">${field.name}${field.isPrimary ? ' <i class="fas fa-key" title="Primary Key"></i>' : ''}</span>
-                                <span class="field-type">${field.type}</span>
-                            </div>
-                            `).join('')}
-                        </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="diagram">Diagramme UML des Classes</div>
+        <div class="tab" data-tab="tables">Tables</div>
+        <div class="tab" data-tab="relations">Relations</div>
+      </div>
+      
+      <div class="tab-content active" id="diagram">
+        <div class="entity-diagram">
+          <h2>Diagramme des Entités</h2>
+          <div id="diagram-container" class="relationship-diagram">
+            <canvas id="relationshipCanvas" width="1000" height="800"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="tables">
+        <div class="entities-container">
+          ${entities.map(entity => `
+            <div class="entity-card">
+              <div class="entity-header">
+                <h3>${entity.name}</h3>
+              </div>
+              <div class="entity-body">
+                ${entity.fields.map(field => `
+                  <div class="entity-field">
+                    <div class="field-name">
+                      ${field.name}
+                      ${field.isPrimary ? '<span class="primary-key">PK</span>' : ''}
+                      ${field.isOptional ? '<span class="optional-field">Optional</span>' : ''}
+                      ${field.isPrivate ? '<span class="private-field">Private</span>' : ''}
                     </div>
-                    `).join('')}
-                </div>
-            </div>
-            
-            <!-- Relationships Tab -->
-            <div class="diagram-content relationship-list" id="relationships-content">
-                ${entities.map(entity => 
-                    entity.relations ? 
-                    entity.relations.map(relation => `
-                    <div class="relationship-item">
-                        <div class="relationship-entities">
-                            <strong>${entity.name}</strong> <i class="fas fa-arrow-right"></i> <strong>${relation.entity}</strong>
-                        </div>
-                        <div class="relationship-details">
-                            <span class="relationship-type">${relation.type}</span>
-                            <span>via ${relation.via}</span>
-                        </div>
+                    <div class="field-type">${field.type}</div>
+                  </div>
+                `).join('')}
+                
+                <div class="relations-section">
+                  <h4>Relations:</h4>
+                  ${entity.relations && entity.relations.length > 0 ? entity.relations.map(relation => `
+                    <div class="relation">
+                      <span class="relation-type">${relation.type}</span>
+                      <span>${relation.entity} via ${relation.via}</span>
                     </div>
-                    `).join('') : '').join('')}
+                  `).join('') : '<div>Aucune relation</div>'}
+                </div>
+              </div>
             </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="tab-content" id="relations">
+        <div class="entity-relation-diagram">
+          <h2 style="text-align: center; margin-bottom: 20px;">Relations Entre Entités</h2>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Entité Source</th>
+                <th>Relation</th>
+                <th>Entité Cible</th>
+                <th>Via</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${entities.flatMap(entity => 
+                (entity.relations || []).map(relation => `
+                  <tr>
+                    <td>${entity.name}</td>
+                    <td>${relation.type}</td>
+                    <td>${relation.entity}</td>
+                    <td>${relation.via}</td>
+                  </tr>
+                `)
+              ).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" id="searchInput" class="search-input" placeholder="Rechercher un endpoint...">
+          <button class="search-button" id="searchButton">
+            <i class="fas fa-search"></i>
+          </button>
         </div>
         
-        <!-- Server Configuration -->
-        <div class="server-config">
-            <h2><i class="fas fa-server"></i> Configuration du Serveur</h2>
-            <div class="server-form">
-                <input type="text" id="serverHost" placeholder="Hôte (ex: localhost)" value="localhost">
-                <input type="number" id="serverPort" placeholder="Port (ex: 3000)" value="3000">
-                <button id="updateServerBtn"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
-            </div>
-            <div class="base-url">
-                <span id="baseUrlDisplay">http://localhost:3000/api</span>
-                <button class="copy-btn" id="copyBaseUrlBtn"><i class="fas fa-copy"></i> Copier</button>
-            </div>
+        <div class="filter-controls">
+          <button class="filter-button active" data-method="all">Tous</button>
+          <button class="filter-button" data-method="get">GET</button>
+          <button class="filter-button" data-method="post">POST</button>
+          <button class="filter-button" data-method="put">PUT</button>
+          <button class="filter-button" data-method="delete">DELETE</button>
         </div>
+      </div>
+      
+      <div class="env-selector">
+        <button class="env-button active" data-env="development">Développement</button>
+        <button class="env-button" data-env="production">Production</button>
+      </div>
+      
+      <section class="api-section">
+        <h2 class="section-title">API Endpoints</h2>
         
-        <!-- API Filtering -->
-        <div class="filter-container">
-            <div class="filter-title"><i class="fas fa-filter"></i> Filtrer les API</div>
-            <div class="filter-options">
-                <select id="entityFilter">
-                    <option value="all">Toutes les entités</option>
-                    ${uniqueEntities.map(entity => `<option value="${entity}">${entity.charAt(0).toUpperCase() + entity.slice(1)}</option>`).join('')}
-                </select>
-                <select id="methodFilter">
-                    <option value="all">Toutes les méthodes</option>
-                    <option value="get">GET</option>
-                    <option value="post">POST</option>
-                    <option value="put">PUT</option>
-                    <option value="delete">DELETE</option>
-                </select>
-            </div>
-        </div>
-        
-        <!-- API Endpoints -->
         <div class="endpoint-list">
-            ${uniqueEntities.map(entity => {
-                const entityRoutes = routes.filter(route => route.path.startsWith('/'+entity));
-                return `
-                <h2 class="entity-title" id="entity-${entity}">
-                    <span class="entity-icon"><i class="fas ${entity === 'users' ? 'fa-users' : 
-                                                 entity === 'places' ? 'fa-map-marker-alt' : 
-                                                 entity === 'events' ? 'fa-calendar-alt' : 
-                                                 entity === 'messages' ? 'fa-comments' : 
-                                                 entity === 'reviews' ? 'fa-star' : 
-                                                 entity === 'reservations' ? 'fa-ticket-alt' : 'fa-code'}"></i></span>
-                    ${entity.charAt(0).toUpperCase() + entity.slice(1)}
-                    <span class="endpoint-counter">(${entityRoutes.length} endpoints)</span>
-                </h2>
-                <div class="entity-group" data-entity="${entity}">
-                    ${entityRoutes.map(route => {
-                        const methodClass = route.method.toLowerCase();
-                        const path = route.path;
-                        
-                        let curlCommand = "curl -X " + route.method.toUpperCase() + " \"http://localhost:3000/api" + path + "\"";
-                        
-                        if (route.requestBody) {
-                            curlCommand += " -H \"Content-Type: application/json\" -d '" + JSON.stringify(route.requestBody) + "'";
+          ${routes.map(route => {
+            const path = route.path;
+            const method = route.method.toLowerCase();
+            
+            // Create curl command
+            let curlCommand = \`curl -X \${route.method.toUpperCase()} "http://localhost:3000\${baseUrl}\${path}"\`;
+            if (method === 'post' || method === 'put') {
+              curlCommand += ` -H "Content-Type: application/json" -d '${JSON.stringify(route.requestBody || {}, null, 2)}'`;
+            }
+            
+            // Create Postman URL (to be used with "try it" button)
+            let postmanUrl = \`https://api.postman.com/collections/import?input=url&collection=\${encodeURIComponent(JSON.stringify({
+              info: {
+                name: \`\${route.method.toUpperCase()} \${path}\`,
+                schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+              },
+              item: [
+                {
+                  name: \`\${route.method.toUpperCase()} \${path}\`,
+                  request: {
+                    method: route.method.toUpperCase(),
+                    url: {
+                      raw: \`http://localhost:3000\${baseUrl}\${path}\`,
+                      protocol: "http",
+                      host: ["localhost"],
+                      port: "3000",
+                      path: [\`api\`, ...path.split('/').filter(p => p !== '')]
+                    },
+                    header: method === 'post' || method === 'put' ? [
+                      {
+                        key: "Content-Type",
+                        value: "application/json"
+                      }
+                    ] : [],
+                    body: method === 'post' || method === 'put' ? {
+                      mode: "raw",
+                      raw: JSON.stringify(route.requestBody || {}, null, 2),
+                      options: {
+                        raw: {
+                          language: "json"
                         }
-                        
-                        return `
-                        <div class="endpoint" data-method="${methodClass}">
-                            <div class="endpoint-header">
-                                <span class="method ${methodClass}">${route.method.toUpperCase()}</span>
-                                <div class="endpoint-path">
-                                    <span>/api${path}</span>
-                                    <button class="copy-btn" onclick="copyToClipboard('/api${path}')">
-                                        <i class="fas fa-copy"></i> Copier
-                                    </button>
-                                </div>
-                                <button class="try-btn" onclick="prepareForPostman('${route.method.toUpperCase()}', '/api${path}')">
-                                    <i class="fas fa-play"></i> Tester dans Postman
-                                </button>
-                            </div>
-                            <div class="endpoint-body">
-                                <div class="endpoint-description">
-                                    ${route.description}
-                                </div>
-                                
-                                ${route.params && route.params.length > 0 ? `
-                                <div class="params-section">
-                                    <h3 class="section-title"><i class="fas fa-list-ul"></i> Paramètres</h3>
-                                    <table class="param-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Nom</th>
-                                                <th>Type</th>
-                                                <th>Obligatoire</th>
-                                                <th>Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${route.params.map(param => `
-                                            <tr>
-                                                <td>${param.name}</td>
-                                                <td>${param.type}</td>
-                                                <td>${param.required ? '<i class="fas fa-check" style="color: var(--success-color);"></i>' : '<i class="fas fa-times" style="color: var(--accent-color);"></i>'}</td>
-                                                <td>${param.description}</td>
-                                            </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                ` : ''}
-                                
-                                <div class="code-tabs">
-                                    <div class="code-tab active" onclick="switchCodeTab(this, 'curl-${methodClass}-${path.replace(/\//g, '-')}')">cURL</div>
-                                    <div class="code-tab" onclick="switchCodeTab(this, 'fetch-${methodClass}-${path.replace(/\//g, '-')}')">Fetch</div>
-                                    <div class="code-tab" onclick="switchCodeTab(this, 'axios-${methodClass}-${path.replace(/\//g, '-')}')">Axios</div>
-                                </div>
-                                
-                                <div id="curl-${methodClass}-${path.replace(/\//g, '-')}" class="code-content active">
-                                    <div class="code-block">
-                                        <div class="code-header">
-                                            <span>cURL</span>
-                                            <button class="copy-btn" onclick="copyToClipboard(\`${curlCommand}\`)">
-                                                <i class="fas fa-copy"></i> Copier
-                                            </button>
-                                        </div>
-                                        <pre><code>${curlCommand}</code></pre>
-                                    </div>
-                                </div>
-                                
-                                <div id="fetch-${methodClass}-${path.replace(/\//g, '-')}" class="code-content">
-                                    <div class="code-block">
-                                        <div class="code-header">
-                                            <span>JavaScript (Fetch API)</span>
-                                            <button class="copy-btn" onclick="copyToClipboard(document.querySelector('#fetch-${methodClass}-${path.replace(/\//g, '-')} pre code').textContent)">
-                                                <i class="fas fa-copy"></i> Copier
-                                            </button>
-                                        </div>
-                                        <pre><code>${getFetchCode(route)}</code></pre>
-                                    </div>
-                                </div>
-                                
-                                <div id="axios-${methodClass}-${path.replace(/\//g, '-')}" class="code-content">
-                                    <div class="code-block">
-                                        <div class="code-header">
-                                            <span>JavaScript (Axios)</span>
-                                            <button class="copy-btn" onclick="copyToClipboard(document.querySelector('#axios-${methodClass}-${path.replace(/\//g, '-')} pre code').textContent)">
-                                                <i class="fas fa-copy"></i> Copier
-                                            </button>
-                                        </div>
-                                        <pre><code>${getAxiosCode(route)}</code></pre>
-                                    </div>
-                                </div>
-                                
-                                <!-- Tabs for request/response -->
-                                <div class="tabs">
-                                    <div class="tab ${route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'request-${methodClass}-${path.replace(/\//g, '-')}')">
-                                        <i class="fas fa-paper-plane"></i> Requête
-                                    </div>
-                                    <div class="tab ${!route.requestBody ? 'active' : ''}" onclick="switchTab(this, 'response-${methodClass}-${path.replace(/\//g, '-')}')">
-                                        <i class="fas fa-reply"></i> Réponse
-                                    </div>
-                                </div>
-                                
-                                <!-- Request Body Tab -->
-                                <div id="request-${methodClass}-${path.replace(/\//g, '-')}" class="tab-content ${route.requestBody ? 'active' : ''}">
-                                    ${route.requestBody ? `
-                                    <div class="body-section">
-                                        <h3 class="section-title"><i class="fas fa-file-code"></i> Corps de la Requête</h3>
-                                        <div class="code-block">
-                                            <div class="code-header">
-                                                <span>JSON</span>
-                                                <button class="copy-btn" onclick="copyToClipboard(JSON.stringify(${JSON.stringify(route.requestBody)}, null, 2))">
-                                                    <i class="fas fa-copy"></i> Copier
-                                                </button>
-                                            </div>
-                                            <pre><code>${JSON.stringify(route.requestBody, null, 2)}</code></pre>
-                                        </div>
-                                    </div>
-                                    ` : `
-                                    <div class="body-section">
-                                        <p>Aucun corps de requête nécessaire pour cette méthode.</p>
-                                    </div>
-                                    `}
-                                </div>
-                                
-                                <!-- Response Tab -->
-                                <div id="response-${methodClass}-${path.replace(/\//g, '-')}" class="tab-content ${!route.requestBody ? 'active' : ''}">
-                                    <div class="response-section">
-                                        <h3 class="section-title"><i class="fas fa-reply-all"></i> Réponse</h3>
-                                        
-                                        ${(() => {
-                                            let statusClass = 'status-success';
-                                            if (route.response.status >= 400) {
-                                                statusClass = 'status-error';
-                                            } else if (route.response.status >= 300) {
-                                                statusClass = 'status-warning';
-                                            }
-                                            
-                                            return `
-                                            <div class="response-status ${statusClass}">
-                                                <i class="fas fa-${route.response.status < 300 ? 'check-circle' : (route.response.status < 400 ? 'exclamation-triangle' : 'times-circle')}"></i>
-                                                Status: ${route.response.status}
-                                            </div>
-                                            `;
-                                        })()}
-                                        
-                                        <div class="code-block">
-                                            <div class="code-header">
-                                                <span>JSON</span>
-                                                <button class="copy-btn" onclick="copyToClipboard(JSON.stringify(${JSON.stringify(route.response)}, null, 2))">
-                                                    <i class="fas fa-copy"></i> Copier
-                                                </button>
-                                            </div>
-                                            <pre><code>${JSON.stringify(route.response, null, 2)}</code></pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                    }).join('')}
+                      }
+                    } : undefined
+                  }
+                }
+              ]
+            }))}\`;
+            
+            return `
+            <div class="endpoint-card" data-method="${method}">
+              <div class="endpoint-header">
+                <div class="http-method ${method}">${method}</div>
+                <div class="endpoint-path">${path}</div>
+              </div>
+              <div class="endpoint-body">
+                <div class="endpoint-description">${route.description}</div>
+                
+                ${route.params && route.params.length > 0 ? `
+                <div class="params-section">
+                  <div class="section-heading">
+                    <i class="fas fa-link"></i> Path Parameters
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Requis</th>
+                        <th>Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${route.params.map(param => `
+                        <tr>
+                          <td class="param-name">${param.name}</td>
+                          <td>${param.type}</td>
+                          <td>${param.required ? '<span class="param-required">Oui</span>' : 'Non'}</td>
+                          <td>${param.description}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
                 </div>
-                `;
-            }).join('')}
+                ` : ''}
+                
+                ${route.requestBody ? `
+                <div class="request-body-section">
+                  <div class="section-heading">
+                    <i class="fas fa-paper-plane"></i> Request Body
+                  </div>
+                  <pre><code>${JSON.stringify(route.requestBody, null, 2)}</code><button class="copy-button" data-clipboard-text='${JSON.stringify(route.requestBody).replace(/'/g, "\\'").replace(/"/g, '\\"')}'>Copier</button></pre>
+                </div>
+                ` : ''}
+                
+                <div class="response-section">
+                  <div class="section-heading">
+                    <i class="fas fa-reply"></i> Response (${route.response.status})
+                  </div>
+                  <pre><code>${JSON.stringify(route.response, null, 2)}</code><button class="copy-button" data-clipboard-text='${JSON.stringify(route.response).replace(/'/g, "\\'").replace(/"/g, '\\"')}'>Copier</button></pre>
+                </div>
+                
+                <div class="code-example">
+                  <div class="section-heading">
+                    <i class="fas fa-terminal"></i> Example Request (cURL)
+                  </div>
+                  <pre><code>${curlCommand}</code><button class="copy-button" data-clipboard-text="${curlCommand.replace(/"/g, '\\"')}">Copier</button></pre>
+                  
+                  <a href="${postmanUrl}" target="_blank" class="try-it-button">
+                    <i class="fas fa-paper-plane"></i> Tester dans Postman
+                  </a>
+                </div>
+              </div>
+            </div>
+          `}).join('')}
         </div>
-        
-        <footer>
-            <p>JenCity API Documentation - Généré le ${new Date().toLocaleDateString('fr-FR')}</p>
-            <p>Version 1.0</p>
-        </footer>
+      </section>
     </div>
     
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toast-message"></span>
+    <div class="back-to-top" id="backToTop">
+      <i class="fas fa-arrow-up"></i>
     </div>
+    
+    <footer>
+      <p>JenCity API Documentation | Version 1.0 | &copy; 2023 JenCity</p>
+    </footer>
     
     <script>
-        // Network diagram visualization
-        document.addEventListener('DOMContentLoaded', function() {
-            // Create data for the diagram
-            const nodes = new vis.DataSet(${JSON.stringify(entities.map((entity, index) => ({
-                id: entity.name,
-                label: entity.name,
-                shape: 'box',
-                color: {
-                    background: '#3498db',
-                    border: '#2980b9',
-                    highlight: {
-                        background: '#2980b9',
-                        border: '#1c6ea4'
-                    }
-                },
-                font: { color: 'white' }
-            })))});
-            
-            // Create edges from relationships
-            const edges = new vis.DataSet(
-                ${JSON.stringify(entities.flatMap(entity => 
-                    entity.relations ? 
-                    entity.relations.map(relation => ({
-                        from: entity.name,
-                        to: relation.entity,
-                        label: relation.type,
-                        arrows: relation.type.includes('hasMany') ? 'to' : (relation.type.includes('belongsTo') ? 'from' : 'to, from'),
-                        color: { color: '#3498db' },
-                        font: { align: 'middle' }
-                    })) : []
-                ))}
-            );
-            
-            // Create a network
-            const container = document.getElementById('diagram-canvas');
-            const data = { nodes, edges };
-            const options = {
-                nodes: {
-                    shape: 'box',
-                    margin: 10,
-                    widthConstraint: {
-                        maximum: 150
-                    }
-                },
-                edges: {
-                    smooth: {
-                        type: 'cubicBezier',
-                        forceDirection: 'horizontal',
-                        roundness: 0.5
-                    }
-                },
-                layout: {
-                    hierarchical: {
-                        direction: 'LR',
-                        sortMethod: 'directed',
-                        nodeSpacing: 150,
-                        levelSeparation: 150
-                    }
-                },
-                physics: {
-                    hierarchicalRepulsion: {
-                        nodeDistance: 200
-                    }
-                }
-            };
-            const network = new vis.Network(container, data, options);
-            
-            // Zoom controls
-            document.getElementById('zoom-in').addEventListener('click', function() {
-                const scale = network.getScale() * 1.2;
-                network.moveTo({ scale: scale });
-            });
-            
-            document.getElementById('zoom-out').addEventListener('click', function() {
-                const scale = network.getScale() * 0.8;
-                network.moveTo({ scale: scale });
-            });
-            
-            document.getElementById('reset-view').addEventListener('click', function() {
-                network.fit();
-            });
-            
-            // Tab switching
-            const diagramTabs = document.querySelectorAll('.diagram-tab');
-            diagramTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    // Remove active class from all tabs
-                    diagramTabs.forEach(t => t.classList.remove('active'));
-                    
-                    // Add active class to clicked tab
-                    this.classList.add('active');
-                    
-                    // Hide all content
-                    document.querySelectorAll('.diagram-content').forEach(content => {
-                        content.classList.remove('active');
-                        
-                        if (this.dataset.tab === 'diagram') {
-                            document.getElementById('diagram-content').classList.add('active');
-                        } else if (this.dataset.tab === 'entities') {
-                            document.getElementById('entities-content').style.display = 'block';
-                            document.getElementById('entities-content').classList.add('active');
-                        } else if (this.dataset.tab === 'relationships') {
-                            document.getElementById('relationships-content').style.display = 'block';
-                            document.getElementById('relationships-content').classList.add('active');
-                        }
-                    });
-                });
-            });
+      // Tabs functionality
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabId = tab.getAttribute('data-tab');
+          
+          // Remove active class from all tabs and contents
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          
+          // Add active class to current tab and content
+          tab.classList.add('active');
+          document.getElementById(tabId).classList.add('active');
+          
+          // If diagram tab is active, redraw the canvas
+          if (tabId === 'diagram') {
+            drawEntityRelationships();
+          }
         });
+      });
+      
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      const searchButton = document.getElementById('searchButton');
+      const endpointCards = document.querySelectorAll('.endpoint-card');
+      
+      function performSearch() {
+        const searchTerm = searchInput.value.toLowerCase();
         
-        // Copy to clipboard functionality
-        function copyToClipboard(text) {
-            const tempInput = document.createElement('textarea');
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            
-            // Show toast notification
-            showToast('Copié avec succès!');
+        endpointCards.forEach(card => {
+          const path = card.querySelector('.endpoint-path').textContent.toLowerCase();
+          const description = card.querySelector('.endpoint-description').textContent.toLowerCase();
+          
+          if (path.includes(searchTerm) || description.includes(searchTerm)) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+      
+      searchButton.addEventListener('click', performSearch);
+      searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          performSearch();
         }
+      });
+      
+      // Filter functionality
+      const filterButtons = document.querySelectorAll('.filter-button');
+      
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const method = button.getAttribute('data-method');
+          
+          // Remove active class from all filter buttons
+          filterButtons.forEach(b => b.classList.remove('active'));
+          
+          // Add active class to current button
+          button.classList.add('active');
+          
+          // Filter endpoint cards
+          endpointCards.forEach(card => {
+            if (method === 'all' || card.getAttribute('data-method') === method) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+      
+      // Environment selector
+      const envButtons = document.querySelectorAll('.env-button');
+      let currentBaseUrl = 'http://localhost:3000/api';
+      
+      envButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const env = button.getAttribute('data-env');
+          
+          // Remove active class from all env buttons
+          envButtons.forEach(b => b.classList.remove('active'));
+          
+          // Add active class to current button
+          button.classList.add('active');
+          
+          // Update base URL based on environment
+          if (env === 'development') {
+            currentBaseUrl = 'http://localhost:3000/api';
+          } else if (env === 'production') {
+            currentBaseUrl = 'https://jencity-api.example.com/api';
+          }
+          
+          // Update all cURL commands with new base URL
+          updateCurlCommands();
+        });
+      });
+      
+      function updateCurlCommands() {
+        const curlCodeBlocks = document.querySelectorAll('.code-example pre code');
+        const copyButtons = document.querySelectorAll('.code-example .copy-button');
         
-        // Toast notification
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            
-            toastMessage.textContent = message;
-            toast.classList.add('show');
+        curlCodeBlocks.forEach((block, index) => {
+          const originalCommand = block.textContent;
+          let newCommand;
+          
+          if (originalCommand.includes('http://localhost:3000/api')) {
+            newCommand = originalCommand.replace('http://localhost:3000/api', currentBaseUrl);
+          } else if (originalCommand.includes('https://jencity-api.example.com/api')) {
+            newCommand = originalCommand.replace('https://jencity-api.example.com/api', currentBaseUrl);
+          }
+          
+          if (newCommand) {
+            block.textContent = newCommand;
+            copyButtons[index].setAttribute('data-clipboard-text', newCommand);
+          }
+        });
+      }
+      
+      // Copy to clipboard functionality
+      const copyButtons = document.querySelectorAll('.copy-button');
+      
+      copyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const textToCopy = button.getAttribute('data-clipboard-text');
+          
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            // Change button text temporarily
+            const originalText = button.textContent;
+            button.textContent = 'Copié!';
             
             setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-        
-        // Prepare for Postman
-        function prepareForPostman(method, url) {
-            const baseUrl = document.getElementById('baseUrlDisplay').textContent;
-            const fullUrl = baseUrl.substring(0, baseUrl.indexOf('/api')) + url;
-            
-            // Create Postman collection JSON
-            const postmanCollection = {
-                "info": {
-                    "name": "JenCity API - " + url,
-                    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-                },
-                "item": [
-                    {
-                        "name": method + " " + url,
-                        "request": {
-                            "method": method,
-                            "header": [
-                                {
-                                    "key": "Content-Type",
-                                    "value": "application/json"
-                                }
-                            ],
-                            "url": {
-                                "raw": fullUrl,
-                                "protocol": fullUrl.startsWith("https") ? "https" : "http",
-                                "host": fullUrl.replace(/^https?:\\/\\//, '').split('/')[0].split(':')[0].split('.'),
-                                "port": baseUrl.split(':')[2] ? baseUrl.split(':')[2].split('/')[0] : "",
-                                "path": fullUrl.replace(/^https?:\\/\\/[^\\/]+/, '').split('/').filter(p => p)
-                            }
-                        }
-                    }
-                ]
-            };
-            
-            // Create a data URI for the Postman collection
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(postmanCollection));
-            
-            // Create a link to download the collection
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "JenCity_API_" + url.replace(/\\//g, '_') + ".postman_collection.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            
-            showToast('Collection Postman créée!');
-        }
-        
-        // Server configuration update
-        document.getElementById('updateServerBtn').addEventListener('click', function() {
-            const host = document.getElementById('serverHost').value || 'localhost';
-            const port = document.getElementById('serverPort').value || '3000';
-            const baseUrl = \`http://\${host}:\${port}/api\`;
-            document.getElementById('baseUrlDisplay').textContent = baseUrl;
-            
-            showToast('Configuration du serveur mise à jour!');
+              button.textContent = originalText;
+            }, 2000);
+          }).catch(err => {
+            console.error('Failed to copy text: ', err);
+          });
         });
-        
-        // Copy base URL
-        document.getElementById('copyBaseUrlBtn').addEventListener('click', function() {
-            copyToClipboard(document.getElementById('baseUrlDisplay').textContent);
-        });
-        
-        // Switch tabs
-        function switchTab(tabElement, contentId) {
-            // Remove active class from all tabs in the same group
-            const tabContainer = tabElement.parentElement;
-            const tabs = tabContainer.querySelectorAll('.tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            tabElement.classList.add('active');
-            
-            // Hide all tab content in the same endpoint
-            const endpoint = tabContainer.closest('.endpoint');
-            const tabContents = endpoint.querySelectorAll('.tab-content');
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Show the selected tab content
-            document.getElementById(contentId).classList.add('active');
+      });
+      
+      // Back to top button
+      const backToTopButton = document.getElementById('backToTop');
+      
+      window.addEventListener('scroll', () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add('visible');
+        } else {
+          backToTopButton.classList.remove('visible');
         }
-        
-        // Switch code tabs
-        function switchCodeTab(tabElement, contentId) {
-            // Remove active class from all tabs in the same group
-            const tabContainer = tabElement.parentElement;
-            const tabs = tabContainer.querySelectorAll('.code-tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            tabElement.classList.add('active');
-            
-            // Hide all tab content in the same endpoint
-            const endpoint = tabContainer.closest('.endpoint-body');
-            const tabContents = endpoint.querySelectorAll('.code-content');
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Show the selected tab content
-            document.getElementById(contentId).classList.add('active');
-        }
-        
-        // Entity filtering
-        document.getElementById('entityFilter').addEventListener('change', function() {
-            applyFilters();
+      });
+      
+      backToTopButton.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
         });
+      });
+      
+      // Draw entity relationships on canvas
+      function drawEntityRelationships() {
+        const canvas = document.getElementById('relationshipCanvas');
+        const ctx = canvas.getContext('2d');
         
-        // Method filtering
-        document.getElementById('methodFilter').addEventListener('change', function() {
-            applyFilters();
-        });
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        function applyFilters() {
-            const selectedEntity = document.getElementById('entityFilter').value;
-            const selectedMethod = document.getElementById('methodFilter').value;
-            
-            const entityGroups = document.querySelectorAll('.entity-group');
-            const entityTitles = document.querySelectorAll('.entity-title');
-            const endpoints = document.querySelectorAll('.endpoint');
-            
-            // First, handle entity filtering
-            if (selectedEntity === 'all') {
-                entityGroups.forEach(group => group.classList.remove('hidden'));
-                entityTitles.forEach(title => title.classList.remove('hidden'));
-            } else {
-                entityGroups.forEach(group => {
-                    if (group.dataset.entity === selectedEntity) {
-                        group.classList.remove('hidden');
-                    } else {
-                        group.classList.add('hidden');
-                    }
-                });
-                
-                entityTitles.forEach(title => {
-                    if (title.id === \`entity-\${selectedEntity}\`) {
-                        title.classList.remove('hidden');
-                    } else {
-                        title.classList.add('hidden');
-                    }
-                });
-            }
-            
-            // Then, handle method filtering
-            if (selectedMethod !== 'all') {
-                endpoints.forEach(endpoint => {
-                    if (endpoint.dataset.method === selectedMethod) {
-                        endpoint.classList.remove('hidden');
-                    } else {
-                        endpoint.classList.add('hidden');
-                    }
-                });
-            } else {
-                endpoints.forEach(endpoint => endpoint.classList.remove('hidden'));
-            }
-            
-            // Update endpoint counters
-            updateEndpointCounters();
-        }
+        // Entity data from the API configuration
+        const entities = ${JSON.stringify(entities)};
         
-        function updateEndpointCounters() {
-            const entityGroups = document.querySelectorAll('.entity-group:not(.hidden)');
+        // Calculate layout
+        const padding = 20;
+        const boxWidth = 200;
+        const boxHeight = 30 + entities.reduce((max, entity) => 
+          Math.max(max, (entity.fields || []).length * 20 + 40), 0);
+        
+        const columns = 3;
+        const rows = Math.ceil(entities.length / columns);
+        
+        const spacingX = (canvas.width - padding * 2) / columns;
+        const spacingY = (canvas.height - padding * 2) / rows;
+        
+        // Entity positions
+        const entityPositions = {};
+        
+        // Draw entities
+        entities.forEach((entity, index) => {
+          const col = index % columns;
+          const row = Math.floor(index / columns);
+          
+          const x = padding + col * spacingX + (spacingX - boxWidth) / 2;
+          const y = padding + row * spacingY;
+          
+          // Store entity position for drawing relationships
+          entityPositions[entity.name] = {
+            x: x + boxWidth / 2,
+            y: y + boxHeight / 2,
+            width: boxWidth,
+            height: boxHeight
+          };
+          
+          // Draw entity box
+          ctx.fillStyle = '#f5f5f5';
+          ctx.strokeStyle = '#3498db';
+          ctx.lineWidth = 2;
+          
+          // Box with rounded corners
+          ctx.beginPath();
+          ctx.moveTo(x + 10, y);
+          ctx.lineTo(x + boxWidth - 10, y);
+          ctx.quadraticCurveTo(x + boxWidth, y, x + boxWidth, y + 10);
+          ctx.lineTo(x + boxWidth, y + boxHeight - 10);
+          ctx.quadraticCurveTo(x + boxWidth, y + boxHeight, x + boxWidth - 10, y + boxHeight);
+          ctx.lineTo(x + 10, y + boxHeight);
+          ctx.quadraticCurveTo(x, y + boxHeight, x, y + boxHeight - 10);
+          ctx.lineTo(x, y + 10);
+          ctx.quadraticCurveTo(x, y, x + 10, y);
+          ctx.closePath();
+          
+          ctx.fill();
+          ctx.stroke();
+          
+          // Entity name header
+          ctx.fillStyle = '#3498db';
+          ctx.fillRect(x, y, boxWidth, 30);
+          
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(entity.name, x + boxWidth / 2, y + 20);
+          
+          // Entity fields
+          if (entity.fields && entity.fields.length) {
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
             
-            entityGroups.forEach(group => {
-                const entityName = group.dataset.entity;
-                const visibleEndpoints = group.querySelectorAll('.endpoint:not(.hidden)').length;
-                const counterElement = document.querySelector(\`#entity-\${entityName} .endpoint-counter\`);
-                
-                if (counterElement) {
-                    counterElement.textContent = \`(\${visibleEndpoints} endpoints)\`;
-                }
+            entity.fields.forEach((field, fieldIndex) => {
+              const fieldY = y + 50 + fieldIndex * 20;
+              
+              // Highlight primary keys
+              if (field.isPrimary) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillText('🔑 ' + field.name + ': ' + field.type, x + 15, fieldY);
+                ctx.fillStyle = '#333';
+              } else {
+                ctx.fillText(field.name + ': ' + field.type, x + 15, fieldY);
+              }
             });
+          }
+        });
+        
+        // Draw relationships
+        ctx.strokeStyle = '#34495e';
+        ctx.lineWidth = 1;
+        
+        entities.forEach(sourceEntity => {
+          if (sourceEntity.relations && sourceEntity.relations.length) {
+            const sourcePos = entityPositions[sourceEntity.name];
+            
+            sourceEntity.relations.forEach(relation => {
+              const targetPos = entityPositions[relation.entity];
+              
+              if (targetPos) {
+                // Calculate starting and ending points
+                let startX, startY, endX, endY;
+                
+                // Determine which side of the boxes to connect
+                if (Math.abs(sourcePos.x - targetPos.x) > Math.abs(sourcePos.y - targetPos.y)) {
+                  // Horizontal connection
+                  if (sourcePos.x < targetPos.x) {
+                    startX = sourcePos.x + sourcePos.width / 2;
+                    endX = targetPos.x - targetPos.width / 2;
+                  } else {
+                    startX = sourcePos.x - sourcePos.width / 2;
+                    endX = targetPos.x + targetPos.width / 2;
+                  }
+                  startY = sourcePos.y;
+                  endY = targetPos.y;
+                } else {
+                  // Vertical connection
+                  if (sourcePos.y < targetPos.y) {
+                    startY = sourcePos.y + sourcePos.height / 2;
+                    endY = targetPos.y - targetPos.height / 2;
+                  } else {
+                    startY = sourcePos.y - sourcePos.height / 2;
+                    endY = targetPos.y + targetPos.height / 2;
+                  }
+                  startX = sourcePos.x;
+                  endX = targetPos.x;
+                }
+                
+                // Draw line
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                // Draw arrow
+                const arrowSize = 10;
+                const angle = Math.atan2(endY - startY, endX - startX);
+                
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(
+                  endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                  endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                  endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                  endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = '#34495e';
+                ctx.fill();
+                
+                // Draw relationship type
+                const midX = (startX + endX) / 2;
+                const midY = (startY + endY) / 2;
+                
+                ctx.fillStyle = 'white';
+                ctx.fillRect(midX - 25, midY - 10, 50, 20);
+                ctx.strokeRect(midX - 25, midY - 10, 50, 20);
+                
+                ctx.fillStyle = '#2ecc71';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(relation.type, midX, midY + 4);
+              }
+            });
+          }
+        });
+      }
+      
+      // Draw the diagram when the page loads
+      window.addEventListener('load', drawEntityRelationships);
+      
+      // Redraw on window resize
+      window.addEventListener('resize', () => {
+        if (document.querySelector('.tab[data-tab="diagram"]').classList.contains('active')) {
+          drawEntityRelationships();
         }
+      });
     </script>
-</body>
-</html>`;
-};
-
-// Helper function to generate Fetch code examples
-const getFetchCode = (route) => {
-  const { method, path, requestBody } = route;
-  const url = \`http://localhost:3000/api\${path}\`;
-  
-  let code = \`const response = await fetch('\${url}', {
-  method: '\${method.toUpperCase()}',\`;
-  
-  if (requestBody) {
-    code += \`
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(\${JSON.stringify(requestBody, null, 2)}),\`;
-  }
-  
-  code += \`
-});\n
-const data = await response.json();
-console.log(data);\`;
-  
-  return code;
-};
-
-// Helper function to generate Axios code examples
-const getAxiosCode = (route) => {
-  const { method, path, requestBody } = route;
-  const url = \`http://localhost:3000/api\${path}\`;
-  
-  let code = \`import axios from 'axios';\n\n\`;
-  
-  code += \`try {
-  const response = await axios.\${method.toLowerCase()}('\${url}'`;
-  
-  if (requestBody && (method.toLowerCase() === 'post' || method.toLowerCase() === 'put')) {
-    code += \`, \${JSON.stringify(requestBody, null, 2)}\`;
-  }
-  
-  code += \`);\n
-  console.log(response.data);
-} catch (error) {
-  console.error('Error:', error);
-}\`;
-  
-  return code;
+  </body>
+  </html>
+  `;
 };
 
 module.exports = { generateDocTemplate };
