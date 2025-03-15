@@ -1,4 +1,9 @@
+
+const fs = require('fs');
+const path = require('path');
 const ApiDocGenerator = require('../utils/apiDocGenerator');
+const { generateDocTemplate } = require('../utils/apiDocTemplate');
+const { API_CONFIG } = require('../config/apiConfig');
 
 // Define your API routes here - these will be used to generate the documentation
 const apiRoutes = [
@@ -758,9 +763,24 @@ const apiRoutes = [
 // Create the API documentation generator
 const docGenerator = new ApiDocGenerator(apiRoutes);
 
-// Generate the documentation
+// Generate the documentation with our custom template
 function generateApiDocs() {
+  // Create docs directory if it doesn't exist
+  const docsDir = path.join(process.cwd(), 'docs');
+  if (!fs.existsSync(docsDir)) {
+    fs.mkdirSync(docsDir, { recursive: true });
+  }
+
+  // Generate HTML documentation
+  const htmlContent = generateDocTemplate(apiRoutes, API_CONFIG.entities);
+  fs.writeFileSync(path.join(docsDir, 'api-documentation.html'), htmlContent);
+
+  // Generate additional documentation formats if needed
   docGenerator.generateDocs();
+
+  console.log('API documentation generated successfully!');
+  console.log(`- HTML: ${path.join(docsDir, 'api-documentation.html')}`);
+  console.log(`- PDF: ${path.join(docsDir, 'api-documentation.pdf')}`);
 }
 
 // If this script is run directly (not imported)
@@ -770,4 +790,3 @@ if (require.main === module) {
 }
 
 module.exports = { generateApiDocs };
-
