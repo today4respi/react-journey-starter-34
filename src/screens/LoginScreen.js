@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -21,8 +20,6 @@ import { FONT_SIZE } from '../theme/typography';
 import { boxShadow } from '../theme/mixins';
 import * as Animatable from 'react-native-animatable';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { useOAuth, useAuth as useClerkAuth } from '@clerk/clerk-expo';
-import { useClerkIntegration } from '../utils/clerkAuth';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -30,31 +27,6 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, error } = useAuth();
-  const { isClerkAuthenticated } = useClerkIntegration();
-  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
-  const { signOut: clerkSignOut } = useClerkAuth();
-
-  // Sign out of Clerk when screen loads
-  useEffect(() => {
-    const handleSignOut = async () => {
-      try {
-        if (clerkSignOut) {
-          await clerkSignOut();
-          console.log('Signed out of Clerk');
-        }
-      } catch (error) {
-        console.error('Error signing out of Clerk:', error);
-      }
-    };
-
-    handleSignOut();
-  }, []);
-
-  useEffect(() => {
-    if (isClerkAuthenticated) {
-      navigation.navigate('Map');
-    }
-  }, [isClerkAuthenticated, navigation]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -80,19 +52,6 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Erreur de connexion', error.message);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      const { createdSessionId, setActive } = await startOAuthFlow();
-      
-      if (createdSessionId) {
-        setActive({ session: createdSessionId });
-      }
-    } catch (err) {
-      console.error("OAuth error", err);
-      Alert.alert('Erreur', 'Problème lors de la connexion avec Google');
     }
   };
 
@@ -178,17 +137,6 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.dividerText}>ou</Text>
               <View style={styles.dividerLine} />
             </View>
-
-            <TouchableOpacity 
-              style={styles.googleButton}
-              onPress={handleGoogleLogin}
-            >
-              <Image 
-                source={{ uri: 'https://developers.google.com/identity/images/g-logo.png' }}
-                style={styles.googleIcon}
-              />
-              <Text style={styles.googleButtonText}>Se connecter avec Google</Text>
-            </TouchableOpacity>
 
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>

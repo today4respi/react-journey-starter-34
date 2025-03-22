@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/users/login`, {
+      const response = await fetch(`${API_URL}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(result.message || 'Failed to login');
       }
 
-      // Extract user data from the response
+      // Handle the response structure: { status: 200, data: {...} }
       const userData = result.data;
       
       // Save to storage
@@ -137,12 +137,12 @@ export const AuthProvider = ({ children }) => {
         email: userData.email,
         password: userData.password,
         phone: userData.phone || '',
-        role: userData.role || 'user' // Default role is 'user'
+        role: 'user' // Default role is 'user'
       };
       
       console.log('Signup data:', registerData);
       
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetch(`${API_URL}/api/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
