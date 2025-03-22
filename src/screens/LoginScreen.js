@@ -65,6 +65,7 @@ export default function LoginScreen({ navigation }) {
     setIsLoading(true);
     try {
       const userData = await login(email, password);
+      console.log('User data after login:', userData);
       
       // Navigate based on user role
       if (userData.role === 'admin') {

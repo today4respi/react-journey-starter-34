@@ -108,6 +108,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error(result.message || 'Failed to login');
       }
 
+      // Extract user data from the response
       const userData = result.data;
       
       // Save to storage
@@ -119,23 +120,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please try again.');
-      
-      // Fallback for development purposes
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Using fallback for development');
-        const simulatedUser = {
-          id: 1,
-          name: 'Demo User',
-          email,
-          role: 'admin', // Set to 'admin' for testing
-        };
-        
-        await storage.setItem('user', JSON.stringify(simulatedUser));
-        setUser(simulatedUser);
-        setIsAuthenticated(true);
-        return simulatedUser;
-      }
-      
       throw error;
     } finally {
       setLoading(false);
@@ -172,37 +156,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(result.message || 'Failed to register');
       }
 
-      const newUser = result.data;
-      
-      // Save to storage
-      await storage.setItem('user', JSON.stringify(newUser));
-      
-      setUser(newUser);
-      setIsAuthenticated(true);
-      return newUser;
+      return result.data;
     } catch (error) {
       console.error('Signup error:', error);
       setError(error.message || 'Registration failed. Please try again.');
-      
-      // Fallback for development purposes
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Using fallback for development');
-        const simulatedUser = {
-          id: 1,
-          firstName: userData.firstName || userData.prenom || '',
-          lastName: userData.lastName || userData.nom || '',
-          name: `${userData.firstName || userData.prenom || ''} ${userData.lastName || userData.nom || ''}`.trim(),
-          email: userData.email,
-          phone: userData.phone || '',
-          role: userData.role || 'user',
-        };
-        
-        await storage.setItem('user', JSON.stringify(simulatedUser));
-        setUser(simulatedUser);
-        setIsAuthenticated(true);
-        return simulatedUser;
-      }
-      
       throw error;
     } finally {
       setLoading(false);
