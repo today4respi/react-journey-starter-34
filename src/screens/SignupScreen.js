@@ -25,6 +25,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useOAuth } from '@clerk/clerk-expo';
 import { useClerkIntegration } from '../utils/clerkAuth';
 import { ROUTES } from '../navigation/navigationConstants';
+import SuccessModal from '../../common/SuccessModal';
 
 const { width } = Dimensions.get('window');
 
@@ -50,6 +51,7 @@ export default function SignupScreen({ navigation }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState({ code: '+216', name: 'Tunisia', flag: '🇹🇳' });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { signup } = useAuth();
   const { isClerkAuthenticated } = useClerkIntegration();
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
@@ -229,29 +231,28 @@ export default function SignupScreen({ navigation }) {
     }
   };
 
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigation.navigate('Login');
+  };
+
   const handleSignup = async () => {
     setIsLoading(true);
     try {
       const userData = {
         firstName: firstName,
         lastName: lastName,
-        prenom: firstName,  // For backend compatibility
-        nom: lastName,      // For backend compatibility
-        email,
+        email: email,
         phone: `${selectedCountry.code}${phone}`,
-        password
+        password: password,
+        role: 'user' // Setting default role to 'user'
       };
       
       const registeredUser = await signup(userData);
       console.log('Registered user:', registeredUser);
       
-      if (registeredUser.role === 'admin') {
-        navigation.navigate(ROUTES.ADMIN_DASHBOARD);
-      } else if (registeredUser.role === 'provider' || registeredUser.role === 'prestataire') {
-        navigation.navigate(ROUTES.PROVIDER_DASHBOARD);
-      } else {
-        navigation.navigate(ROUTES.HOME);
-      }
+      // Show success modal
+      setShowSuccessModal(true);
     } catch (error) {
       Alert.alert('Erreur d\'inscription', error.message);
     } finally {
@@ -364,6 +365,13 @@ export default function SignupScreen({ navigation }) {
           </Animatable.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isVisible={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        message="Inscription réussie ! Vous pouvez maintenant vous connecter."
+      />
     </SafeAreaView>
   );
 }

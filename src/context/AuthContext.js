@@ -146,16 +146,19 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // Extract or combine name fields based on what the frontend sends
+      // Format data to match API requirements
       const registerData = {
-        ...userData,
-        // Handle name based on the format from the form
-        name: userData.name || `${userData.firstName || userData.prenom || ''} ${userData.lastName || userData.nom || ''}`.trim()
+        firstName: userData.firstName || userData.prenom,
+        lastName: userData.lastName || userData.nom,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone || '',
+        role: userData.role || 'user' // Default role is 'user'
       };
       
       console.log('Signup data:', registerData);
       
-      const response = await fetch(`${API_URL}/users/register`, {
+      const response = await fetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,10 +189,12 @@ export const AuthProvider = ({ children }) => {
         console.log('Using fallback for development');
         const simulatedUser = {
           id: 1,
-          name: userData.name || `${userData.firstName || userData.prenom || ''} ${userData.lastName || userData.nom || ''}`.trim(),
+          firstName: userData.firstName || userData.prenom || '',
+          lastName: userData.lastName || userData.nom || '',
+          name: `${userData.firstName || userData.prenom || ''} ${userData.lastName || userData.nom || ''}`.trim(),
           email: userData.email,
           phone: userData.phone || '',
-          role: 'user',
+          role: userData.role || 'user',
         };
         
         await storage.setItem('user', JSON.stringify(simulatedUser));
