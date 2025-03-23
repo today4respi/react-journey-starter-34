@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { View, StyleSheet, SafeAreaView, StatusBar, Text , Platform} from 'react-native';
+import { View, StyleSheet, SafeAreaView, StatusBar, Text, Platform } from 'react-native';
 import { COLORS } from '../theme/colors';
 import { ROUTES } from '../navigation/navigationConstants';
 import { SPACING } from '../theme/spacing';
@@ -90,8 +90,8 @@ const MapScreen = ({ navigation }) => {
         </View>
       </Animatable.View>
       
-      {/* Footer */}
-      <FooterNav navigation={navigation} activeScreen={ROUTES.ACOTE} />
+      {/* Footer - Updated to set HOME as active route */}
+      <FooterNav navigation={navigation} activeScreen={ROUTES.HOME} />
     </SafeAreaView>
   );
 };

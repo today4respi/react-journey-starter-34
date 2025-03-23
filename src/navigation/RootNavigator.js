@@ -1,4 +1,3 @@
-
 import React, { useContext } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
