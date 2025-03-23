@@ -3,6 +3,7 @@ import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-expo';
 import { useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { ROUTES } from '../navigation/navigationConstants';
 
 // Simplified Clerk integration
 export const useClerkIntegration = () => {

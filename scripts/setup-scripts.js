@@ -12,7 +12,7 @@ try {
 
   // Add the dev script if it doesn't exist
   if (!packageJson.scripts.dev) {
-    packageJson.scripts.dev = 'vite --port 8080';
+    packageJson.scripts.dev = 'expo start';
     console.log('Added "dev" script to package.json');
   }
 

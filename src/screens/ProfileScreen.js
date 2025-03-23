@@ -1,3 +1,4 @@
+
 import React, { useState, useContext } from 'react';
 import {
   StyleSheet,
@@ -21,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, Trash2, LogOut } from 'lucide-react-native';
 import { AuthContext } from '../context/AuthContext';
 import { useClerkIntegration } from '../utils/clerkAuth';
+import { ROUTES } from '../navigation/navigationConstants';
 
 export default function ProfileScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,10 +45,10 @@ export default function ProfileScreen({ navigation }) {
       // Use the complete logout function from clerk integration
       await logoutFromClerk();
       
-      // Navigate to Login screen
+      // Navigate to Login screen using the correct route constant
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Login' }],
+        routes: [{ name: ROUTES.LOGIN }],
       });
     } catch (error) {
       console.error('Logout error:', error);
