@@ -6,9 +6,9 @@ import { useAuth } from '../context/AuthContext';
 
 // Simplified Clerk integration
 export const useClerkIntegration = () => {
-  const { isSignedIn } = useClerkAuth();
+  const { isSignedIn, signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   // When Clerk auth state changes, sync with our system
   useEffect(() => {
@@ -41,8 +41,28 @@ export const useClerkIntegration = () => {
     }
   };
 
+  // Complete logout function that handles both Clerk and our auth system
+  const handleCompleteLogout = async () => {
+    try {
+      // First logout from our system
+      await logout();
+      
+      // Then logout from Clerk if signed in
+      if (isSignedIn) {
+        await signOut();
+      }
+      
+      console.log('User completely logged out from all systems');
+      return true;
+    } catch (error) {
+      console.error('Error during complete logout:', error);
+      return false;
+    }
+  };
+
   return {
     isClerkAuthenticated: isSignedIn,
-    clerkUser
+    clerkUser,
+    logoutFromClerk: handleCompleteLogout
   };
 };

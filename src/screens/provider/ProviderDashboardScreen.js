@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { 
   StyleSheet, 
   Text, 
   View, 
   TouchableOpacity, 
   ScrollView,
-  SafeAreaView ,
-  Platform
+  SafeAreaView,
+  Platform,
+  Alert
 } from 'react-native';
 import { 
   User, 
@@ -20,8 +21,13 @@ import { COLORS } from '../../theme/colors';
 import { SPACING } from '../../theme/spacing';
 import { FONT_SIZE } from '../../theme/typography';
 import * as Animatable from 'react-native-animatable';
+import { AuthContext } from '../../context/AuthContext';
+import { useClerkIntegration } from '../../utils/clerkAuth';
 
 const ProviderDashboardScreen = ({ navigation }) => {
+  const { logout } = useContext(AuthContext);
+  const { logoutFromClerk } = useClerkIntegration();
+
   const menuItems = [
     {
       title: 'Gestion du compte',
@@ -48,6 +54,27 @@ const ProviderDashboardScreen = ({ navigation }) => {
       onPress: () => navigation.navigate('PromotionManagement')
     }
   ];
+
+  const handleLogout = async () => {
+    try {
+      // Show loading indicator or disable button if needed
+      
+      // Use the complete logout function from clerk integration
+      await logoutFromClerk();
+      
+      // Navigate to Login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert(
+        'Logout Error',
+        'An error occurred during logout. Please try again.'
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -88,7 +115,7 @@ const ProviderDashboardScreen = ({ navigation }) => {
         >
           <TouchableOpacity 
             style={styles.logoutButton}
-            onPress={() => navigation.navigate('Login')}
+            onPress={handleLogout}
           >
             <LogOut size={24} color={COLORS.error} />
             <Text style={styles.logoutText}>Se déconnecter</Text>

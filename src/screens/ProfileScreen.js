@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   ScrollView,
   Platform,
   Image,
+  Alert
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { COLORS } from '../theme/colors';
@@ -19,12 +19,16 @@ import { FONT_SIZE } from '../theme/typography';
 import { boxShadow } from '../theme/mixins';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Lock, Trash2, LogOut } from 'lucide-react-native';
+import { AuthContext } from '../context/AuthContext';
+import { useClerkIntegration } from '../utils/clerkAuth';
 
 export default function ProfileScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { t } = useTranslation();
+  const { logout } = useContext(AuthContext);
+  const { logoutFromClerk } = useClerkIntegration();
 
   const handleUpdateCredentials = () => {
     // TODO: Implement update logic
@@ -32,8 +36,25 @@ export default function ProfileScreen({ navigation }) {
     setModalVisible(false);
   };
 
-  const handleLogout = () => {
-    navigation.navigate('Login');
+  const handleLogout = async () => {
+    try {
+      // Show loading indicator or disable button if needed
+      
+      // Use the complete logout function from clerk integration
+      await logoutFromClerk();
+      
+      // Navigate to Login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert(
+        'Logout Error',
+        'An error occurred during logout. Please try again.'
+      );
+    }
   };
 
   return (

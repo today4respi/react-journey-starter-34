@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
@@ -45,6 +44,20 @@ const storage = {
       console.error('Error removing from storage:', error);
       return false;
     }
+  },
+
+  async clearAll() {
+    try {
+      if (Platform.OS === 'web') {
+        window.localStorage.clear();
+      } else {
+        await AsyncStorage.clear();
+      }
+      return true;
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+      return false;
+    }
   }
 };
 
@@ -65,7 +78,6 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Check for saved user on app load
     const checkAuth = async () => {
       try {
         const savedUser = await storage.getItem('user');
@@ -75,7 +87,6 @@ export const AuthProvider = ({ children }) => {
             setUser(JSON.parse(savedUser));
             setIsAuthenticated(true);
           } catch (err) {
-            // If there's an error parsing saved user, clear storage
             await storage.removeItem('user');
           }
         }
@@ -108,10 +119,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error(result.message || 'Failed to login');
       }
 
-      // Extract user data from the response
       const userData = result.data;
       
-      // Save to storage
       await storage.setItem('user', JSON.stringify(userData));
       
       setUser(userData);
@@ -130,14 +139,13 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      // Format data to match API requirements
       const registerData = {
         firstName: userData.firstName || userData.prenom,
         lastName: userData.lastName || userData.nom,
         email: userData.email,
         password: userData.password,
         phone: userData.phone || '',
-        role: userData.role || 'user' // Default role is 'user'
+        role: userData.role || 'user'
       };
       
       console.log('Signup data:', registerData);
@@ -168,13 +176,16 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Clear storage
-      await storage.removeItem('user');
+      await storage.clearAll();
       
       setUser(null);
       setIsAuthenticated(false);
+      
+      console.log('User logged out successfully');
+      return true;
     } catch (error) {
-      console.error('Error removing auth data:', error);
+      console.error('Error during logout:', error);
+      return false;
     }
   };
 

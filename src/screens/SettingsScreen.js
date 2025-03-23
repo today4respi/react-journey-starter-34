@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -10,7 +9,8 @@ import {
   TextInput, 
   Platform,
   Animated,
-  ScrollView
+  ScrollView,
+  Alert
 } from 'react-native';
 import { FooterNav } from '../components/FooterNav';
 import { COLORS } from '../theme/colors';
@@ -31,9 +31,14 @@ import {
   Key
 } from 'lucide-react-native';
 import * as Animatable from 'react-native-animatable';
+import { AuthContext } from '../context/AuthContext';
+import { useClerkIntegration } from '../utils/clerkAuth';
 
 const SettingsScreen = ({ navigation }) => {
   const { t } = useTranslation();
+  const { logout } = useContext(AuthContext);
+  const { logoutFromClerk } = useClerkIntegration();
+  
   const [isProfileModalVisible, setProfileModalVisible] = useState(false);
   const [isPasswordModalVisible, setPasswordModalVisible] = useState(false);
   const [name, setName] = useState('User Name');
@@ -106,6 +111,27 @@ const SettingsScreen = ({ navigation }) => {
     setPasswordModalVisible(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      // Show loading indicator or disable button if needed
+      
+      // Use the complete logout function from clerk integration
+      await logoutFromClerk();
+      
+      // Navigate to Login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert(
+        'Logout Error',
+        'An error occurred during logout. Please try again.'
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Animatable.View 
@@ -166,7 +192,7 @@ const SettingsScreen = ({ navigation }) => {
         >
           <TouchableOpacity 
             style={[styles.settingItem, styles.logoutButton]}
-            onPress={() => navigation.navigate('Login')}
+            onPress={handleLogout}
           >
             <LogOut size={24} color={COLORS.error} />
             <Text style={[styles.settingText, styles.logoutText]}>
@@ -359,7 +385,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   scrollContent: {
-    paddingBottom: 100, // Add extra padding at the bottom to ensure logout button is visible
+    paddingBottom: 100,
   },
   section: {
     marginBottom: SPACING.xl,
@@ -400,7 +426,7 @@ const styles = StyleSheet.create({
   },
   logoutContainer: {
     marginTop: SPACING.md,
-    marginBottom: 80, // Ensure enough space for the footer
+    marginBottom: 80,
   },
   logoutButton: {
     backgroundColor: COLORS.light_error,
