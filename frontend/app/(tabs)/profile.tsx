@@ -1,19 +1,14 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput } from 'react-native';
+
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, TextInput, Modal, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Shield, CircleHelp as HelpCircle, LogOut, Mail, Phone, MapPin, ChevronDown, Lock } from 'lucide-react-native';
+import { User, Shield, CircleHelp as HelpCircle, LogOut, Mail, Phone, MapPin, ChevronDown, Lock, Trash2 } from 'lucide-react-native';
 import React, { useState } from 'react';
+import { useAuth } from '../../assets/src/contexts/AuthContext';
+import { EditableField } from '../../assets/src/types';
 
-// Temporary user data (replace with actual user data from your backend)
-const userData = {
-  name: 'Thomas Martin',
-  email: 'thomas.martin@example.com',
-  phone: '+33 6 12 34 56 78',
-  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&q=80',
-  location: 'Paris, France',
-  type: 'guest',
-  status: 'active'
-};
-
+/**
+ * Questions fréquemment posées
+ */
 const FAQ_ITEMS = [
   {
     question: 'Comment modifier mes informations personnelles ?',
@@ -31,26 +26,135 @@ const FAQ_ITEMS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, updateUserInfo, logout, deleteUserAccount } = useAuth();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [editValues, setEditValues] = useState({
-    email: userData.email,
-    phone: userData.phone,
-    location: userData.location,
+    email: user?.email || '',
+    nom: user?.nom || '',
+    prenom: user?.prenom || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // État pour la modale de confirmation
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'update' | 'delete' | null>(null);
+  const [fieldToUpdate, setFieldToUpdate] = useState<EditableField | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  const handleSave = (field: string) => {
-    console.log(`Saving ${field}:`, editValues[field]);
-    setActiveDropdown(null);
+  /**
+   * Demande confirmation avant de sauvegarder les modifications
+   */
+  const confirmSave = (field: EditableField) => {
+    setFieldToUpdate(field);
+    setModalType('update');
+    setModalVisible(true);
   };
 
+  /**
+   * Demande confirmation avant de supprimer le compte
+   */
+  const confirmDelete = () => {
+    setModalType('delete');
+    setModalVisible(true);
+  };
+
+  /**
+   * Sauvegarde les modifications après confirmation
+   */
+  const handleSave = async () => {
+    if (!user || !fieldToUpdate) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (fieldToUpdate === 'password') {
+        if (!editValues.currentPassword) {
+          setError('Veuillez entrer votre mot de passe actuel');
+          setLoading(false);
+          return;
+        }
+        if (editValues.newPassword !== editValues.confirmPassword) {
+          setError('Les mots de passe ne correspondent pas');
+          setLoading(false);
+          return;
+        }
+        
+        await updateUserInfo(user.id, { 
+          password: editValues.newPassword 
+        });
+        
+        setEditValues({
+          ...editValues,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      } else {
+        // Update the field that was edited
+        await updateUserInfo(user.id, { 
+          [fieldToUpdate]: editValues[fieldToUpdate]
+        });
+      }
+      
+      setActiveDropdown(null);
+      setModalVisible(false);
+      Alert.alert('Succès', 'Vos informations ont été mises à jour avec succès.');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Supprime le compte utilisateur après confirmation
+   */
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    if (deleteConfirmText !== 'SUPPRIMER') {
+      setError('Veuillez écrire "SUPPRIMER" pour confirmer');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      await deleteUserAccount(user.id);
+      setModalVisible(false);
+      router.replace('/(auth)/login');
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la suppression du compte');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Déconnecte l'utilisateur
+   */
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion', error);
+    }
+  };
+
+  /**
+   * Rendu d'un champ modifiable avec dropdown
+   */
   const renderDropdownItem = (
     icon: React.ReactNode,
     title: string,
     value: string,
-    field: 'email' | 'phone' | 'location' | 'password'
+    field: EditableField
   ) => (
     <View style={styles.settingsItem}>
       <TouchableOpacity
@@ -88,6 +192,7 @@ export default function ProfileScreen() {
                 onChangeText={(text) => setEditValues({ ...editValues, currentPassword: text })}
                 placeholder="Mot de passe actuel"
                 secureTextEntry
+                placeholderTextColor="#999"
               />
               <TextInput
                 style={styles.input}
@@ -95,6 +200,7 @@ export default function ProfileScreen() {
                 onChangeText={(text) => setEditValues({ ...editValues, newPassword: text })}
                 placeholder="Nouveau mot de passe"
                 secureTextEntry
+                placeholderTextColor="#999"
               />
               <TextInput
                 style={styles.input}
@@ -102,6 +208,7 @@ export default function ProfileScreen() {
                 onChangeText={(text) => setEditValues({ ...editValues, confirmPassword: text })}
                 placeholder="Confirmer le mot de passe"
                 secureTextEntry
+                placeholderTextColor="#999"
               />
             </>
           ) : (
@@ -110,32 +217,119 @@ export default function ProfileScreen() {
               value={editValues[field]}
               onChangeText={(text) => setEditValues({ ...editValues, [field]: text })}
               placeholder={`Nouveau ${title.toLowerCase()}`}
-              keyboardType={field === 'phone' ? 'phone-pad' : 'default'}
-              secureTextEntry={field === 'password'}
+              keyboardType={field === 'email' ? 'email-address' : 'default'}
+              placeholderTextColor="#999"
             />
           )}
+          
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          
           <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => handleSave(field)}
+            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            onPress={() => confirmSave(field)}
+            disabled={loading}
           >
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+            <Text style={styles.saveButtonText}>
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
   );
 
+  /**
+   * Rendu de la modale de confirmation
+   */
+  const renderConfirmationModal = () => (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => {
+        setModalVisible(false);
+        setError(null);
+      }}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>
+            {modalType === 'update' ? 'Confirmer les modifications' : 'Supprimer le compte'}
+          </Text>
+          
+          <Text style={styles.modalText}>
+            {modalType === 'update' 
+              ? 'Êtes-vous sûr de vouloir enregistrer ces modifications ?'
+              : 'Cette action est irréversible. Votre compte et toutes vos données seront définitivement supprimés.'}
+          </Text>
+          
+          {modalType === 'delete' && (
+            <>
+              <Text style={styles.modalWarning}>
+                Écrivez "SUPPRIMER" pour confirmer:
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+                placeholder="SUPPRIMER"
+                placeholderTextColor="#999"
+              />
+            </>
+          )}
+          
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => {
+                setModalVisible(false);
+                setError(null);
+                if (modalType === 'delete') {
+                  setDeleteConfirmText('');
+                }
+              }}
+              disabled={loading}
+            >
+              <Text style={styles.modalCancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                modalType === 'update' ? styles.modalConfirmButton : styles.modalDeleteButton,
+                loading && styles.saveButtonDisabled
+              ]}
+              onPress={modalType === 'update' ? handleSave : handleDeleteAccount}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.modalConfirmButtonText}>
+                  {modalType === 'update' ? 'Confirmer' : 'Supprimer'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {renderConfirmationModal()}
+      
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <Image 
-            source={{ uri: userData.avatar }}
+            source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&q=80' }}
             style={styles.avatar}
           />
           <View style={styles.nameContainer}>
-            <Text style={styles.name}>{userData.name}</Text>
-            <Text style={styles.userType}>Compte {userData.type}</Text>
+            <Text style={styles.name}>{user ? `${user.prenom} ${user.nom}` : 'Utilisateur'}</Text>
+            <Text style={styles.userType}>Compte {user?.role || 'utilisateur'}</Text>
           </View>
         </View>
 
@@ -158,20 +352,20 @@ export default function ProfileScreen() {
           {renderDropdownItem(
             <Mail size={20} color="#0066FF" style={styles.itemIcon} />,
             'Email',
-            userData.email,
+            user?.email || '',
             'email'
           )}
           {renderDropdownItem(
-            <Phone size={20} color="#0066FF" style={styles.itemIcon} />,
-            'Téléphone',
-            userData.phone,
-            'phone'
+            <User size={20} color="#0066FF" style={styles.itemIcon} />,
+            'Prénom',
+            user?.prenom || '',
+            'prenom'
           )}
           {renderDropdownItem(
-            <MapPin size={20} color="#0066FF" style={styles.itemIcon} />,
-            'Localisation',
-            userData.location,
-            'location'
+            <User size={20} color="#0066FF" style={styles.itemIcon} />,
+            'Nom',
+            user?.nom || '',
+            'nom'
           )}
           {renderDropdownItem(
             <Lock size={20} color="#0066FF" style={styles.itemIcon} />,
@@ -198,8 +392,16 @@ export default function ProfileScreen() {
         </View>
 
         <TouchableOpacity 
+          style={styles.deleteAccountButton}
+          onPress={confirmDelete}
+        >
+          <Trash2 size={20} color="#FF3B30" />
+          <Text style={styles.deleteAccountText}>Supprimer mon compte</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
           style={styles.logoutButton}
-          onPress={() => router.replace('/(auth)/login')}
+          onPress={handleLogout}
         >
           <LogOut size={20} color="#FF3B30" />
           <Text style={styles.logoutText}>Se déconnecter</Text>
@@ -352,6 +554,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E0E0E0',
+    color: '#333',
   },
   saveButton: {
     backgroundColor: '#0066FF',
@@ -388,6 +591,23 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginLeft: 32,
   },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: '#FFF0F0',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FFDDDD',
+  },
+  deleteAccountText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#FF3B30',
+    marginLeft: 8,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,5 +622,86 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FF3B30',
     marginLeft: 8,
+  },
+  errorText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#FF3B30',
+    marginBottom: 12,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#0066FF80',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 20,
+    color: '#333',
+    marginBottom: 16,
+  },
+  modalText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#555',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  modalWarning: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#FF3B30',
+    marginBottom: 12,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelButton: {
+    flex: 1,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  modalCancelButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#666',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#0066FF',
+    alignItems: 'center',
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  modalDeleteButton: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#FF3B30',
+    alignItems: 'center',
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  modalConfirmButtonText: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#fff',
   },
 });
