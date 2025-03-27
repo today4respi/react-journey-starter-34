@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, LoginCredentials, RegisterData } from '../types';
 import authService from '../services/authService';
+import * as SecureStore from 'expo-secure-store';
 
 /**
  * Interface définissant les fonctionnalités du contexte d'authentification
@@ -20,6 +21,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Key for storing user in storage
+const USER_STORAGE_KEY = 'user_data';
+
 /**
  * Provider du contexte d'authentification
  * @param children - Les composants enfants
@@ -31,10 +35,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Vérification de l'utilisateur au chargement
   useEffect(() => {
-    const checkUserLoggedIn = async () => {
+    const loadUserFromStorage = async () => {
       try {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+        // Try to get user from storage first
+        const userDataString = await SecureStore.getItemAsync(USER_STORAGE_KEY);
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          setUser(userData);
+        } else {
+          // If not in storage, try to get from API
+          const currentUser = await authService.getCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(currentUser));
+          }
+        }
       } catch (err) {
         console.error('Erreur lors de la vérification de l\'utilisateur:', err);
       } finally {
@@ -42,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    checkUserLoggedIn();
+    loadUserFromStorage();
   }, []);
 
   /**
@@ -53,8 +68,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      const loggedInUser = await authService.login(credentials);
+      const response = await authService.login(credentials);
+      const loggedInUser = response.user;
       setUser(loggedInUser);
+      
+      // Store user in secure storage
+      await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion');
       throw err;
@@ -71,8 +90,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      const newUser = await authService.register(data);
-      setUser(newUser);
+      const response = await authService.register(data);
+      return response;
     } catch (err: any) {
       setError(err.message || 'Erreur lors de l\'inscription');
       throw err;
@@ -88,6 +107,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       await authService.logout();
+      // Clear user from storage
+      await SecureStore.deleteItemAsync(USER_STORAGE_KEY);
       setUser(null);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la déconnexion');
@@ -108,6 +129,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const updatedUser = await authService.updateUser(id, data);
       setUser(updatedUser);
+      
+      // Update user in storage
+      await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(updatedUser));
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la mise à jour');
       throw err;
@@ -125,6 +149,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
     try {
       await authService.deleteUser(id);
+      // Clear user from storage
+      await SecureStore.deleteItemAsync(USER_STORAGE_KEY);
       setUser(null);
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la suppression du compte');

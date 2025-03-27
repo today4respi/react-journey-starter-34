@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+
+import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import authService from '@/assets/src/services/authService';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -10,14 +12,32 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       setError('Veuillez remplir tous les champs');
       return;
     }
-    // Add login logic here
-    router.replace('/(tabs)');
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await authService.login({ email, password });
+      
+      if (response.user) {
+        // Store user info in local storage if needed
+        router.replace('/(tabs)');
+      } else {
+        setError('Une erreur est survenue lors de la connexion');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Identifiants invalides');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,10 +118,15 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={styles.loginButton}
+                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
                 onPress={handleLogin}
+                disabled={loading}
               >
-                <Text style={styles.loginButtonText}>Se connecter</Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={styles.loginButtonText}>Se connecter</Text>
+                )}
               </TouchableOpacity>
 
               <View style={styles.divider}>
@@ -252,5 +277,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color: '#fff',
     fontSize: 16,
+  },
+  loginButtonDisabled: {
+    backgroundColor: 'rgba(0, 102, 255, 0.5)',
   },
 });

@@ -101,11 +101,11 @@ const App = () => {
           // Écrans pour les utilisateurs authentifiés
           <Stack.Screen name="Main" component={TabNavigator} />
         ) : (
-          // Écrans pour les utilisateurs non authentifiés
+          // Écrans pour les utilisateurs non authentifiés - commencer par l'écran de connexion
           <>
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
           </>
         )}
       </Stack.Navigator>

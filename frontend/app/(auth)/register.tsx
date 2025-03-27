@@ -1,26 +1,29 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform } from 'react-native';
+
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Mail, Lock, User, Phone, MapPin, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import authService from '@/assets/src/services/authService';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    nom: '',
+    prenom: '',
     email: '',
-    phone: '',
-    location: '',
     password: '',
     confirmPassword: '',
+    role: 'user'
   });
   const [error, setError] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     // Basic validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.nom || !formData.prenom || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -28,8 +31,35 @@ export default function RegisterScreen() {
       setError('Les mots de passe ne correspondent pas');
       return;
     }
-    // Add registration logic here
-    router.replace('/(tabs)');
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const { confirmPassword, ...registerData } = formData;
+      const response = await authService.register(registerData);
+
+      if (response.success) {
+        // Redirect to login or directly login the user
+        Alert.alert(
+          "Inscription réussie",
+          "Votre compte a été créé avec succès",
+          [{ text: "OK", onPress: () => router.push('/login') }]
+        );
+      } else {
+        setError('Une erreur est survenue lors de l\'inscription');
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError(err.message || 'Erreur lors de l\'inscription');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    setError('');
   };
 
   return (
@@ -71,14 +101,23 @@ export default function RegisterScreen() {
                 <User size={20} color="#666" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Nom complet *"
+                  placeholder="Prénom *"
                   placeholderTextColor="#666"
                   autoCapitalize="words"
-                  value={formData.name}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, name: text });
-                    setError('');
-                  }}
+                  value={formData.prenom}
+                  onChangeText={(text) => handleInputChange('prenom', text)}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <User size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nom *"
+                  placeholderTextColor="#666"
+                  autoCapitalize="words"
+                  value={formData.nom}
+                  onChangeText={(text) => handleInputChange('nom', text)}
                 />
               </View>
 
@@ -91,33 +130,7 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={formData.email}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, email: text });
-                    setError('');
-                  }}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <Phone size={20} color="#666" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Téléphone"
-                  placeholderTextColor="#666"
-                  keyboardType="phone-pad"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <MapPin size={20} color="#666" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Localisation"
-                  placeholderTextColor="#666"
-                  value={formData.location}
-                  onChangeText={(text) => setFormData({ ...formData, location: text })}
+                  onChangeText={(text) => handleInputChange('email', text)}
                 />
               </View>
 
@@ -129,10 +142,7 @@ export default function RegisterScreen() {
                   placeholderTextColor="#666"
                   secureTextEntry={!showPassword}
                   value={formData.password}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, password: text });
-                    setError('');
-                  }}
+                  onChangeText={(text) => handleInputChange('password', text)}
                 />
                 <TouchableOpacity 
                   style={styles.eyeIcon}
@@ -154,10 +164,7 @@ export default function RegisterScreen() {
                   placeholderTextColor="#666"
                   secureTextEntry={!showConfirmPassword}
                   value={formData.confirmPassword}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, confirmPassword: text });
-                    setError('');
-                  }}
+                  onChangeText={(text) => handleInputChange('confirmPassword', text)}
                 />
                 <TouchableOpacity 
                   style={styles.eyeIcon}
@@ -178,10 +185,15 @@ export default function RegisterScreen() {
               <Text style={styles.requiredText}>* Champs obligatoires</Text>
 
               <TouchableOpacity 
-                style={styles.registerButton}
+                style={[styles.registerButton, loading && styles.registerButtonDisabled]}
                 onPress={handleRegister}
+                disabled={loading}
               >
-                <Text style={styles.registerButtonText}>S'inscrire</Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={styles.registerButtonText}>S'inscrire</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -315,5 +327,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color: '#fff',
     fontSize: 16,
+  },
+  registerButtonDisabled: {
+    backgroundColor: 'rgba(0, 102, 255, 0.5)',
   },
 });

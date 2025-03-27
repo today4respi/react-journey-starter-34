@@ -19,11 +19,13 @@ const API_URL = 'http://localhost:3000/api';
  * @returns La réponse en JSON ou lance une erreur
  */
 const handleApiResponse = async (response: Response) => {
+  const data = await response.json();
+  
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Une erreur est survenue');
+    throw new Error(data.message || 'Une erreur est survenue');
   }
-  return response.json();
+  
+  return data;
 };
 
 /**
@@ -36,7 +38,8 @@ export const authService = {
    * @param data - Les données d'inscription (nom, prénom, email, mot de passe)
    * @returns Promise<User> - Les informations de l'utilisateur créé
    */
-  register: async (data: RegisterData): Promise<User> => {
+  register: async (data: RegisterData) => {
+    console.log('Registering with data:', data);
     const response = await fetch(`${API_URL}/users/register`, {
       method: 'POST',
       headers: {
@@ -54,7 +57,8 @@ export const authService = {
    * @param credentials - Les identifiants de connexion (email, mot de passe)
    * @returns Promise<User> - Les informations de l'utilisateur connecté
    */
-  login: async (credentials: LoginCredentials): Promise<User> => {
+  login: async (credentials: LoginCredentials) => {
+    console.log('Logging in with credentials:', credentials);
     const response = await fetch(`${API_URL}/users/login`, {
       method: 'POST',
       headers: {
@@ -71,7 +75,7 @@ export const authService = {
    * Termine la session de l'utilisateur connecté
    * @returns Promise<void> - Confirmation de déconnexion
    */
-  logout: async (): Promise<void> => {
+  logout: async () => {
     const response = await fetch(`${API_URL}/users/logout`, {
       method: 'POST',
       credentials: 'include',
@@ -84,7 +88,7 @@ export const authService = {
    * Vérifie si une session utilisateur existe et retourne les informations de l'utilisateur
    * @returns Promise<User | null> - Les informations de l'utilisateur ou null si non connecté
    */
-  getCurrentUser: async (): Promise<User | null> => {
+  getCurrentUser: async () => {
     try {
       const response = await fetch(`${API_URL}/users/me`, {
         method: 'GET',
@@ -104,7 +108,7 @@ export const authService = {
    * @param data - Les données à mettre à jour (partielles)
    * @returns Promise<User> - Les informations de l'utilisateur mis à jour
    */
-  updateUser: async (id: string, data: Partial<RegisterData>): Promise<User> => {
+  updateUser: async (id: string, data: Partial<RegisterData>) => {
     const response = await fetch(`${API_URL}/users/${id}`, {
       method: 'PUT',
       headers: {
@@ -122,7 +126,7 @@ export const authService = {
    * @param id - L'identifiant de l'utilisateur à supprimer
    * @returns Promise<void> - Confirmation de suppression
    */
-  deleteUser: async (id: string): Promise<void> => {
+  deleteUser: async (id: string) => {
     const response = await fetch(`${API_URL}/users/${id}`, {
       method: 'DELETE',
       credentials: 'include',
