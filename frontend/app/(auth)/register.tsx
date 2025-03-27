@@ -85,6 +85,7 @@ export default function RegisterScreen() {
             <TouchableOpacity 
               style={styles.backButton}
               onPress={() => router.back()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <ArrowLeft color="#fff" size={24} />
             </TouchableOpacity>
@@ -102,7 +103,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Prénom *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   autoCapitalize="words"
                   value={formData.prenom}
                   onChangeText={(text) => handleInputChange('prenom', text)}
@@ -114,7 +115,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Nom *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   autoCapitalize="words"
                   value={formData.nom}
                   onChangeText={(text) => handleInputChange('nom', text)}
@@ -126,7 +127,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={formData.email}
@@ -139,7 +140,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Mot de passe *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   secureTextEntry={!showPassword}
                   value={formData.password}
                   onChangeText={(text) => handleInputChange('password', text)}
@@ -147,6 +148,7 @@ export default function RegisterScreen() {
                 <TouchableOpacity 
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showPassword ? (
                     <EyeOff size={20} color="#666" />
@@ -161,7 +163,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Confirmer le mot de passe *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   secureTextEntry={!showConfirmPassword}
                   value={formData.confirmPassword}
                   onChangeText={(text) => handleInputChange('confirmPassword', text)}
@@ -169,6 +171,7 @@ export default function RegisterScreen() {
                 <TouchableOpacity 
                   style={styles.eyeIcon}
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={20} color="#666" />
@@ -270,9 +273,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
     height: 56,
   },
   inputIcon: {
@@ -283,22 +286,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize: 16,
     color: '#333',
+    paddingVertical: 8,
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
   },
   errorText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#FF3B30',
-    marginTop: -8,
+    marginTop: 4,
   },
   requiredText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#fff',
     opacity: 0.7,
-    marginTop: -8,
+    marginTop: 4,
   },
   registerButton: {
     backgroundColor: '#0066FF',

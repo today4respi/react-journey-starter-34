@@ -73,7 +73,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
@@ -89,7 +89,7 @@ export default function LoginScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Mot de passe"
-                  placeholderTextColor="#666"
+                  placeholderTextColor="#999"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={(text) => {
@@ -100,6 +100,7 @@ export default function LoginScreen() {
                 <TouchableOpacity 
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showPassword ? (
                     <EyeOff size={20} color="#666" />
@@ -113,7 +114,10 @@ export default function LoginScreen() {
                 <Text style={styles.errorText}>{error}</Text>
               ) : null}
 
-              <TouchableOpacity style={styles.forgotPasswordButton}>
+              <TouchableOpacity 
+                style={styles.forgotPasswordButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
               </TouchableOpacity>
 
@@ -204,9 +208,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
     height: 56,
   },
   inputIcon: {
@@ -217,18 +221,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize: 16,
     color: '#333',
+    paddingVertical: 8,
   },
   eyeIcon: {
-    padding: 4,
+    padding: 8,
   },
   errorText: {
     fontFamily: 'Inter-Regular',
     fontSize: 14,
     color: '#FF3B30',
-    marginTop: -8,
+    marginTop: 4,
   },
   forgotPasswordButton: {
     alignSelf: 'flex-end',
+    paddingVertical: 4,
   },
   forgotPasswordText: {
     fontFamily: 'Inter-Medium',
