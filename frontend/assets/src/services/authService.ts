@@ -1,99 +1,138 @@
 
-import axios from 'axios';
+/**
+ * Service d'authentification
+ * Ce module gère toutes les opérations liées à l'authentification des utilisateurs
+ * comme l'inscription, la connexion, la déconnexion, et la gestion du profil.
+ * @module authService
+ */
+
 import { LoginCredentials, RegisterData, User } from '../types';
-import * as SecureStore from 'expo-secure-store';
 
-const API_URL = '/api/users';
+/**
+ * URL de base de l'API
+ */
+const API_URL = 'http://localhost:3000/api';
 
-const login = async (credentials: LoginCredentials) => {
-  try {
-    const response = await axios.post(`${API_URL}/login`, credentials, {
-      withCredentials: true
+/**
+ * Fonction pour gérer les réponses de l'API
+ * @param response - La réponse HTTP de l'API
+ * @returns La réponse en JSON ou lance une erreur
+ */
+const handleApiResponse = async (response: Response) => {
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(data.message || 'Une erreur est survenue');
+  }
+  
+  return data;
+};
+
+/**
+ * Service d'authentification pour gérer les utilisateurs
+ */
+export const authService = {
+  /**
+   * Inscription d'un nouvel utilisateur
+   * Envoie une requête POST au serveur pour créer un nouveau compte utilisateur
+   * @param data - Les données d'inscription (nom, prénom, email, mot de passe)
+   * @returns Promise<User> - Les informations de l'utilisateur créé
+   */
+  register: async (data: RegisterData) => {
+    console.log('Registering with data:', data);
+    const response = await fetch(`${API_URL}/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      credentials: 'include',
     });
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Identifiants invalides');
-    } else {
-      throw new Error('Erreur de connexion au serveur');
+    return handleApiResponse(response);
+  },
+
+  /**
+   * Connexion d'un utilisateur
+   * Authentifie un utilisateur avec ses identifiants et crée une session
+   * @param credentials - Les identifiants de connexion (email, mot de passe)
+   * @returns Promise<User> - Les informations de l'utilisateur connecté
+   */
+  login: async (credentials: LoginCredentials) => {
+    console.log('Logging in with credentials:', credentials);
+    const response = await fetch(`${API_URL}/users/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+      credentials: 'include',
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * Déconnexion de l'utilisateur
+   * Termine la session de l'utilisateur connecté
+   * @returns Promise<void> - Confirmation de déconnexion
+   */
+  logout: async () => {
+    const response = await fetch(`${API_URL}/users/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return handleApiResponse(response);
+  },
+
+  /**
+   * Récupération de l'utilisateur actuellement connecté
+   * Vérifie si une session utilisateur existe et retourne les informations de l'utilisateur
+   * @returns Promise<User | null> - Les informations de l'utilisateur ou null si non connecté
+   */
+  getCurrentUser: async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/me`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      return handleApiResponse(response);
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'utilisateur courant', error);
+      return null;
     }
-  }
-};
+  },
 
-const register = async (data: RegisterData) => {
-  try {
-    const response = await axios.post(`${API_URL}/register`, data);
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Erreur lors de l\'inscription');
-    } else {
-      throw new Error('Erreur de connexion au serveur');
-    }
-  }
-};
-
-const logout = async () => {
-  try {
-    const response = await axios.post(`${API_URL}/logout`, {}, {
-      withCredentials: true
+  /**
+   * Mise à jour des informations d'un utilisateur
+   * Modifie les données du profil d'un utilisateur existant
+   * @param id - L'identifiant de l'utilisateur à modifier
+   * @param data - Les données à mettre à jour (partielles)
+   * @returns Promise<User> - Les informations de l'utilisateur mis à jour
+   */
+  updateUser: async (id: string, data: Partial<RegisterData>) => {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      credentials: 'include',
     });
-    await SecureStore.deleteItemAsync('user_data');
-    return response.data;
-  } catch (error: any) {
-    throw new Error('Erreur lors de la déconnexion');
-  }
-};
+    return handleApiResponse(response);
+  },
 
-const getCurrentUser = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/me`, {
-      withCredentials: true
+  /**
+   * Suppression d'un utilisateur
+   * Supprime définitivement un compte utilisateur et ses données associées
+   * @param id - L'identifiant de l'utilisateur à supprimer
+   * @returns Promise<void> - Confirmation de suppression
+   */
+  deleteUser: async (id: string) => {
+    const response = await fetch(`${API_URL}/users/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
     });
-    return response.data;
-  } catch (error) {
-    return null;
+    return handleApiResponse(response);
   }
 };
 
-const updateUser = async (id: string, data: Partial<RegisterData>) => {
-  try {
-    const response = await axios.put(`${API_URL}/${id}`, data, {
-      withCredentials: true
-    });
-    
-    // Get the updated user data
-    const updatedUser = await getCurrentUser();
-    return updatedUser;
-  } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Erreur lors de la mise à jour');
-    } else {
-      throw new Error('Erreur de connexion au serveur');
-    }
-  }
-};
-
-const deleteUser = async (id: string) => {
-  try {
-    const response = await axios.delete(`${API_URL}/${id}`, {
-      withCredentials: true
-    });
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
-      throw new Error(error.response.data.message || 'Erreur lors de la suppression');
-    } else {
-      throw new Error('Erreur de connexion au serveur');
-    }
-  }
-};
-
-export default {
-  login,
-  register,
-  logout,
-  getCurrentUser,
-  updateUser,
-  deleteUser
-};
+export default authService;

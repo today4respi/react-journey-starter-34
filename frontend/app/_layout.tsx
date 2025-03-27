@@ -1,33 +1,37 @@
-
-import React from 'react';
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
-import useFrameworkReady from '@/hooks/useFrameworkReady';
+import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { SplashScreen } from 'expo-router';
-import { AuthProvider } from '../assets/src/contexts/AuthContext';
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  useFrameworkReady();
+
+  const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
   });
 
-  const { ready } = useFrameworkReady();
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded || !ready) {
-    return <SplashScreen />;
+  if (!fontsLoaded && !fontError) {
+    return null;
   }
 
   return (
-    <AuthProvider>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="(auth)/login">
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
-    </AuthProvider>
+      <StatusBar style="light" />
+    </>
   );
 }
