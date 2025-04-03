@@ -9,6 +9,7 @@ import { ROUTES } from './navigationConstants';
 import StartScreen from '../screens/StartScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ForgotPasswordEmailScreen from '../screens/password/ForgotPasswordEmailScreen';
 import ForgotPasswordVerificationScreen from '../screens/password/ForgotPasswordVerificationScreen';
 import ForgotPasswordResetScreen from '../screens/password/ForgotPasswordResetScreen';
@@ -71,6 +72,10 @@ const AuthStack = () => {
       />
       <Stack.Screen 
         name={ROUTES.FORGOT_PASSWORD} 
+        component={ForgotPasswordScreen}
+      />
+      <Stack.Screen 
+        name={ROUTES.FORGOT_PASSWORD_EMAIL} 
         component={ForgotPasswordEmailScreen}
       />
       <Stack.Screen 

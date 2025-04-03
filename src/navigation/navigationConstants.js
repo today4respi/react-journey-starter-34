@@ -5,7 +5,12 @@ export const ROUTES = {
   START: 'Start',
   LOGIN: 'Login',
   SIGNUP: 'Signup',
+  
+  // Password Reset Flow - Legacy
   FORGOT_PASSWORD: 'ForgotPassword',
+  
+  // Password Reset Flow - New multi-step
+  FORGOT_PASSWORD_EMAIL: 'ForgotPasswordEmail',
   FORGOT_PASSWORD_VERIFICATION: 'ForgotPasswordVerification',
   FORGOT_PASSWORD_RESET: 'ForgotPasswordReset',
   FORGOT_PASSWORD_SUCCESS: 'ForgotPasswordSuccess',
