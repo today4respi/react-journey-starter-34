@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   View, 
@@ -32,6 +33,7 @@ const ForgotPasswordScreen = () => {
   const [resetCode, setResetCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [shouldNavigateBack, setShouldNavigateBack] = useState(false);
 
   // Gère la soumission de l'email et l'envoi du code de vérification
   // (Handles email submission and sending verification code)
@@ -56,6 +58,7 @@ const ForgotPasswordScreen = () => {
       
       // Passe à l'étape suivante
       // (Move to the next step)
+      setShouldNavigateBack(false); // Ensure we don't navigate back
       setCurrentStep(2);
     } catch (err) {
       setError(t('forgotPassword.emailError') || 'Failed to send verification code');
@@ -90,6 +93,7 @@ const ForgotPasswordScreen = () => {
       // Vérifie si le code entré correspond au code généré
       // (Check if entered code matches the generated code)
       if (codeString === resetCode) {
+        setShouldNavigateBack(false); // Ensure we don't navigate back
         setCurrentStep(3);
       } else {
         throw new Error(t('forgotPassword.verificationError') || 'Invalid verification code');
@@ -115,6 +119,7 @@ const ForgotPasswordScreen = () => {
       
       // Passe à l'étape finale
       // (Move to the final step)
+      setShouldNavigateBack(false); // Ensure we don't navigate back
       setCurrentStep(4);
     } catch (err) {
       setError(t('forgotPassword.resetError') || 'Failed to reset password');
@@ -129,6 +134,19 @@ const ForgotPasswordScreen = () => {
   const handleReturnToLogin = () => {
     navigation.navigate(ROUTES.LOGIN);
   };
+
+  // Prevent automatic navigation to login
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // If we're in the middle of the flow and not deliberately navigating back
+      if (currentStep > 1 && currentStep < 4 && !shouldNavigateBack) {
+        e.preventDefault();
+        console.log('Navigation prevented - in the middle of password reset flow');
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, currentStep, shouldNavigateBack]);
 
   // Rendu de l'étape appropriée en fonction de currentStep
   // (Render the appropriate step based on currentStep)
@@ -203,6 +221,7 @@ const ForgotPasswordScreen = () => {
               style={styles.backButton} 
               onPress={() => {
                 if (currentStep === 1) {
+                  setShouldNavigateBack(true);
                   navigation.navigate(ROUTES.LOGIN);
                 } else {
                   setCurrentStep(currentStep - 1);

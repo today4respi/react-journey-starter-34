@@ -53,10 +53,23 @@ const AuthStack = () => {
         headerShown: false,
       }}
     >
-      <Stack.Screen name={ROUTES.START} component={StartScreen} />
-      <Stack.Screen name={ROUTES.LOGIN} component={LoginScreen} />
-      <Stack.Screen name={ROUTES.SIGNUP} component={SignupScreen} />
-      <Stack.Screen name={ROUTES.FORGOT_PASSWORD} component={ForgotPasswordScreen} />
+      <Stack.Screen 
+        name={ROUTES.START} 
+        component={StartScreen} 
+      />
+      <Stack.Screen 
+        name={ROUTES.LOGIN} 
+        component={LoginScreen} 
+      />
+      <Stack.Screen 
+        name={ROUTES.SIGNUP} 
+        component={SignupScreen} 
+      />
+      <Stack.Screen 
+        name={ROUTES.FORGOT_PASSWORD} 
+        component={ForgotPasswordScreen}
+        options={{ detachPreviousScreen: true }}
+      />
     </Stack.Navigator>
   );
 };
