@@ -6,6 +6,9 @@ export const ROUTES = {
   LOGIN: 'Login',
   SIGNUP: 'Signup',
   FORGOT_PASSWORD: 'ForgotPassword',
+  FORGOT_PASSWORD_VERIFICATION: 'ForgotPasswordVerification',
+  FORGOT_PASSWORD_RESET: 'ForgotPasswordReset',
+  FORGOT_PASSWORD_SUCCESS: 'ForgotPasswordSuccess',
   
   // Main Routes
   MAP: 'Map',          // Primary route for the map screen

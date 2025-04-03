@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -8,7 +9,10 @@ import { ROUTES } from './navigationConstants';
 import StartScreen from '../screens/StartScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
-import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ForgotPasswordEmailScreen from '../screens/password/ForgotPasswordEmailScreen';
+import ForgotPasswordVerificationScreen from '../screens/password/ForgotPasswordVerificationScreen';
+import ForgotPasswordResetScreen from '../screens/password/ForgotPasswordResetScreen';
+import ForgotPasswordSuccessScreen from '../screens/password/ForgotPasswordSuccessScreen';
 import MapScreen from '../screens/MapScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -67,8 +71,19 @@ const AuthStack = () => {
       />
       <Stack.Screen 
         name={ROUTES.FORGOT_PASSWORD} 
-        component={ForgotPasswordScreen}
-        options={{ detachPreviousScreen: true }}
+        component={ForgotPasswordEmailScreen}
+      />
+      <Stack.Screen 
+        name={ROUTES.FORGOT_PASSWORD_VERIFICATION} 
+        component={ForgotPasswordVerificationScreen}
+      />
+      <Stack.Screen 
+        name={ROUTES.FORGOT_PASSWORD_RESET} 
+        component={ForgotPasswordResetScreen}
+      />
+      <Stack.Screen 
+        name={ROUTES.FORGOT_PASSWORD_SUCCESS} 
+        component={ForgotPasswordSuccessScreen}
       />
     </Stack.Navigator>
   );

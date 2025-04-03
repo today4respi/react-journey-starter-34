@@ -37,7 +37,6 @@ export default function LoginScreen({ navigation }) {
   const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const { signOut: clerkSignOut } = useClerkAuth();
 
-  // Sign out of Clerk when screen loads
   useEffect(() => {
     const handleSignOut = async () => {
       try {
@@ -71,13 +70,11 @@ export default function LoginScreen({ navigation }) {
       const userData = await login(email, password);
       console.log('User data after login:', userData);
       
-      // Navigate based on user role - using the correct route names from ROUTES constant
       if (userData.role === 'admin') {
         navigation.navigate(ROUTES.ADMIN_DASHBOARD);
       } else if (userData.role === 'provider' || userData.role === 'prestataire') {
         navigation.navigate(ROUTES.PROVIDER_DASHBOARD);
       } else {
-        // Update to navigate to MAP screen instead of HOME
         navigation.navigate(ROUTES.MAP);
       }
     } catch (error) {
@@ -88,7 +85,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
+    navigation.navigate(ROUTES.FORGOT_PASSWORD);
   };
   
   const handleGoogleLogin = async () => {
