@@ -51,12 +51,6 @@ const VerificationStep = ({ email, onSubmit, onResendCode, loading, error }) => 
     if (text && index < 3) {
       inputRefs[index + 1].current.focus();
     }
-    
-    // Submit when all fields are filled
-    if (index === 3 && text && newCode.every(digit => digit)) {
-      Keyboard.dismiss();
-      onSubmit(newCode);
-    }
   };
 
   // Handle key press for backspace
@@ -70,6 +64,14 @@ const VerificationStep = ({ email, onSubmit, onResendCode, loading, error }) => 
   const handleResendCode = () => {
     setTimeLeft(120); // Reset timer
     onResendCode();
+  };
+
+  // Handle verification submission
+  const handleSubmit = () => {
+    if (code.every(digit => digit)) {
+      Keyboard.dismiss();
+      onSubmit(code);
+    }
   };
 
   return (
@@ -105,7 +107,7 @@ const VerificationStep = ({ email, onSubmit, onResendCode, loading, error }) => 
       
       <TouchableOpacity 
         style={[styles.button, code.every(digit => digit) ? styles.buttonActive : styles.buttonInactive]} 
-        onPress={() => onSubmit(code)}
+        onPress={handleSubmit}
         disabled={loading || !code.every(digit => digit)}
       >
         {loading ? (

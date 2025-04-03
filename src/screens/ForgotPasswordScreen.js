@@ -203,11 +203,19 @@ const ForgotPasswordScreen = () => {
           {currentStep !== 4 && (
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={() => navigation.navigate(ROUTES.LOGIN)}
+              onPress={() => {
+                if (currentStep === 1) {
+                  navigation.navigate(ROUTES.LOGIN);
+                } else {
+                  setCurrentStep(currentStep - 1);
+                }
+              }}
               disabled={loading}
             >
               <Text style={styles.backButtonText}>
-                {t('forgotPassword.backToLogin') || 'Back to Login'}
+                {currentStep === 1 
+                  ? (t('forgotPassword.backToLogin') || 'Back to Login')
+                  : (t('forgotPassword.backToPrevious') || 'Back to Previous Step')}
               </Text>
             </TouchableOpacity>
           )}

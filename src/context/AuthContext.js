@@ -276,6 +276,10 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log(`Sending forgot password request for ${email} with code ${resetCode}`);
       
+      // Store the reset code temporarily in local storage to persist between app states
+      await storage.setItem('tempResetCode', resetCode);
+      await storage.setItem('tempResetEmail', email);
+      
       const response = await fetch(`${API_URL}${ENDPOINTS.FORGOT_PASSWORD}`, {
         method: 'POST',
         headers: {
@@ -310,14 +314,26 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     
     try {
+      // Check if we need to get the saved values
+      const savedCode = await storage.getItem('tempResetCode');
+      const savedEmail = await storage.getItem('tempResetEmail');
+      
+      // Use saved values if provided parameters are empty
+      const finalEmail = email || savedEmail;
+      const finalCode = resetCode || savedCode;
+      
+      if (!finalEmail || !finalCode) {
+        throw new Error('Missing email or reset code. Please try again.');
+      }
+      
       const response = await fetch(`${API_URL}${ENDPOINTS.RESET_PASSWORD}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          email, 
-          resetCode, 
+          email: finalEmail, 
+          resetCode: finalCode, 
           newPassword 
         }),
       });
@@ -328,6 +344,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(result.message || 'Failed to reset password');
       }
 
+      // Clear temporary storage data
+      await storage.removeItem('tempResetCode');
+      await storage.removeItem('tempResetEmail');
+      
       console.log('Password reset response:', result);
       return result;
     } catch (error) {
