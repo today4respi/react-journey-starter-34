@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   View, 
@@ -31,19 +30,8 @@ const ForgotPasswordScreen = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Génère un code de vérification à 4 chiffres aléatoire
-  // (Generates a random 4-digit verification code)
-  const generateVerificationCode = () => {
-    let code = '';
-    for (let i = 0; i < 4; i++) {
-      code += Math.floor(Math.random() * 10).toString();
-    }
-    return code;
-  };
 
   // Gère la soumission de l'email et l'envoi du code de vérification
   // (Handles email submission and sending verification code)
@@ -57,7 +45,7 @@ const ForgotPasswordScreen = () => {
       console.log('Generated code:', code);
       
       // Use the auth context forgotPassword function
-      const response = await forgotPassword(submittedEmail, code);
+      await forgotPassword(submittedEmail, code);
       
       console.log('Code sent successfully:', code);
       
@@ -77,21 +65,31 @@ const ForgotPasswordScreen = () => {
     }
   };
 
+  // Génère un code de vérification à 4 chiffres aléatoire
+  // (Generates a random 4-digit verification code)
+  const generateVerificationCode = () => {
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+      code += Math.floor(Math.random() * 10).toString();
+    }
+    return code;
+  };
+
   // Gère la soumission du code de vérification
   // (Handles verification code submission)
-  const handleVerificationSubmit = async (code) => {
+  const handleVerificationSubmit = (codeArray) => {
     setError('');
     setLoading(true);
     
     try {
       // Convertit le tableau de code en chaîne
       // (Convert code array to string)
-      const codeString = code.join('');
+      const codeString = codeArray.join('');
+      console.log('Submitted code:', codeString, 'Expected code:', resetCode);
       
       // Vérifie si le code entré correspond au code généré
       // (Check if entered code matches the generated code)
       if (codeString === resetCode) {
-        setVerificationCode(code);
         setCurrentStep(3);
       } else {
         throw new Error(t('forgotPassword.verificationError') || 'Invalid verification code');

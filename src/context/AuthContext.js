@@ -326,6 +326,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Missing email or reset code. Please try again.');
       }
       
+      console.log('Resetting password with:', { email: finalEmail, code: finalCode });
+      
       const response = await fetch(`${API_URL}${ENDPOINTS.RESET_PASSWORD}`, {
         method: 'POST',
         headers: {

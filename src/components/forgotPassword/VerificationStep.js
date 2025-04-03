@@ -68,6 +68,7 @@ const VerificationStep = ({ email, onSubmit, onResendCode, loading, error }) => 
 
   // Handle verification submission
   const handleSubmit = () => {
+    console.log('Verification code submitted:', code);
     if (code.every(digit => digit)) {
       Keyboard.dismiss();
       onSubmit(code);
