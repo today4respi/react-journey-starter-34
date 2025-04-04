@@ -1,6 +1,6 @@
 
-import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker, Callout, Circle } from 'react-native-maps';
 import PlaceCallout from '../PlaceCallout';
 import { COLORS } from '../../theme/colors';
@@ -14,6 +14,18 @@ const MapContent = ({
   onRegionChangeComplete
 }) => {
   const navigation = useNavigation();
+
+  // Initialize map with user location when available
+  useEffect(() => {
+    if (mapRef.current && userLocation) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 1000);
+    }
+  }, [userLocation]);
 
   // Handle navigation to place details
   const handlePlacePress = (place) => {
@@ -54,6 +66,15 @@ const MapContent = ({
         showsCompass={true}
         showsScale={true}
         onRegionChangeComplete={onRegionChangeComplete}
+        toolbarEnabled={Platform.OS === 'android'}
+        loadingEnabled={true}
+        loadingIndicatorColor={COLORS.primary}
+        loadingBackgroundColor={COLORS.white}
+        moveOnMarkerPress={false}
+        pitchEnabled={true}
+        rotateEnabled={true}
+        zoomEnabled={true}
+        zoomControlEnabled={Platform.OS === 'android'}
         customMapStyle={[
           {
             "featureType": "water",
@@ -105,6 +126,7 @@ const MapContent = ({
             radius={500}
             strokeColor={COLORS.primary}
             fillColor={`${COLORS.primary}20`}
+            strokeWidth={1}
           />
         )}
         {placeMarkers}

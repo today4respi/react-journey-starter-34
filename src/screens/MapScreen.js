@@ -31,14 +31,27 @@ const MapScreen = ({ navigation }) => {
   const { t } = useTranslation();
   const mapRef = useRef(null);
   const [filterType, setFilterType] = useState(null);
+  const [mapRegion, setMapRegion] = useState(initialRegion);
   
   // Custom hooks
   const userLocation = useLocationPermission();
   const { places, isLoading, error, fetchPlaces } = usePlacesData();
   
+  // Update map region when user location changes
+  useEffect(() => {
+    if (userLocation && userLocation.latitude && userLocation.longitude) {
+      setMapRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    }
+  }, [userLocation]);
+  
   // Handle region change
   const handleRegionChangeComplete = (region) => {
-    // Update region if needed
+    setMapRegion(region);
     console.log('Region changed:', region);
   };
 
@@ -66,11 +79,11 @@ const MapScreen = ({ navigation }) => {
     // Ensure all places have valid coordinates
     return filtered.map(place => ({
       ...place,
-      latitude: parseFloat(place.location?.latitude) || initialRegion.latitude,
-      longitude: parseFloat(place.location?.longitude) || initialRegion.longitude,
+      latitude: parseFloat(place.location?.latitude) || mapRegion.latitude,
+      longitude: parseFloat(place.location?.longitude) || mapRegion.longitude,
       id: place.id || Math.random().toString() // Ensure each place has a unique ID
     }));
-  }, [places, filterType]);
+  }, [places, filterType, mapRegion]);
 
   // Effect to handle errors in coordinate data
   useEffect(() => {
@@ -85,16 +98,20 @@ const MapScreen = ({ navigation }) => {
     }
   }, [places]);
 
+  const retryFetchPlaces = useCallback(() => {
+    fetchPlaces();
+  }, [fetchPlaces]);
+
   if (isLoading) {
     return <LoadingState />;
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={fetchPlaces} />;
+    return <ErrorState error={error} onRetry={retryFetchPlaces} />;
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary_dark} />
       
       {/* Header */}
@@ -103,8 +120,8 @@ const MapScreen = ({ navigation }) => {
         duration={1000} 
         style={styles.header}
       >
-        <Text style={styles.title}>Accueil</Text>
-        <Text style={styles.subtitle}>Découvrez les lieux touristiques</Text>
+        <Text style={styles.title}>{t('map.home')}</Text>
+        <Text style={styles.subtitle}>{t('map.discover')}</Text>
       </Animatable.View>
       
       <Animatable.View 
@@ -122,7 +139,7 @@ const MapScreen = ({ navigation }) => {
         <View style={styles.mapContainer}>
           <MapContent 
             mapRef={mapRef}
-            initialRegion={initialRegion}
+            initialRegion={mapRegion}
             userLocation={userLocation}
             filteredPlaces={filteredPlaces}
             onRegionChangeComplete={handleRegionChangeComplete}
@@ -130,7 +147,7 @@ const MapScreen = ({ navigation }) => {
         </View>
       </Animatable.View>
       
-      {/* Footer - Explicitly set HOME as active route */}
+      {/* Footer */}
       <FooterNav navigation={navigation} activeScreen={ROUTES.HOME} />
     </SafeAreaView>
   );
