@@ -5,6 +5,7 @@ import MapView, { PROVIDER_GOOGLE, Marker, Callout, Circle } from 'react-native-
 import PlaceCallout from '../PlaceCallout';
 import { COLORS } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 
 const MapContent = ({ 
   mapRef, 
@@ -14,6 +15,7 @@ const MapContent = ({
   onRegionChangeComplete
 }) => {
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   // Initialize map with user location when available
   useEffect(() => {

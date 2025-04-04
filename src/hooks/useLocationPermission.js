@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import * as Location from 'expo-location';
 import { Platform, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export const useLocationPermission = () => {
   const [userLocation, setUserLocation] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     (async () => {
@@ -17,9 +19,12 @@ export const useLocationPermission = () => {
           // On iOS, show a more user-friendly message
           if (Platform.OS === 'ios') {
             Alert.alert(
-              "Location Access Required",
-              "Please enable location services in your device settings to see nearby places.",
-              [{ text: "OK" }]
+              t('map.permissions'),
+              t('map.permissionsMessage'),
+              [
+                { text: t('map.settings'), onPress: () => Location.openSettings() },
+                { text: t('map.cancel'), style: 'cancel' }
+              ]
             );
           }
           return;
@@ -43,14 +48,17 @@ export const useLocationPermission = () => {
         
         if (Platform.OS === 'ios' && error.message?.includes('denied')) {
           Alert.alert(
-            "Location Error",
-            "Please check your location permissions in Settings.",
-            [{ text: "OK" }]
+            t('map.locationError'),
+            t('map.enableLocation'),
+            [
+              { text: t('map.settings'), onPress: () => Location.openSettings() },
+              { text: t('map.cancel'), style: 'cancel' }
+            ]
           );
         }
       }
     })();
-  }, []);
+  }, [t]);
 
   return userLocation;
 };
