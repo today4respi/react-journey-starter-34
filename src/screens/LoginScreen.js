@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
@@ -72,30 +71,25 @@ export default function LoginScreen({ navigation }) {
       const userData = await login(email, password);
       console.log('User data after login:', userData);
       
-      // Use reset to avoid navigation stacking issues
+      // Navigate to the appropriate stack based on user role
+      let targetStack = STACKS.USER;
       if (userData.role === 'admin') {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: STACKS.ADMIN }],
-          })
-        );
+        targetStack = STACKS.ADMIN;
       } else if (userData.role === 'provider' || userData.role === 'prestataire') {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: STACKS.PROVIDER }],
-          })
-        );
-      } else {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: STACKS.USER }],
-          })
-        );
+        targetStack = STACKS.PROVIDER;
       }
+      
+      console.log('Navigating to stack:', targetStack);
+      
+      // Use reset to replace the navigation history
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: targetStack }],
+        })
+      );
     } catch (error) {
+      console.error('Login error:', error);
       setLoginError(t('login.invalidCredentials') || 'Identifiants incorrects. Veuillez réessayer.');
     } finally {
       setIsLoading(false);

@@ -150,7 +150,7 @@ const ProviderStack = () => {
   );
 };
 
-// Main RootNavigator - Always showing AuthStack regardless of authentication status
+// Main RootNavigator - Decide which stack to show based on authentication status
 const RootNavigator = () => {
   const authContext = useContext(AuthContext) || { loading: true, isAuthenticated: false, user: null };
   const { loading, isAuthenticated, user } = authContext;
@@ -159,9 +159,23 @@ const RootNavigator = () => {
     return <LoadingScreen />;
   }
   
-  // Always start with AuthStack (StartScreen)
+  // Determine which initial stack to show based on authentication status
+  let initialRouteName = STACKS.AUTH;
+  if (isAuthenticated) {
+    if (user && user.role === 'admin') {
+      initialRouteName = STACKS.ADMIN;
+    } else if (user && (user.role === 'provider' || user.role === 'prestataire')) {
+      initialRouteName = STACKS.PROVIDER;
+    } else {
+      initialRouteName = STACKS.USER;
+    }
+  }
+
   return (
-    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+    <RootStack.Navigator 
+      initialRouteName={initialRouteName} 
+      screenOptions={{ headerShown: false }}
+    >
       <RootStack.Screen 
         name={STACKS.AUTH} 
         component={AuthStack} 
