@@ -1,3 +1,4 @@
+
 export default {
   common: {
     email: "Email",
@@ -115,6 +116,11 @@ export default {
   
   settings: {
     title: "Settings",
+    account: "Account",
+    profile: "Profile",
+    preferences: "Preferences",
+    security: "Security", 
+    support: "Support",
     language: "Language",
     theme: "Theme",
     light: "Light",
@@ -125,6 +131,25 @@ export default {
     terms: "Terms of Service",
     contact: "Contact Us",
     about: "About",
+    logout: "Logout",
+    subtitle: "Manage your preferences",
+    editProfile: "Edit Profile",
+    updateInfo: "Update your personal information",
+    email: "Email",
+    phone: "Phone",
+    cancel: "Cancel",
+    save: "Save",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm Password",
+    updatePassword: "Update your password",
+    enterCurrentPassword: "Please enter your current password",
+    enterNewPassword: "Please enter a new password",
+    passwordMismatch: "Passwords do not match",
+    passwordTooShort: "Password must be at least 6 characters",
+    version: "Version",
+    appVersion: "1.0.0",
+    changePassword: "Change Password",
   },
   
   historicalPlaces: {

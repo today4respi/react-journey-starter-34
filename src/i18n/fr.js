@@ -1,4 +1,3 @@
-
 export default {
   common: {
     email: "Adresse e-mail",
@@ -170,5 +169,80 @@ export default {
     passwordWeak: "Faible",
     passwordMedium: "Moyen",
     passwordStrong: "Fort"
+  },
+  
+  settings: {
+    title: "Paramètres",
+    account: "Compte",
+    profile: "Profil",
+    preferences: "Préférences",
+    security: "Sécurité",
+    support: "Support",
+    language: "Langue",
+    changePassword: "Changer le mot de passe",
+    privacy: "Confidentialité",
+    help: "Aide",
+    logout: "Déconnexion",
+    subtitle: "Gérer vos préférences",
+    editProfile: "Modifier le profil",
+    updateInfo: "Mettre à jour vos informations personnelles",
+    email: "Email",
+    phone: "Téléphone",
+    cancel: "Annuler",
+    save: "Sauvegarder",
+    currentPassword: "Mot de passe actuel",
+    newPassword: "Nouveau mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    updatePassword: "Mettre à jour votre mot de passe",
+    enterCurrentPassword: "Veuillez saisir votre mot de passe actuel",
+    enterNewPassword: "Veuillez saisir un nouveau mot de passe",
+    passwordMismatch: "Les mots de passe ne correspondent pas",
+    passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
+    version: "Version",
+    appVersion: "1.0.0",
+  },
+  
+  profile: {
+    title: "Profil",
+    editProfile: "Modifier le profil",
+    logout: "Déconnexion",
+    confirmLogout: "Êtes-vous sûr de vouloir vous déconnecter?",
+    deleteAccount: "Supprimer le compte",
+    confirmDelete: "Êtes-vous sûr de vouloir supprimer votre compte?",
+    deleteAccountWarning: "Cette action ne peut pas être annulée.",
+    personalInfo: "Informations personnelles",
+    email: "Email",
+    phone: "Téléphone",
+    role: "Rôle",
+    updateProfile: "Mettre à jour le profil",
+    updateEmail: "Mettre à jour l'email",
+    updatePassword: "Mettre à jour le mot de passe",
+    version: "Version",
+    appVersion: "1.0.0",
+    firstName: "Prénom",
+    lastName: "Nom",
+    currentPassword: "Mot de passe actuel",
+    newPassword: "Nouveau mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    cancel: "Annuler",
+    confirm: "Confirmer",
+    delete: "Supprimer",
+    newEmail: "Nouvel email",
+  },
+
+  map: {
+    searchPlaceholder: "Rechercher...",
+    noResultsFound: "Aucun résultat trouvé",
+    currentLocation: "Position actuelle",
+  },
+  
+  historicalPlaces: {
+    title: "Lieux historiques",
+    noPlacesFound: "Aucun lieu historique trouvé",
+  },
+  
+  acote: {
+    title: "À Côté",
+    noPlacesFound: "Aucun lieu trouvé à proximité",
   },
 };

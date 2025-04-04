@@ -5,7 +5,7 @@ import { COLORS } from '../theme/colors';
 import { SPACING } from '../theme/spacing';
 import { FONT_SIZE } from '../theme/typography';
 import { ROUTES, STACKS } from '../navigation/navigationConstants';
-import { Home, Map, User, Settings } from 'lucide-react-native';
+import { Home, Map, MapPin, Settings } from 'lucide-react-native';
 
 export const FooterNav = ({ navigation, activeScreen }) => {
   // Navigation now needs to account for nested navigators
@@ -68,21 +68,21 @@ export const FooterNav = ({ navigation, activeScreen }) => {
 
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigateTo(ROUTES.PROFILE)}
+        onPress={() => navigateTo(ROUTES.ACOTE)}
         activeOpacity={0.7}
       >
-        <User
+        <MapPin
           size={24}
-          color={isActive(ROUTES.PROFILE) ? COLORS.primary : COLORS.gray}
-          fill={isActive(ROUTES.PROFILE) ? COLORS.primary : 'transparent'}
+          color={isActive(ROUTES.ACOTE) ? COLORS.primary : COLORS.gray}
+          fill={isActive(ROUTES.ACOTE) ? COLORS.primary : 'transparent'}
         />
         <Text
           style={[
             styles.navLabel,
-            isActive(ROUTES.PROFILE) && styles.activeNavLabel
+            isActive(ROUTES.ACOTE) && styles.activeNavLabel
           ]}
         >
-          Profil
+          À côté
         </Text>
       </TouchableOpacity>
 
