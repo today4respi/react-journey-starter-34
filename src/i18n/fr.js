@@ -1,3 +1,4 @@
+
 export default {
   common: {
     email: "Adresse e-mail",
@@ -239,10 +240,31 @@ export default {
   historicalPlaces: {
     title: "Lieux historiques",
     noPlacesFound: "Aucun lieu historique trouvé",
+    searchPlaceholder: "Rechercher un lieu...",
+    subtitle: "Découvrez les sites historiques de Jendouba",
+    noResults: "Aucun résultat ne correspond à votre recherche",
+    categories: {
+      museums: "Musées",
+      hotels: "Hôtels",
+      restaurants: "Restaurants"
+    }
   },
   
   acote: {
     title: "À Côté",
     noPlacesFound: "Aucun lieu trouvé à proximité",
+    searchPlaceholder: "Rechercher à proximité...",
+    subtitle: "Découvrez ce qui se trouve près de vous",
+    distance: "Distance",
+    open: "Ouvert",
+    closed: "Fermé",
+    filter: "Filtrer",
+    categories: {
+      all: "Tous",
+      restaurants: "Restaurants",
+      cafes: "Cafés",
+      hotels: "Hôtels",
+      attractions: "Attractions"
+    }
   },
 };
