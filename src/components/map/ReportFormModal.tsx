@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Modal, 
   View, 
@@ -12,11 +12,14 @@ import {
   Platform, 
   ScrollView, 
   Image,
-  Alert 
+  Alert,
+  Animated,
+  ActivityIndicator
 } from 'react-native';
-import { X, Camera, Send, AlertCircle } from 'lucide-react-native';
+import { X, Camera, Send, AlertCircle, CheckCircle2, WifiOff, MessageSquare } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { wp, hp } from '../../utils/responsive';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 
 interface ReportFormModalProps {
   visible: boolean;
@@ -24,6 +27,8 @@ interface ReportFormModalProps {
   checkpointId?: number;
   scannedData: string;
   colors: any;
+  onSubmitSuccess?: (success: boolean) => void;
+  onContactAdmin?: () => void;
 }
 
 const ReportFormModal = ({ 
@@ -31,11 +36,77 @@ const ReportFormModal = ({
   onClose, 
   checkpointId, 
   scannedData, 
-  colors 
+  colors,
+  onSubmitSuccess,
+  onContactAdmin
 }: ReportFormModalProps) => {
   const [reportText, setReportText] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'success' | 'offline' | null>(null);
+  const { isConnected } = useNetworkStatus();
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const spinAnim = useRef(new Animated.Value(0)).current;
+
+  const spin = spinAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  // Reset form state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setReportText('');
+      setImage(null);
+      setIsSending(false);
+      setIsSubmitted(false);
+      setSubmitStatus(null);
+      fadeAnim.setValue(0);
+      scaleAnim.setValue(0.5);
+      spinAnim.setValue(0);
+    }
+  }, [visible]);
+
+  // Handle animations after submission
+  useEffect(() => {
+    if (isSubmitted && submitStatus) {
+      // Start animations
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true
+        }),
+        Animated.timing(spinAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true
+        })
+      ]).start();
+      
+      // Auto-close after success with delay
+      if (submitStatus === 'success') {
+        const timer = setTimeout(() => {
+          if (onSubmitSuccess) {
+            onSubmitSuccess(true);
+          } else {
+            onClose();
+          }
+        }, 2000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isSubmitted, submitStatus]);
 
   const pickImage = async () => {
     try {
@@ -97,12 +168,15 @@ const ReportFormModal = ({
     // Simulate sending the report
     setTimeout(() => {
       setIsSending(false);
-      Alert.alert(
-        "Rapport envoyé", 
-        "Votre rapport a été envoyé avec succès aux responsables.",
-        [{ text: "OK", onPress: onClose }]
-      );
+      setIsSubmitted(true);
+      setSubmitStatus(isConnected ? 'success' : 'offline');
     }, 1500);
+  };
+
+  const handleContactAdmin = () => {
+    if (onContactAdmin) {
+      onContactAdmin();
+    }
   };
 
   return (
@@ -124,94 +198,171 @@ const ReportFormModal = ({
             </TouchableOpacity>
           </View>
           
-          <ScrollView style={styles.content}>
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Point de contrôle:</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {checkpointId ? `#${checkpointId}` : 'Non spécifié'}
-              </Text>
-              
-              <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Code QR scanné:</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>
-                {scannedData || 'Non disponible'}
-              </Text>
-              
-              <View style={[styles.qrInfoBox, { backgroundColor: `${colors.primary}20` }]}>
-                <AlertCircle size={20} color={colors.primary} style={styles.infoIcon} />
-                <Text style={[styles.qrInfoText, { color: colors.text }]}>
-                  Vérifiez que les informations ci-dessus correspondent au point de contrôle.
-                </Text>
-              </View>
-            </View>
-            
-            <Text style={[styles.inputLabel, { color: colors.text }]}>Rapport:</Text>
-            <TextInput
-              style={[
-                styles.textInput, 
-                { 
-                  backgroundColor: colors.inputBg,
-                  color: colors.text,
-                  borderColor: colors.border
-                }
-              ]}
-              placeholder="Décrivez les problèmes ou observations..."
-              placeholderTextColor={colors.textSecondary}
-              multiline
-              textAlignVertical="top"
-              value={reportText}
-              onChangeText={setReportText}
-            />
-            
-            <View style={styles.imageOptions}>
-              <TouchableOpacity
-                style={[styles.imageButton, { backgroundColor: colors.card }]}
-                onPress={takePhoto}
+          {isSubmitted ? (
+            <View style={styles.submissionResultContainer}>
+              <Animated.View 
+                style={[
+                  styles.animatedIconContainer, 
+                  { 
+                    opacity: fadeAnim,
+                    transform: [
+                      { scale: scaleAnim },
+                      { rotate: spin }
+                    ],
+                    backgroundColor: submitStatus === 'success' ? `${colors.success}20` : `${colors.warning}20`
+                  }
+                ]}
               >
-                <Camera size={24} color={colors.primary} />
-                <Text style={[styles.imageButtonText, { color: colors.text }]}>
-                  Prendre photo
-                </Text>
-              </TouchableOpacity>
+                {submitStatus === 'success' ? (
+                  <CheckCircle2 size={wp(60)} color={colors.success} />
+                ) : (
+                  <WifiOff size={wp(60)} color={colors.warning} />
+                )}
+              </Animated.View>
               
-              <TouchableOpacity
-                style={[styles.imageButton, { backgroundColor: colors.card }]}
-                onPress={pickImage}
+              <Animated.Text 
+                style={[
+                  styles.submissionResultTitle, 
+                  { 
+                    color: colors.text,
+                    opacity: fadeAnim
+                  }
+                ]}
               >
-                <Camera size={24} color={colors.primary} />
-                <Text style={[styles.imageButtonText, { color: colors.text }]}>
-                  Choisir image
-                </Text>
-              </TouchableOpacity>
+                {submitStatus === 'success' 
+                  ? "Rapport envoyé avec succès" 
+                  : "Rapport enregistré hors ligne"}
+              </Animated.Text>
+              
+              <Animated.Text 
+                style={[
+                  styles.submissionResultMessage, 
+                  { 
+                    color: colors.textSecondary,
+                    opacity: fadeAnim
+                  }
+                ]}
+              >
+                {submitStatus === 'success' 
+                  ? "Votre rapport a été transmis aux responsables." 
+                  : "Votre rapport sera envoyé automatiquement dès que vous serez connecté à Internet."}
+              </Animated.Text>
+              
+              {submitStatus === 'offline' && (
+                <Animated.View style={{ opacity: fadeAnim }}>
+                  <TouchableOpacity
+                    style={[
+                      styles.actionButton, 
+                      { backgroundColor: colors.primary }
+                    ]}
+                    onPress={onClose}
+                  >
+                    <Text style={styles.actionButtonText}>Continuer la ronde</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              )}
             </View>
-            
-            {image && (
-              <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: image }} style={styles.imagePreview} />
-                <TouchableOpacity 
-                  style={[styles.removeImageButton, { backgroundColor: `${colors.danger}CC` }]} 
-                  onPress={() => setImage(null)}
+          ) : (
+            <>
+              <ScrollView style={styles.content}>
+                <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Point de contrôle:</Text>
+                  <Text style={[styles.infoValue, { color: colors.text }]}>
+                    {checkpointId ? `#${checkpointId}` : 'Non spécifié'}
+                  </Text>
+                  
+                  <View style={[styles.qrInfoBox, { backgroundColor: `${colors.primary}20` }]}>
+                    <AlertCircle size={20} color={colors.primary} style={styles.infoIcon} />
+                    <Text style={[styles.qrInfoText, { color: colors.text }]}>
+                      Remplissez ce rapport pour valider le point de contrôle et passer au suivant.
+                    </Text>
+                  </View>
+                </View>
+                
+                <Text style={[styles.inputLabel, { color: colors.text }]}>Rapport:</Text>
+                <TextInput
+                  style={[
+                    styles.textInput, 
+                    { 
+                      backgroundColor: colors.inputBg,
+                      color: colors.text,
+                      borderColor: colors.border
+                    }
+                  ]}
+                  placeholder="Décrivez les problèmes ou observations..."
+                  placeholderTextColor={colors.textSecondary}
+                  multiline
+                  textAlignVertical="top"
+                  value={reportText}
+                  onChangeText={setReportText}
+                />
+                
+                <View style={styles.imageOptions}>
+                  <TouchableOpacity
+                    style={[styles.imageButton, { backgroundColor: colors.card }]}
+                    onPress={takePhoto}
+                  >
+                    <Camera size={24} color={colors.primary} />
+                    <Text style={[styles.imageButtonText, { color: colors.text }]}>
+                      Prendre photo
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.imageButton, { backgroundColor: colors.card }]}
+                    onPress={pickImage}
+                  >
+                    <Camera size={24} color={colors.primary} />
+                    <Text style={[styles.imageButtonText, { color: colors.text }]}>
+                      Choisir image
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {image && (
+                  <View style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: image }} style={styles.imagePreview} />
+                    <TouchableOpacity 
+                      style={[styles.removeImageButton, { backgroundColor: `${colors.danger}CC` }]} 
+                      onPress={() => setImage(null)}
+                    >
+                      <X size={16} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                
+                <TouchableOpacity
+                  style={[styles.contactAdminButton, { backgroundColor: `${colors.secondary}20` }]}
+                  onPress={handleContactAdmin}
                 >
-                  <X size={16} color="white" />
+                  <MessageSquare size={20} color={colors.secondary} style={styles.contactIcon} />
+                  <Text style={[styles.contactButtonText, { color: colors.text }]}>
+                    Contacter un administrateur
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+              
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  style={[
+                    styles.sendButton, 
+                    { backgroundColor: isSending ? colors.secondary : colors.primary }
+                  ]}
+                  onPress={sendReport}
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <ActivityIndicator size="small" color="white" style={styles.sendIcon} />
+                  ) : (
+                    <Send size={20} color="white" style={styles.sendIcon} />
+                  )}
+                  <Text style={styles.sendButtonText}>
+                    {isSending ? 'Envoi en cours...' : 'Envoyer maintenant'}
+                  </Text>
                 </TouchableOpacity>
               </View>
-            )}
-          </ScrollView>
-          
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[
-                styles.sendButton, 
-                { backgroundColor: isSending ? colors.secondary : colors.primary }
-              ]}
-              onPress={sendReport}
-              disabled={isSending}
-            >
-              <Send size={20} color="white" style={styles.sendIcon} />
-              <Text style={styles.sendButtonText}>
-                {isSending ? 'Envoi en cours...' : 'Envoyer maintenant'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
@@ -342,6 +493,58 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: wp(16),
     fontWeight: 'bold',
+  },
+  submissionResultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: wp(24),
+  },
+  animatedIconContainer: {
+    width: wp(140),
+    height: wp(140),
+    borderRadius: wp(70),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: hp(24),
+  },
+  submissionResultTitle: {
+    fontSize: wp(24),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: hp(12),
+  },
+  submissionResultMessage: {
+    fontSize: wp(16),
+    textAlign: 'center',
+    marginBottom: hp(24),
+  },
+  actionButton: {
+    paddingVertical: hp(12),
+    paddingHorizontal: wp(24),
+    borderRadius: wp(8),
+    marginTop: hp(12),
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: wp(16),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  contactAdminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: wp(16),
+    borderRadius: wp(12),
+    marginBottom: hp(16),
+  },
+  contactIcon: {
+    marginRight: wp(8),
+  },
+  contactButtonText: {
+    fontSize: wp(16),
+    fontWeight: '500',
   },
 });
 

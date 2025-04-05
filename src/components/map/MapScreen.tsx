@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, SafeAreaView, Alert, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,8 +15,10 @@ import RouteInfo from './RouteInfo';
 import RouteProgress from './RouteProgress';
 import MapControls from './MapControls';
 import StartRouteButton from './StartRouteButton';
-import QRScannerModal from './QRScannerModal';
+import ReportFormModal from './ReportFormModal';
 import { MapPin } from 'lucide-react-native';
+import { calculateDistance, calculateTravelTime, formatTravelTime, AVERAGE_SPEEDS } from '../../utils/mapCalculations';
+import { router } from 'expo-router';
 
 export default function MapScreen() {
   const mapRef = useRef<LeafletMapRef>(null);
@@ -31,14 +34,21 @@ export default function MapScreen() {
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(1); // Default to Secteur B
   const [isRondeStarted, setIsRondeStarted] = useState(false);
   const [activeCheckpointIndex, setActiveCheckpointIndex] = useState(-1);
-  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
   const [selectedCheckpointId, setSelectedCheckpointId] = useState<number | undefined>(undefined);
+  const [distanceToNextPoint, setDistanceToNextPoint] = useState<number>(0);
+  const [timeToNextPoint, setTimeToNextPoint] = useState<string>("--");
+  const [remainingPoints, setRemainingPoints] = useState<number>(0);
+  const [totalDistance, setTotalDistance] = useState<number>(0);
   
   const buttonScale = useRef(new Animated.Value(1)).current;
   const checkpointScale = useRef(new Animated.Value(1)).current;
   const routeProgress = useRef(new Animated.Value(0)).current;
   
   const selectedRoute = routesData[selectedRouteIndex];
+
+  // Location tracking interval
+  const locationTrackingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (activeCheckpointIndex >= 0) {
@@ -83,8 +93,92 @@ export default function MapScreen() {
       setIsRondeStarted(false);
       setActiveCheckpointIndex(-1);
       routeProgress.setValue(0);
+      stopLocationTracking();
     }
   }, [selectedRouteIndex]);
+
+  // Calculate initial distances and time estimates
+  useEffect(() => {
+    if (selectedRoute && selectedRoute.checkpoints.length > 0) {
+      calculateRemainingPoints();
+      calculateTotalDistance();
+    }
+  }, [selectedRoute]);
+
+  // Recalculate distance and time when user location changes and route is active
+  useEffect(() => {
+    if (isRondeStarted && userLocation && activeCheckpointIndex >= 0 && activeCheckpointIndex < selectedRoute.checkpoints.length) {
+      const nextCheckpoint = selectedRoute.checkpoints[activeCheckpointIndex];
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        nextCheckpoint.latitude,
+        nextCheckpoint.longitude
+      );
+      
+      setDistanceToNextPoint(distance);
+      
+      // Calculate time estimate based on car speed
+      const timeInMinutes = calculateTravelTime(distance, AVERAGE_SPEEDS.CAR);
+      setTimeToNextPoint(formatTravelTime(timeInMinutes));
+    }
+  }, [userLocation, isRondeStarted, activeCheckpointIndex, selectedRoute]);
+
+  // Start tracking location when route begins
+  useEffect(() => {
+    if (isRondeStarted) {
+      startLocationTracking();
+    } else {
+      stopLocationTracking();
+    }
+    
+    return () => {
+      stopLocationTracking();
+    };
+  }, [isRondeStarted]);
+
+  const startLocationTracking = () => {
+    if (locationTrackingRef.current) {
+      clearInterval(locationTrackingRef.current);
+    }
+    
+    // Update location every 5 seconds
+    locationTrackingRef.current = setInterval(() => {
+      getCurrentLocation();
+    }, 5000);
+  };
+  
+  const stopLocationTracking = () => {
+    if (locationTrackingRef.current) {
+      clearInterval(locationTrackingRef.current);
+      locationTrackingRef.current = null;
+    }
+  };
+
+  const calculateRemainingPoints = () => {
+    if (activeCheckpointIndex >= 0) {
+      const remaining = selectedRoute.checkpoints.length - activeCheckpointIndex;
+      setRemainingPoints(remaining);
+    } else {
+      setRemainingPoints(selectedRoute.checkpoints.length);
+    }
+  };
+
+  const calculateTotalDistance = () => {
+    let total = 0;
+    const points = selectedRoute.route;
+    
+    for (let i = 0; i < points.length - 1; i++) {
+      total += calculateDistance(
+        points[i].latitude,
+        points[i].longitude,
+        points[i+1].latitude,
+        points[i+1].longitude
+      );
+    }
+    
+    setTotalDistance(total);
+  };
 
   const toggleMapType = () => {
     setMapType(mapType === 'standard' ? 'satellite' : 'standard');
@@ -132,7 +226,7 @@ export default function MapScreen() {
       const { latitude, longitude } = location.coords;
       setUserLocation({ latitude, longitude });
       
-      if (mapRef.current && mapReady) {
+      if (mapRef.current && mapReady && !isRondeStarted) {
         mapRef.current.animateToRegion({
           latitude,
           longitude,
@@ -172,8 +266,21 @@ export default function MapScreen() {
   };
 
   const handleCheckpointPress = (checkpointId: number) => {
-    setSelectedCheckpointId(checkpointId);
-    setShowQRScanner(true);
+    // Only allow interaction with the active checkpoint when route is started
+    if (isRondeStarted) {
+      const activeCheckpoint = selectedRoute.checkpoints[activeCheckpointIndex];
+      
+      if (activeCheckpoint && activeCheckpoint.id === checkpointId) {
+        setSelectedCheckpointId(checkpointId);
+        setShowReportForm(true);
+      } else {
+        Alert.alert("Point non actif", "Vous devez d'abord vous rendre au point de contrôle actif.");
+      }
+    } else {
+      // When not in a route, allow viewing any checkpoint
+      setSelectedCheckpointId(checkpointId);
+      setShowReportForm(true);
+    }
   };
 
   const startRonde = () => {
@@ -188,36 +295,52 @@ export default function MapScreen() {
       duration: 300,
       useNativeDriver: false,
     }).start();
+    
+    calculateRemainingPoints();
   };
 
-  const handleCheckpointValidation = () => {
-    if (activeCheckpointIndex >= 0 && activeCheckpointIndex < selectedRoute.checkpoints.length - 1) {
-      const updatedCheckpoints = [...selectedRoute.checkpoints];
-      updatedCheckpoints[activeCheckpointIndex] = {
-        ...updatedCheckpoints[activeCheckpointIndex],
-        visited: true
-      };
-      
-      setActiveCheckpointIndex(prevIndex => prevIndex + 1);
-      
-      Animated.timing(routeProgress, {
-        toValue: (activeCheckpointIndex + 2) / selectedRoute.checkpoints.length,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    } else if (activeCheckpointIndex === selectedRoute.checkpoints.length - 1) {
-      const updatedCheckpoints = [...selectedRoute.checkpoints];
-      updatedCheckpoints[activeCheckpointIndex] = {
-        ...updatedCheckpoints[activeCheckpointIndex],
-        visited: true
-      };
-      
-      Alert.alert(
-        "Ronde terminée",
-        "Félicitations, vous avez terminé la ronde!",
-        [{ text: "OK" }]
-      );
+  const handleReportSubmission = (success: boolean) => {
+    setShowReportForm(false);
+    
+    if (success) {
+      // Mark the current checkpoint as visited
+      if (activeCheckpointIndex >= 0 && activeCheckpointIndex < selectedRoute.checkpoints.length) {
+        const updatedCheckpoints = [...selectedRoute.checkpoints];
+        updatedCheckpoints[activeCheckpointIndex] = {
+          ...updatedCheckpoints[activeCheckpointIndex],
+          visited: true
+        };
+        
+        // Progress to the next checkpoint
+        if (activeCheckpointIndex < selectedRoute.checkpoints.length - 1) {
+          setActiveCheckpointIndex(prevIndex => prevIndex + 1);
+          
+          Animated.timing(routeProgress, {
+            toValue: (activeCheckpointIndex + 2) / selectedRoute.checkpoints.length,
+            duration: 300,
+            useNativeDriver: false,
+          }).start();
+          
+          calculateRemainingPoints();
+        } else {
+          // Route completed
+          Alert.alert(
+            "Ronde terminée",
+            "Félicitations, vous avez terminé la ronde!",
+            [{ text: "OK" }]
+          );
+          setIsRondeStarted(false);
+        }
+      }
     }
+  };
+
+  const handleContactAdmin = () => {
+    // Close the form modal
+    setShowReportForm(false);
+    
+    // Navigate to the messages screen
+    router.push('/messages/1'); // Navigate to chat with admin
   };
 
   return (
@@ -254,7 +377,22 @@ export default function MapScreen() {
           />
         )}
         
-        <RouteInfo selectedRoute={selectedRoute} colors={colors} />
+        <RouteInfo 
+          selectedRoute={{
+            ...selectedRoute,
+            // Use real-time calculated values
+            distance: isRondeStarted ? `${totalDistance.toFixed(1)} km` : selectedRoute.distance,
+            time: isRondeStarted && distanceToNextPoint > 0 ? timeToNextPoint : selectedRoute.time,
+            completed: isRondeStarted ? 
+              `${selectedRoute.checkpoints.filter(cp => cp.visited).length}/${selectedRoute.checkpoints.length}` : 
+              selectedRoute.completed
+          }} 
+          colors={colors}
+          isRondeStarted={isRondeStarted}
+          distanceToNext={isRondeStarted ? `${distanceToNextPoint.toFixed(2)} km` : undefined}
+          timeToNext={isRondeStarted ? timeToNextPoint : undefined}
+          remainingPoints={remainingPoints}
+        />
       </SafeAreaView>
       
       {isRondeStarted && (
@@ -263,6 +401,8 @@ export default function MapScreen() {
           activeCheckpointIndex={activeCheckpointIndex} 
           totalCheckpoints={selectedRoute.checkpoints.length} 
           colors={colors} 
+          distanceToNext={distanceToNextPoint.toFixed(2)}
+          timeToNext={timeToNextPoint}
         />
       )}
       
@@ -292,11 +432,14 @@ export default function MapScreen() {
         onOpenSettings={handleOpenSettings}
       />
       
-      <QRScannerModal
-        visible={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
+      <ReportFormModal
+        visible={showReportForm}
+        onClose={() => setShowReportForm(false)}
         checkpointId={selectedCheckpointId}
+        scannedData="" // We're not using QR scanner anymore
         colors={colors}
+        onSubmitSuccess={handleReportSubmission}
+        onContactAdmin={handleContactAdmin}
       />
     </View>
   );
