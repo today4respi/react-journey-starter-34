@@ -85,3 +85,18 @@ export const formatTravelTime = (minutes: number): string => {
   
   return `${hours} h ${remainingMinutes} min`;
 };
+
+/**
+ * Get the estimated arrival time based on travel time in minutes
+ * @param minutes Travel time in minutes
+ * @returns Estimated arrival time string
+ */
+export const getEstimatedArrivalTime = (minutes: number): string => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + minutes);
+  
+  const hours = now.getHours();
+  const mins = now.getMinutes();
+  
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+};

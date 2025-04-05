@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -126,7 +127,6 @@ const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>((props, ref) => {
           .user-location-marker {
             width: 40px;
             height: 40px;
-            border-radius: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -200,13 +200,18 @@ const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>((props, ref) => {
           });
           
           if (${userLocation !== null}) {
+            const guardIconUrl = 'https://i.ibb.co/MyyGgMb/guard.png';
+            
+            // Create a custom icon using the guard image
+            const guardIcon = L.icon({
+              iconUrl: guardIconUrl,
+              iconSize: [32, 32],
+              iconAnchor: [16, 16],
+              popupAnchor: [0, -16]
+            });
+
             userLocationMarker = L.marker([${userLocation?.latitude}, ${userLocation?.longitude}], {
-              icon: L.divIcon({
-                className: 'user-location-marker',
-                html: '<div style="width: 30px; height: 30px; background-color: #60A5FA; border-radius: 15px; border: 2px solid white;"></div>',
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-              })
+              icon: guardIcon
             }).addTo(map).bindPopup('Votre position');
             
             map.setView([${userLocation?.latitude}, ${userLocation?.longitude}], 16);
@@ -234,18 +239,26 @@ const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>((props, ref) => {
               } else if (data.type === 'updateUserLocation') {
                 if (userLocationMarker) {
                   userLocationMarker.setLatLng([data.location.latitude, data.location.longitude]);
-                  map.flyTo([data.location.latitude, data.location.longitude], 16, {
-                    duration: 0.5,
-                    easeLinearity: 0.5
-                  });
+                  
+                  if (!data.keepView) {
+                    map.flyTo([data.location.latitude, data.location.longitude], 16, {
+                      duration: 0.5,
+                      easeLinearity: 0.5
+                    });
+                  }
                 } else {
+                  const guardIconUrl = 'https://i.ibb.co/MyyGgMb/guard.png';
+                  
+                  // Create a custom icon using the guard image
+                  const guardIcon = L.icon({
+                    iconUrl: guardIconUrl,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                    popupAnchor: [0, -16]
+                  });
+    
                   userLocationMarker = L.marker([data.location.latitude, data.location.longitude], {
-                    icon: L.divIcon({
-                      className: 'user-location-marker',
-                      html: '<div style="width: 30px; height: 30px; background-color: #60A5FA; border-radius: 15px; border: 2px solid white;"></div>',
-                      iconSize: [40, 40],
-                      iconAnchor: [20, 20]
-                    })
+                    icon: guardIcon
                   }).addTo(map).bindPopup('Votre position');
                   
                   map.setView([data.location.latitude, data.location.longitude], 16);
@@ -275,7 +288,8 @@ const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>((props, ref) => {
     if (webViewRef.current && userLocation) {
       const message = JSON.stringify({
         type: 'updateUserLocation',
-        location: userLocation
+        location: userLocation,
+        keepView: true
       });
       webViewRef.current.postMessage(message);
     }

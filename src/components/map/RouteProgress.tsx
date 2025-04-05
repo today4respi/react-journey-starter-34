@@ -2,7 +2,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { wp, hp } from '../../utils/responsive';
-import { MapPin, Clock } from 'lucide-react-native';
+import { MapPin, Clock, ArrowRight, Timer } from 'lucide-react-native';
+import { getEstimatedArrivalTime } from '../../utils/mapCalculations';
 
 interface RouteProgressProps {
   routeProgress: Animated.Value;
@@ -21,6 +22,11 @@ const RouteProgress = ({
   distanceToNext,
   timeToNext
 }: RouteProgressProps) => {
+  // Calculate estimated arrival time based on timeToNext
+  const estimatedArrival = timeToNext ? 
+    getEstimatedArrivalTime(parseInt(timeToNext.replace(/\D/g, ''))) : 
+    null;
+
   return (
     <View style={[styles.progressContainer, { backgroundColor: `${colors.card}CC`, borderColor: colors.border }]}>
       <View style={styles.progressIndicatorContainer}>
@@ -45,20 +51,26 @@ const RouteProgress = ({
         
         {activeCheckpointIndex >= 0 && activeCheckpointIndex < totalCheckpoints && (
           <View style={styles.nextPointInfoContainer}>
-            {distanceToNext && (
+            <View style={styles.infoRow}>
               <View style={styles.infoItem}>
                 <MapPin size={14} color={colors.primary} style={styles.infoIcon} />
                 <Text style={[styles.infoText, { color: colors.text }]}>
-                  {distanceToNext} km
+                  {distanceToNext || '0'} km
                 </Text>
               </View>
-            )}
-            
-            {timeToNext && (
+              
               <View style={styles.infoItem}>
                 <Clock size={14} color={colors.primary} style={styles.infoIcon} />
                 <Text style={[styles.infoText, { color: colors.text }]}>
-                  {timeToNext}
+                  {timeToNext || '--'}
+                </Text>
+              </View>
+            </View>
+            
+            {estimatedArrival && (
+              <View style={[styles.arrivalTimeContainer, { backgroundColor: colors.primary + '22' }]}>
+                <Text style={[styles.arrivalText, { color: colors.text }]}>
+                  Arrivée prévue: <Text style={{ fontWeight: 'bold' }}>{estimatedArrival}</Text>
                 </Text>
               </View>
             )}
@@ -101,9 +113,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   nextPointInfoContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: hp(8),
+  },
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: hp(8),
+    width: '100%',
   },
   infoItem: {
     flexDirection: 'row',
@@ -121,6 +138,16 @@ const styles = StyleSheet.create({
     fontSize: wp(12),
     fontWeight: '500',
   },
+  arrivalTimeContainer: {
+    marginTop: hp(6),
+    paddingVertical: hp(4),
+    paddingHorizontal: wp(10),
+    borderRadius: wp(10),
+    alignSelf: 'center',
+  },
+  arrivalText: {
+    fontSize: wp(11),
+  }
 });
 
 export default RouteProgress;
