@@ -190,8 +190,7 @@ export default function MapScreen() {
     }).start();
   };
 
-  const handleQRScan = (data: string) => {
-    console.log("Point validé:", data);
+  const handleCheckpointValidation = () => {
     if (activeCheckpointIndex >= 0 && activeCheckpointIndex < selectedRoute.checkpoints.length - 1) {
       const updatedCheckpoints = [...selectedRoute.checkpoints];
       updatedCheckpoints[activeCheckpointIndex] = {
@@ -296,9 +295,8 @@ export default function MapScreen() {
       <QRScannerModal
         visible={showQRScanner}
         onClose={() => setShowQRScanner(false)}
-        onScan={handleQRScan}
-        colors={colors}
         checkpointId={selectedCheckpointId}
+        colors={colors}
       />
     </View>
   );

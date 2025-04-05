@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Animated, Easing } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Animated, Easing, Alert } from 'react-native';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
-import { X, Send, CheckCircle, WifiOff, Loader } from 'lucide-react-native';
+import { X, Send, CheckCircle, WifiOff, Loader, Camera, Upload, MessageCircle } from 'lucide-react-native';
 import { wp, hp } from '../../utils/responsive';
+import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 
 interface QRScannerModalProps {
   visible: boolean;
@@ -17,6 +19,7 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { isConnected } = useNetworkStatus();
+  const [image, setImage] = useState<string | null>(null);
   
   // Animation values
   const spinValue = useState(new Animated.Value(0))[0];
@@ -30,6 +33,7 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
         setReportText('');
         setIsSubmitted(false);
         setIsSubmitting(false);
+        setImage(null);
       }, 300);
     }
   }, [visible]);
@@ -83,8 +87,66 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
     outputRange: ['0deg', '360deg']
   });
   
+  const takePhoto = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission refusée", "Vous devez autoriser l'accès à votre caméra pour prendre une photo.");
+        return;
+      }
+      
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Erreur", "Une erreur s'est produite lors de la prise de photo.");
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert("Permission refusée", "Vous devez autoriser l'accès à votre galerie pour sélectionner une image.");
+        return;
+      }
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Erreur", "Une erreur s'est produite lors de la sélection de l'image.");
+    }
+  };
+
+  const handleContactAdmin = () => {
+    onClose();
+    // Navigate to the messages screen
+    setTimeout(() => {
+      router.push('/messages/1');
+    }, 300);
+  };
+  
   const handleSubmitReport = () => {
     if (reportText.trim().length === 0) {
+      Alert.alert("Champ obligatoire", "Veuillez rédiger un rapport avant d'envoyer.");
       return;
     }
     
@@ -163,17 +225,67 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
           value={reportText}
           onChangeText={setReportText}
         />
+
+        <View style={styles.mediaActions}>
+          <TouchableOpacity 
+            style={[styles.mediaButton, { backgroundColor: `${colors.primary}20` }]}
+            onPress={takePhoto}
+          >
+            <Camera size={wp(20)} color={colors.primary} style={{ marginRight: wp(8) }} />
+            <Text style={[styles.mediaButtonText, { color: colors.text }]}>
+              Prendre photo
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.mediaButton, { backgroundColor: `${colors.primary}20` }]}
+            onPress={pickImage}
+          >
+            <Upload size={wp(20)} color={colors.primary} style={{ marginRight: wp(8) }} />
+            <Text style={[styles.mediaButtonText, { color: colors.text }]}>
+              Importer image
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {image && (
+          <View style={styles.imagePreviewContainer}>
+            <Animated.Image 
+              source={{ uri: image }} 
+              style={styles.imagePreview} 
+              resizeMode="cover"
+            />
+            <TouchableOpacity 
+              style={[styles.removeImageButton, { backgroundColor: `${colors.error}CC` }]} 
+              onPress={() => setImage(null)}
+            >
+              <X size={wp(16)} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
         
-        <TouchableOpacity 
-          style={[styles.submitButton, { backgroundColor: colors.primary }]}
-          onPress={handleSubmitReport}
-          disabled={reportText.trim().length === 0}
-        >
-          <Send size={wp(20)} color={colors.card} style={{ marginRight: wp(8) }} />
-          <Text style={[styles.buttonText, { color: colors.card }]}>
-            Envoyer le rapport
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity 
+            style={[styles.submitButton, { backgroundColor: colors.primary }]}
+            onPress={handleSubmitReport}
+            disabled={reportText.trim().length === 0}
+          >
+            <Send size={wp(20)} color={colors.card} style={{ marginRight: wp(8) }} />
+            <Text style={[styles.buttonText, { color: colors.card }]}>
+              Envoyer le rapport
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.contactButton, { borderColor: colors.primary }]}
+            onPress={handleContactAdmin}
+          >
+            <MessageCircle size={wp(20)} color={colors.primary} style={{ marginRight: wp(8) }} />
+            <Text style={[styles.contactButtonText, { color: colors.primary }]}>
+              Contacter l'administrateur
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -192,7 +304,7 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
             onPress={onClose}
             disabled={isSubmitting}
           >
-            <Text style={[styles.closeButtonText, { color: colors.card }]}>X</Text>
+            <X size={wp(16)} color={colors.card} />
           </TouchableOpacity>
           
           {renderSubmissionStatus()}
@@ -211,7 +323,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '90%',
-    height: '70%',
+    maxHeight: '80%',
     borderRadius: wp(16),
     padding: wp(16),
     alignItems: 'center',
@@ -229,13 +341,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  closeButtonText: {
-    fontSize: wp(14),
-    fontWeight: 'bold',
-  },
   reportFormContainer: {
     width: '100%',
-    height: '80%',
     padding: wp(16),
   },
   reportTitle: {
@@ -246,12 +353,55 @@ const styles = StyleSheet.create({
   },
   reportInput: {
     width: '100%',
-    height: hp(150),
+    height: hp(120),
     borderWidth: 1,
     borderRadius: wp(8),
     padding: wp(12),
     marginBottom: hp(16),
     textAlignVertical: 'top',
+  },
+  mediaActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: hp(16),
+  },
+  mediaButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: wp(10),
+    borderRadius: wp(8),
+    flex: 0.48,
+  },
+  mediaButtonText: {
+    fontSize: wp(14),
+    fontWeight: '500',
+  },
+  imagePreviewContainer: {
+    width: '100%',
+    height: hp(200),
+    marginBottom: hp(16),
+    borderRadius: wp(8),
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: wp(8),
+    right: wp(8),
+    width: wp(32),
+    height: wp(32),
+    borderRadius: wp(16),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionsContainer: {
+    width: '100%',
+    gap: hp(12),
   },
   submitButton: {
     flexDirection: 'row',
@@ -261,9 +411,21 @@ const styles = StyleSheet.create({
     borderRadius: wp(8),
     marginTop: hp(8),
   },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: wp(12),
+    borderRadius: wp(8),
+    borderWidth: 1,
+  },
   buttonText: {
     fontSize: wp(16),
     fontWeight: 'bold',
+  },
+  contactButtonText: {
+    fontSize: wp(16),
+    fontWeight: '500',
   },
   statusContainer: {
     width: '80%',
