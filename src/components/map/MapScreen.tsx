@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, SafeAreaView, Alert, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -192,7 +191,7 @@ export default function MapScreen() {
   };
 
   const handleQRScan = (data: string) => {
-    console.log("QR code scanned:", data);
+    console.log("Point validé:", data);
     if (activeCheckpointIndex >= 0 && activeCheckpointIndex < selectedRoute.checkpoints.length - 1) {
       const updatedCheckpoints = [...selectedRoute.checkpoints];
       updatedCheckpoints[activeCheckpointIndex] = {

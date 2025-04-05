@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Image, TextInput, Platform } from 'react-native';
-import { CameraView, BarcodeScanningResult, PermissionResponse } from 'expo-camera';
-import { Camera as CameraIcon } from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput, Platform, Animated, Easing } from 'react-native';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
+import { X, Send, CheckCircle, WifiOff, Loader } from 'lucide-react-native';
 import { wp, hp } from '../../utils/responsive';
 
 interface QRScannerModalProps {
@@ -13,164 +13,138 @@ interface QRScannerModalProps {
 }
 
 const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerModalProps) => {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
-  const [showReportForm, setShowReportForm] = useState(false);
   const [reportText, setReportText] = useState('');
-  const [photoTaken, setPhotoTaken] = useState(false);
-  const [attemptingPermission, setAttemptingPermission] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { isConnected } = useNetworkStatus();
   
+  // Animation values
+  const spinValue = useState(new Animated.Value(0))[0];
+  const scaleValue = useState(new Animated.Value(0))[0];
+  const opacityValue = useState(new Animated.Value(0))[0];
+
+  // Reset state when modal is opened/closed
   useEffect(() => {
-    if (visible) {
-      requestCameraPermission();
+    if (!visible) {
+      setTimeout(() => {
+        setReportText('');
+        setIsSubmitted(false);
+        setIsSubmitting(false);
+      }, 300);
     }
   }, [visible]);
-  
-  const requestCameraPermission = async () => {
-    setAttemptingPermission(true);
-    try {
-      const { status } = await CameraView.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    } catch (error) {
-      console.log("Error requesting camera permission:", error);
-      setHasPermission(false);
-    } finally {
-      setAttemptingPermission(false);
-    }
-  };
-  
-  const handleBarCodeScanned = (result: BarcodeScanningResult) => {
-    if (scanned) return;
-    
-    const { data } = result;
-    setScanned(true);
-    
-    if (data.includes(String(checkpointId))) {
-      setTimeout(() => {
-        setShowReportForm(true);
-      }, 500);
+
+  // Create spinning animation
+  useEffect(() => {
+    if (isSubmitting) {
+      Animated.loop(
+        Animated.timing(spinValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true
+        })
+      ).start();
     } else {
-      alert(`QR code invalid. Expected checkpoint ID ${checkpointId}, but got ${data}`);
-      setTimeout(() => {
-        setScanned(false);
-      }, 1500);
+      spinValue.setValue(0);
     }
-  };
+  }, [isSubmitting]);
+
+  // Success animation
+  useEffect(() => {
+    if (isSubmitted) {
+      Animated.sequence([
+        Animated.timing(scaleValue, {
+          toValue: 1.2,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.back(1.5))
+        }),
+        Animated.timing(scaleValue, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true
+        })
+      ]).start();
+      
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true
+      }).start();
+    } else {
+      scaleValue.setValue(0);
+      opacityValue.setValue(0);
+    }
+  }, [isSubmitted]);
   
-  const handlePhotoCapture = () => {
-    setPhotoTaken(true);
-  };
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
   
   const handleSubmitReport = () => {
-    console.log('Report submitted for checkpoint ID:', checkpointId);
-    console.log('Report text:', reportText);
-    console.log('Photo taken:', photoTaken);
-    
-    setScanned(false);
-    setShowReportForm(false);
-    setReportText('');
-    setPhotoTaken(false);
-    onClose();
-  };
-  
-  const handleSendUrgent = () => {
-    console.log('URGENT report submitted for checkpoint ID:', checkpointId);
-    console.log('Report text:', reportText);
-    console.log('Photo taken:', photoTaken);
-    
-    alert('Rapport urgent envoyé aux dirigeants et clients!');
-    
-    setScanned(false);
-    setShowReportForm(false);
-    setReportText('');
-    setPhotoTaken(false);
-    onClose();
-  };
-  
-  const handleCloseModal = () => {
-    setScanned(false);
-    setShowReportForm(false);
-    setReportText('');
-    setPhotoTaken(false);
-    onClose();
-  };
-  
-  const renderScannerContent = () => {
-    if (attemptingPermission) {
-      return (
-        <View style={styles.permissionContainer}>
-          <Text style={[styles.permissionText, { color: colors.text }]}>Demande d'accès à la caméra en cours...</Text>
-        </View>
-      );
+    if (reportText.trim().length === 0) {
+      return;
     }
     
-    if (hasPermission === null && !attemptingPermission) {
-      return (
-        <View style={styles.permissionContainer}>
-          <Text style={[styles.permissionText, { color: colors.text }]}>Initialisation de la caméra...</Text>
-          <TouchableOpacity
-            style={[styles.permissionButton, { backgroundColor: colors.primary }]}
-            onPress={requestCameraPermission}
-          >
-            <Text style={[styles.permissionButtonText, { color: colors.card }]}>
-              Autoriser l'accès à la caméra
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+    setIsSubmitting(true);
     
-    if (hasPermission === false) {
+    // Simulate API call delay
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      
+      // Close after showing success message
+      setTimeout(() => {
+        onClose();
+      }, 3000);
+    }, 2000);
+  };
+  
+  const renderSubmissionStatus = () => {
+    if (isSubmitting) {
       return (
-        <View style={styles.permissionContainer}>
-          <Text style={[styles.permissionText, { color: colors.text }]}>
-            Accès à la caméra refusé. Veuillez autoriser l'accès à la caméra dans les paramètres de votre appareil.
+        <View style={[styles.statusContainer, { backgroundColor: colors.card }]}>
+          <Animated.View style={{ transform: [{ rotate: spin }] }}>
+            <Loader size={wp(40)} color={colors.primary} />
+          </Animated.View>
+          <Text style={[styles.statusText, { color: colors.text }]}>
+            Envoi en cours...
           </Text>
-          <TouchableOpacity
-            style={[styles.permissionButton, { backgroundColor: colors.primary }]}
-            onPress={requestCameraPermission}
-          >
-            <Text style={[styles.permissionButtonText, { color: colors.card }]}>
-              Réessayer
-            </Text>
-          </TouchableOpacity>
         </View>
       );
     }
     
-    return (
-      <View style={styles.cameraContainer}>
-        {hasPermission && (
-          <CameraView
-            style={StyleSheet.absoluteFillObject}
-            facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ['qr'],
-            }}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-          >
-            {scanned && (
-              <View style={styles.scannedOverlay}>
-                <Text style={styles.scannedText}>QR Code scanné avec succès!</Text>
-              </View>
-            )}
-          </CameraView>
-        )}
-        
-        <View style={styles.overlay}>
-          <View style={styles.unfilled} />
-          <View style={styles.row}>
-            <View style={styles.unfilled} />
-            <View style={styles.scanner} />
-            <View style={styles.unfilled} />
-          </View>
-          <View style={styles.unfilled} />
-        </View>
-      </View>
-    );
-  };
-  
-  const renderReportForm = () => {
+    if (isSubmitted) {
+      return (
+        <Animated.View style={[
+          styles.statusContainer, 
+          { 
+            backgroundColor: colors.card,
+            transform: [{ scale: scaleValue }],
+            opacity: opacityValue
+          }
+        ]}>
+          {isConnected ? (
+            <>
+              <CheckCircle size={wp(40)} color={colors.success} />
+              <Text style={[styles.statusText, { color: colors.text }]}>
+                Rapport envoyé avec succès!
+              </Text>
+            </>
+          ) : (
+            <>
+              <WifiOff size={wp(40)} color={colors.warning} />
+              <Text style={[styles.statusText, { color: colors.text }]}>
+                Rapport enregistré et en attente de connexion
+              </Text>
+            </>
+          )}
+        </Animated.View>
+      );
+    }
+    
     return (
       <View style={styles.reportFormContainer}>
         <Text style={[styles.reportTitle, { color: colors.text }]}>
@@ -191,36 +165,15 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
         />
         
         <TouchableOpacity 
-          style={[styles.photoButton, { 
-            backgroundColor: photoTaken ? colors.success : colors.primary 
-          }]}
-          onPress={handlePhotoCapture}
+          style={[styles.submitButton, { backgroundColor: colors.primary }]}
+          onPress={handleSubmitReport}
+          disabled={reportText.trim().length === 0}
         >
-          <CameraIcon size={24} color={colors.card} />
+          <Send size={wp(20)} color={colors.card} style={{ marginRight: wp(8) }} />
           <Text style={[styles.buttonText, { color: colors.card }]}>
-            {photoTaken ? 'Photo prise' : 'Prendre une photo'}
+            Envoyer le rapport
           </Text>
         </TouchableOpacity>
-        
-        <View style={styles.buttonRow}>
-          <TouchableOpacity 
-            style={[styles.submitButton, { backgroundColor: colors.primary }]}
-            onPress={handleSubmitReport}
-          >
-            <Text style={[styles.buttonText, { color: colors.card }]}>
-              Enregistrer
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.urgentButton, { backgroundColor: colors.error || '#ff4747' }]}
-            onPress={handleSendUrgent}
-          >
-            <Text style={[styles.buttonText, { color: colors.card }]}>
-              Envoyer urgent
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   };
@@ -237,11 +190,12 @@ const QRScannerModal = ({ visible, onClose, checkpointId, colors }: QRScannerMod
           <TouchableOpacity 
             style={[styles.closeButton, { backgroundColor: colors.primary }]}
             onPress={onClose}
+            disabled={isSubmitting}
           >
             <Text style={[styles.closeButtonText, { color: colors.card }]}>X</Text>
           </TouchableOpacity>
           
-          {!showReportForm ? renderScannerContent() : renderReportForm()}
+          {renderSubmissionStatus()}
         </View>
       </View>
     </Modal>
@@ -279,67 +233,6 @@ const styles = StyleSheet.create({
     fontSize: wp(14),
     fontWeight: 'bold',
   },
-  permissionContainer: {
-    width: '100%',
-    height: '80%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: wp(20),
-  },
-  permissionText: {
-    fontSize: wp(16),
-    textAlign: 'center',
-    marginBottom: hp(20),
-  },
-  permissionButton: {
-    paddingVertical: hp(12),
-    paddingHorizontal: wp(24),
-    borderRadius: wp(8),
-  },
-  permissionButtonText: {
-    fontSize: wp(16),
-    fontWeight: 'bold',
-  },
-  cameraContainer: {
-    width: '100%',
-    height: '80%',
-    overflow: 'hidden',
-    borderRadius: wp(12),
-    position: 'relative',
-  },
-  scannedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scannedText: {
-    color: '#FFF',
-    fontSize: wp(18),
-    fontWeight: 'bold',
-  },
-  mockScanner: {
-    width: '100%',
-    height: '80%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#2c2c2c',
-    borderRadius: wp(12),
-  },
-  mockScannerText: {
-    fontSize: wp(16),
-    marginBottom: hp(20),
-    textAlign: 'center',
-  },
-  mockScanButton: {
-    paddingVertical: hp(12),
-    paddingHorizontal: wp(24),
-    borderRadius: wp(8),
-  },
-  mockScanButtonText: {
-    fontSize: wp(16),
-    fontWeight: 'bold',
-  },
   reportFormContainer: {
     width: '100%',
     height: '80%',
@@ -360,60 +253,30 @@ const styles = StyleSheet.create({
     marginBottom: hp(16),
     textAlignVertical: 'top',
   },
-  photoButton: {
+  submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: wp(12),
     borderRadius: wp(8),
-    marginBottom: hp(16),
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  submitButton: {
-    flex: 1,
-    padding: wp(12),
-    borderRadius: wp(8),
-    marginRight: wp(8),
-    alignItems: 'center',
-  },
-  urgentButton: {
-    flex: 1,
-    padding: wp(12),
-    borderRadius: wp(8),
-    marginLeft: wp(8),
-    alignItems: 'center',
+    marginTop: hp(8),
   },
   buttonText: {
-    fontSize: wp(14),
+    fontSize: wp(16),
     fontWeight: 'bold',
-    marginLeft: wp(8),
   },
-  webCameraContainer: {
-    width: '100%',
-    height: '100%',
-    position: 'relative',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
+  statusContainer: {
+    width: '80%',
+    padding: wp(24),
+    borderRadius: wp(16),
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  unfilled: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  row: {
-    flexDirection: 'row',
-    height: wp(250),
-  },
-  scanner: {
-    width: wp(250),
-    height: wp(250),
-    borderWidth: 2,
-    borderColor: '#fff',
-    borderRadius: 10,
+  statusText: {
+    marginTop: hp(16),
+    fontSize: wp(16),
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
