@@ -1,4 +1,3 @@
-
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, UserCircle, Building } from 'lucide-react-native';
@@ -25,38 +24,28 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     // Basic validation
-    if (!formData.nom || !formData.prenom || !formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.email || !formData.password || !formData.nom || !formData.prenom) {
       setError('Veuillez remplir tous les champs obligatoires');
       return;
     }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
       return;
     }
 
     setLoading(true);
-    setError('');
 
     try {
       const { confirmPassword, ...registerData } = formData;
       // Update the role based on selection
       registerData.role = selectedRole;
       
-      const response = await register(registerData);
-
-      if (response.success) {
-        // Redirect to login or directly login the user
-        Alert.alert(
-          "Inscription réussie",
-          "Votre compte a été créé avec succès",
-          [{ text: "OK", onPress: () => router.push('/login') }]
-        );
-      } else {
-        setError('Une erreur est survenue lors de l\'inscription');
-      }
+      await register(registerData);
+      // If we got here without errors, registration was successful
+      router.push('/login');
     } catch (err: any) {
-      console.error('Registration error:', err);
-      setError(err.message || 'Erreur lors de l\'inscription');
+      setError(err.message || 'Une erreur est survenue lors de l\'inscription');
     } finally {
       setLoading(false);
     }
@@ -71,50 +60,45 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView 
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
       >
-        <ScrollView 
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <Image
-            source={{ uri: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80' }}
-            style={styles.backgroundImage}
-            blurRadius={2}
-          />
-          
-          <View style={styles.overlay} />
-          
+        <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
           <View style={styles.content}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <ArrowLeft color="#fff" size={24} />
-            </TouchableOpacity>
-
             <View style={styles.header}>
-              <Text style={styles.title}>Inscription</Text>
-              <Text style={styles.subtitle}>
-                Créez votre compte pour commencer votre expérience
-              </Text>
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={() => router.back()}
+              >
+                <ArrowLeft size={24} color="#fff" />
+              </TouchableOpacity>
+              <View style={styles.logoContainer}>
+                <Image 
+                  source={{ uri: 'https://via.placeholder.com/150x50' }} 
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+              <View style={{ width: 40 }} />
             </View>
 
-            <View style={styles.form}>
+            <View style={styles.formContainer}>
+              <Text style={styles.title}>Créer un compte</Text>
+              <Text style={styles.subtitle}>Rejoignez-nous et trouvez votre espace de travail idéal</Text>
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {authError ? <Text style={styles.errorText}>{authError}</Text> : null}
+
               <View style={styles.inputContainer}>
                 <User size={20} color="#666" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Prénom *"
-                  placeholderTextColor="#999"
-                  autoCapitalize="words"
-                  value={formData.prenom}
-                  onChangeText={(text) => handleInputChange('prenom', text)}
+                  placeholder="Nom *"
+                  placeholderTextColor="#666"
+                  value={formData.nom}
+                  onChangeText={(text) => handleInputChange('nom', text)}
                 />
               </View>
 
@@ -122,11 +106,10 @@ export default function RegisterScreen() {
                 <User size={20} color="#666" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Nom *"
-                  placeholderTextColor="#999"
-                  autoCapitalize="words"
-                  value={formData.nom}
-                  onChangeText={(text) => handleInputChange('nom', text)}
+                  placeholder="Prénom *"
+                  placeholderTextColor="#666"
+                  value={formData.prenom}
+                  onChangeText={(text) => handleInputChange('prenom', text)}
                 />
               </View>
 
@@ -135,7 +118,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Email *"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#666"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={formData.email}
@@ -193,15 +176,14 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Mot de passe *"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#666"
                   secureTextEntry={!showPassword}
                   value={formData.password}
                   onChangeText={(text) => handleInputChange('password', text)}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showPassword ? (
                     <EyeOff size={20} color="#666" />
@@ -216,15 +198,14 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Confirmer le mot de passe *"
-                  placeholderTextColor="#999"
+                  placeholderTextColor="#666"
                   secureTextEntry={!showConfirmPassword}
                   value={formData.confirmPassword}
                   onChangeText={(text) => handleInputChange('confirmPassword', text)}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.eyeIcon}
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   {showConfirmPassword ? (
                     <EyeOff size={20} color="#666" />
@@ -234,30 +215,24 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
 
-              {error ? (
-                <Text style={styles.errorText}>{error}</Text>
-              ) : null}
-
-              <Text style={styles.requiredText}>* Champs obligatoires</Text>
-
-              <TouchableOpacity 
-                style={[styles.registerButton, loading && styles.registerButtonDisabled]}
+              <TouchableOpacity
+                style={[styles.registerButton, loading && styles.buttonDisabled]}
                 onPress={handleRegister}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#FFF" size="small" />
+                  <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.registerButtonText}>S'inscrire</Text>
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.loginButton}
-                onPress={() => router.push('/login')}
-              >
-                <Text style={styles.loginButtonText}>Déjà un compte ? Se connecter</Text>
-              </TouchableOpacity>
+              <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>Déjà un compte ? </Text>
+                <TouchableOpacity onPress={() => router.push('/login')}>
+                  <Text style={styles.loginLink}>Se connecter</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -267,75 +242,71 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0066FF',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#000',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  backgroundImage: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: '#0066FF',
   },
   content: {
     flex: 1,
-    padding: 24,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
   },
-  header: {
-    marginTop: 24,
-    marginBottom: 32,
+  logoContainer: {
+    alignItems: 'center',
+  },
+  logo: {
+    width: 150,
+    height: 50,
+  },
+  formContainer: {
+    flex: 1,
+    backgroundColor: '#0066FF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
   },
   title: {
     fontFamily: 'Inter-Bold',
-    fontSize: 36,
+    fontSize: 28,
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   subtitle: {
     fontFamily: 'Inter-Regular',
-    fontSize: 18,
-    color: '#fff',
-    opacity: 0.9,
-  },
-  form: {
-    gap: 16,
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 32,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
+    marginBottom: 16,
     paddingHorizontal: 16,
-    height: 56,
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
+    height: 56,
     fontFamily: 'Inter-Regular',
     fontSize: 16,
     color: '#333',
@@ -382,48 +353,42 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 8,
   },
-  errorText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#FF3B30',
-    marginTop: 4,
-  },
-  requiredText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 14,
-    color: '#fff',
-    opacity: 0.7,
-    marginTop: 4,
-  },
   registerButton: {
-    backgroundColor: '#0066FF',
-    padding: 16,
+    backgroundColor: '#004FC7',
     borderRadius: 12,
-    alignItems: 'center',
     height: 56,
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   registerButtonText: {
     fontFamily: 'Inter-SemiBold',
-    color: '#fff',
     fontSize: 16,
+    color: '#fff',
   },
-  loginButton: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#fff',
-    height: 56,
+  loginContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 24,
   },
-  loginButtonText: {
-    fontFamily: 'Inter-SemiBold',
-    color: '#fff',
+  loginText: {
+    fontFamily: 'Inter-Regular',
     fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
-  registerButtonDisabled: {
-    backgroundColor: 'rgba(0, 102, 255, 0.5)',
+  loginLink: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+    color: '#fff',
+  },
+  errorText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 14,
+    color: '#FFD7D7',
+    marginBottom: 16,
+    textAlign: 'center',
   },
 });

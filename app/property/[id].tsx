@@ -1,7 +1,7 @@
-
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Star, ArrowLeft, Wifi, Building, Briefcase, Car, Users, Clock } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 
 /**
  * Définition des types TypeScript
@@ -10,74 +10,28 @@ import { MapPin, Star, ArrowLeft, Wifi, Building, Briefcase, Car, Users, Clock }
 interface Property {
   id: string;
   title: string;
-  location: string;
-  price: number;
-  rating: number;
-  reviews: number;
-  image: string;
+  location?: string;
+  address?: string;
+  price: string;
+  rating: string;
+  reviews?: number;
+  image_url: string;
   description: string;
-  amenities: string[];
-  capacity: number;
-  size: number;
-  availability: string;
-  type: string;
+  type?: string;
+  area?: string;
+  workstations?: number;
+  meeting_rooms?: number;
+  // Amenities flags
+  wifi?: number;
+  parking?: number;
+  coffee?: number;
+  reception?: number;
+  secured?: number;
+  accessible?: number;
+  printers?: number;
+  kitchen?: number;
+  flexible_hours?: number;
 }
-
-interface Properties {
-  [key: string]: Property;
-}
-
-/**
- * Données des espaces de bureaux disponibles
- * Available office spaces data
- */
-const PROPERTIES: Properties = {
-  '1': {
-    id: '1',
-    title: 'Espace de coworking moderne',
-    location: 'La Défense, Paris',
-    price: 350,
-    rating: 4.8,
-    reviews: 112,
-    image: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&q=80',
-    description: 'Espace de travail moderne et lumineux situé au cœur du quartier d\'affaires de La Défense. Profitez d\'un environnement stimulant avec des services premium et un réseau professionnel dynamique. Parfaitement équipé pour les entrepreneurs, freelances et petites équipes. Accès 24/7, internet haut débit et salles de réunion incluses dans le forfait mensuel.',
-    amenities: ['Wifi haut débit', 'Parking sécurisé', 'Salles de réunion', 'Cafétéria', 'Réception 24/7', 'Imprimantes & scanners'],
-    capacity: 50,
-    size: 300,
-    availability: 'Immédiate',
-    type: 'Espace partagé'
-  },
-  '2': {
-    id: '2',
-    title: 'Bureau privé avec vue panoramique',
-    location: 'Lyon, France',
-    price: 420,
-    rating: 4.9,
-    reviews: 84,
-    image: 'https://images.unsplash.com/photo-1497215842964-222b430dc094?w=800&q=80',
-    description: 'Bureau privé haut de gamme avec une vue exceptionnelle sur la ville de Lyon. Espace idéal pour les équipes cherchant calme et prestige. Entièrement meublé et équipé, avec accès à des services de conciergerie exclusifs et des zones de détente communes. Notre équipe sur place est à votre disposition pour répondre à tous vos besoins professionnels au quotidien.',
-    amenities: ['Wifi haut débit', 'Parking sécurisé', 'Réception 24/7', 'Cafétéria', 'Salle de conférence', 'Espace détente'],
-    capacity: 12,
-    size: 120,
-    availability: 'Sous 2 semaines',
-    type: 'Bureau privé'
-  },
-  '3': {
-    id: '3',
-    title: 'Espace collaboratif créatif',
-    location: 'Bordeaux, France',
-    price: 290,
-    rating: 4.7,
-    reviews: 65,
-    image: 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?w=800&q=80',
-    description: 'Espace de travail créatif au design industriel dans le quartier des Chartrons à Bordeaux. Idéal pour les startups, designers et créatifs en recherche d\'un environnement inspirant. Ateliers et événements réguliers pour développer votre réseau professionnel. Communauté dynamique favorisant les échanges et les collaborations entre membres. Forfaits flexibles adaptés à vos besoins.',
-    amenities: ['Wifi haut débit', 'Imprimantes', 'Cuisine équipée', 'Terrasse', 'Espace événementiel', 'Studio photo'],
-    capacity: 35,
-    size: 220,
-    availability: 'Immédiate',
-    type: 'Espace créatif'
-  },
-};
 
 const { width } = Dimensions.get('window');
 
@@ -88,15 +42,36 @@ const { width } = Dimensions.get('window');
 export default function PropertyScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const property = PROPERTIES[id as keyof typeof PROPERTIES];
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!property) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Propriété non trouvée</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    fetchPropertyDetails();
+  }, [id]);
+
+  const fetchPropertyDetails = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/properties/${id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setProperty(data);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des détails de la propriété:', err);
+      setError('Impossible de charger les détails. Veuillez réessayer plus tard.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /**
    * Fonction pour afficher les icônes d'équipement appropriées
@@ -114,18 +89,76 @@ export default function PropertyScreen() {
         return <Users size={24} color="#0066FF" />;
       case 'Cafétéria':
       case 'Cuisine équipée':
-      case 'Espace détente':
+      case 'Café/Thé':
         return <Briefcase size={24} color="#0066FF" />;
       case 'Réception 24/7':
+      case 'Réception':
         return <Clock size={24} color="#0066FF" />;
       case 'Imprimantes':
       case 'Imprimantes & scanners':
       case 'Studio photo':
       case 'Terrasse':
+      case 'Sécurisé':
       default:
         return <Building size={24} color="#0066FF" />;
     }
   };
+
+  /**
+   * Converts API property data amenities to display format
+   */
+  const getPropertyAmenities = (property: Property): string[] => {
+    const amenities: string[] = [];
+    
+    if (property.wifi === 1) amenities.push('Wifi haut débit');
+    if (property.parking === 1) amenities.push('Parking sécurisé');
+    if (property.meeting_rooms && property.meeting_rooms > 0) amenities.push('Salles de réunion');
+    if (property.kitchen === 1) amenities.push('Cuisine équipée');
+    if (property.coffee === 1) amenities.push('Café/Thé');
+    if (property.reception === 1) amenities.push('Réception');
+    if (property.secured === 1) amenities.push('Sécurisé');
+    if (property.printers === 1) amenities.push('Imprimantes');
+    if (property.flexible_hours === 1) amenities.push('Heures flexibles');
+    
+    // If no amenities found, return empty array
+    return amenities;
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0066FF" />
+        <Text style={styles.loadingText}>Chargement des détails...</Text>
+      </View>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>
+          {error || "Propriété non trouvée"}
+        </Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={fetchPropertyDetails}
+        >
+          <Text style={styles.retryText}>Réessayer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.backButtonError}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonErrorText}>Retour</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Get location from address or location field
+  const locationText = property.address || property.location || 'Emplacement non spécifié';
+  // Get amenities in display format
+  const amenities = getPropertyAmenities(property);
 
   return (
     <View style={styles.mainContainer}>
@@ -139,7 +172,7 @@ export default function PropertyScreen() {
           </TouchableOpacity>
           <Image 
             source={{
-              uri: property.image ? property.image : 'https://via.placeholder.com/150',
+              uri: property.image_url,
             }}
             style={styles.coverImage}
           />
@@ -150,14 +183,14 @@ export default function PropertyScreen() {
             <Text style={styles.title}>{property.title}</Text>
             <View style={styles.locationContainer}>
               <MapPin size={16} color="#0066FF" />
-              <Text style={styles.location}>{property.location}</Text>
+              <Text style={styles.location}>{locationText}</Text>
             </View>
           </View>
 
           <View style={styles.ratingContainer}>
             <Star size={16} color="#0066FF" fill="#0066FF" />
             <Text style={styles.rating}>{property.rating}</Text>
-            <Text style={styles.reviews}>({property.reviews} avis professionnels)</Text>
+            <Text style={styles.reviews}>({property.reviews || 0} avis professionnels)</Text>
           </View>
 
           <View style={styles.infoContainer}>
@@ -167,10 +200,10 @@ export default function PropertyScreen() {
 
           <View style={styles.statsContainer}>
             {[
-              { value: property.type, label: 'Type d\'espace' },
-              { value: `${property.capacity} pers.`, label: 'Capacité' },
-              { value: `${property.size}m²`, label: 'Surface' },
-              { value: property.availability, label: 'Disponibilité' },
+              { value: property.type || 'Bureau standard', label: 'Type d\'espace' },
+              { value: `${property.workstations || 0} pers.`, label: 'Capacité' },
+              { value: `${property.area || 0}m²`, label: 'Surface' },
+              { value: 'Immédiate', label: 'Disponibilité' },
             ].map((stat, index) => (
               <View key={index} style={styles.stat}>
                 <Text style={styles.statValue}>{stat.value}</Text>
@@ -179,17 +212,19 @@ export default function PropertyScreen() {
             ))}
           </View>
 
-          <View style={styles.amenitiesContainer}>
-            <Text style={styles.infoTitle}>Équipements & Services</Text>
-            <View style={styles.amenitiesGrid}>
-              {property.amenities.map((amenity, index) => (
-                <View key={index} style={styles.amenity}>
-                  {renderAmenityIcon(amenity)}
-                  <Text style={styles.amenityText}>{amenity}</Text>
-                </View>
-              ))}
+          {amenities.length > 0 && (
+            <View style={styles.amenitiesContainer}>
+              <Text style={styles.infoTitle}>Équipements & Services</Text>
+              <View style={styles.amenitiesGrid}>
+                {amenities.map((amenity, index) => (
+                  <View key={index} style={styles.amenity}>
+                    {renderAmenityIcon(amenity)}
+                    <Text style={styles.amenityText}>{amenity}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
 
@@ -213,19 +248,59 @@ export default function PropertyScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+  },
+  errorText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#FF3B30',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#0066FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  retryText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  backButtonError: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  backButtonErrorText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#0066FF',
+  },
   mainContainer: {
     flex: 1,
     backgroundColor: '#fff',
   },
   container: {
     flex: 1,
-  },
-  errorText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
   },
   header: {
     position: 'relative',
