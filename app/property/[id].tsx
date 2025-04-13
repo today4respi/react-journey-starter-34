@@ -1,3 +1,4 @@
+
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Star, ArrowLeft, Wifi, Building, Briefcase, Car, Users, Clock } from 'lucide-react-native';
@@ -33,6 +34,11 @@ interface Property {
   flexible_hours?: number;
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: Property;
+}
+
 const { width } = Dimensions.get('window');
 
 /**
@@ -57,14 +63,21 @@ export default function PropertyScreen() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/properties/${id}`);
+      console.log(`Fetching property with id: ${id}`);
+      const response = await fetch(`http://localhost:3000/api/properties/${id}`);
       
       if (!response.ok) {
         throw new Error(`Erreur HTTP: ${response.status}`);
       }
       
-      const data = await response.json();
-      setProperty(data);
+      const result: ApiResponse = await response.json();
+      
+      if (result.success && result.data) {
+        console.log('Property data received:', result.data);
+        setProperty(result.data);
+      } else {
+        throw new Error('Format de réponse invalide');
+      }
     } catch (err) {
       console.error('Erreur lors de la récupération des détails de la propriété:', err);
       setError('Impossible de charger les détails. Veuillez réessayer plus tard.');

@@ -35,7 +35,7 @@ export type EditableField = 'email' | 'nom' | 'prenom' | 'password';
  * Types pour les activités et le flux d'activités
  * Types for activities and activity feed
  */
-export type ActivityType = 'space' | 'rental' | 'user' | 'maintenance';
+export type ActivityType = 'space' | 'rental' | 'user' | 'maintenance' | 'device' | 'return';
 
 // Élément d'activité affiché dans le flux / Activity item displayed in the feed
 export interface ActivityItem {
@@ -103,6 +103,10 @@ export interface Device {
   type: string;
   location: string;
   lastMaintenance?: string;
+  serialNumber?: string;
+  addedDate?: string;
+  lastRented?: string;
+  value?: number;
 }
 
 /**
@@ -117,6 +121,10 @@ export interface UserItem {
   role: string;
   status: string;
   lastActive: string;
+  department?: string;
+  registeredDate?: string;
+  totalRentals?: number;
+  currentRentals?: number;
 }
 
 /**

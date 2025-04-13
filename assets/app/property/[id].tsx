@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Star, ArrowLeft, Wifi, School as Pool, Twitch as Kitchen, Car } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 
 // Define TypeScript interfaces
 interface Property {
@@ -18,41 +19,53 @@ interface Property {
   size: number;
 }
 
-interface Properties {
-  [key: string]: Property;
+interface ApiResponse {
+  success: boolean;
+  data: Property;
 }
-
-const PROPERTIES: Properties = {
-  '1': {
-    id: '1',
-    title: 'Villa de luxe avec vue sur mer',
-    location: 'Cannes, France',
-    price: 450,
-    rating: 4.9,
-    reviews: 128,
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80',
-    description: 'Magnifique villa moderne avec vue panoramique sur la mer Méditerranée. Profitez dune piscine à débordement, dne cuisine entièrement équipée et dun jardin luxuriant.',
-    amenities: ['Wifi', 'Piscine', 'Cuisine équipée', 'Parking'],
-    rooms: 4,
-    bathrooms: 3,
-    size: 250,
-  },
-};
 
 const { width } = Dimensions.get('window');
 
 export default function PropertyScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const property = PROPERTIES[id as keyof typeof PROPERTIES];
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!property) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Propriété non trouvée</Text>
-      </View>
-    );
-  }
+  useEffect(() => {
+    fetchPropertyDetails();
+  }, [id]);
+
+  const fetchPropertyDetails = async () => {
+    if (!id) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log(`Fetching property with id: ${id}`);
+      const response = await fetch(`http://localhost:3000/api/properties/${id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+      
+      const result: ApiResponse = await response.json();
+      
+      if (result.success && result.data) {
+        console.log('Property data received:', result.data);
+        setProperty(result.data);
+      } else {
+        throw new Error('Format de réponse invalide');
+      }
+    } catch (err) {
+      console.error('Erreur lors de la récupération des détails de la propriété:', err);
+      setError('Impossible de charger les détails. Veuillez réessayer plus tard.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderAmenityIcon = (amenity: string) => {
     switch (amenity) {
@@ -69,6 +82,29 @@ export default function PropertyScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0066FF" />
+        <Text style={styles.loadingText}>Chargement des détails...</Text>
+      </View>
+    );
+  }
+
+  if (error || !property) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error || "Propriété non trouvée"}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={fetchPropertyDetails}
+        >
+          <Text style={styles.retryText}>Réessayer</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.mainContainer}>
       <ScrollView style={styles.container}>
@@ -81,8 +117,8 @@ export default function PropertyScreen() {
           </TouchableOpacity>
           <Image 
             source={{
-    uri: property.image ? property.image : 'https://via.placeholder.com/150',
-  }}
+              uri: property.image || 'https://via.placeholder.com/150',
+            }}
             style={styles.coverImage}
           />
         </View>
@@ -159,13 +195,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-  },
-  errorText: {
-    fontFamily: 'Inter-Regular',
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 20,
   },
   header: {
     position: 'relative',
@@ -315,5 +344,31 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     fontSize: 16,
     color: '#fff',
+  },
+  loadingText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+  },
+  errorText: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  retryButton: {
+    backgroundColor: '#0066FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignSelf: 'center',
+  },
+  retryText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#FFFFFF',
   },
 });
