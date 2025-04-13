@@ -1,13 +1,14 @@
 
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, UserCircle, Building } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
-import authService from '@/assets/src/services/authService';
+import { useAuth } from '../../assets/src/contexts/AuthContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { register, error: authError, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,9 +18,10 @@ export default function RegisterScreen() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user'
+    role: 'user' // Default role
   });
   const [error, setError] = useState('');
+  const [selectedRole, setSelectedRole] = useState('user'); // Default role selection
 
   const handleRegister = async () => {
     // Basic validation
@@ -37,7 +39,10 @@ export default function RegisterScreen() {
 
     try {
       const { confirmPassword, ...registerData } = formData;
-      const response = await authService.register(registerData);
+      // Update the role based on selection
+      registerData.role = selectedRole;
+      
+      const response = await register(registerData);
 
       if (response.success) {
         // Redirect to login or directly login the user
@@ -60,6 +65,9 @@ export default function RegisterScreen() {
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
     setError('');
+    if (field === 'role') {
+      setSelectedRole(value);
+    }
   };
 
   return (
@@ -133,6 +141,51 @@ export default function RegisterScreen() {
                   value={formData.email}
                   onChangeText={(text) => handleInputChange('email', text)}
                 />
+              </View>
+
+              <View style={styles.roleSelectionContainer}>
+                <Text style={styles.roleTitle}>Type de compte *</Text>
+                <View style={styles.roleOptions}>
+                  <TouchableOpacity 
+                    style={[
+                      styles.roleButton,
+                      selectedRole === 'user' && styles.roleButtonSelected
+                    ]}
+                    onPress={() => handleInputChange('role', 'user')}
+                  >
+                    <UserCircle 
+                      size={24} 
+                      color={selectedRole === 'user' ? '#fff' : '#666'}
+                      style={styles.roleIcon} 
+                    />
+                    <Text style={[
+                      styles.roleText,
+                      selectedRole === 'user' && styles.roleTextSelected
+                    ]}>
+                      Utilisateur normal
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[
+                      styles.roleButton,
+                      selectedRole === 'owner' && styles.roleButtonSelected
+                    ]}
+                    onPress={() => handleInputChange('role', 'owner')}
+                  >
+                    <Building 
+                      size={24} 
+                      color={selectedRole === 'owner' ? '#fff' : '#666'} 
+                      style={styles.roleIcon}
+                    />
+                    <Text style={[
+                      styles.roleText,
+                      selectedRole === 'owner' && styles.roleTextSelected
+                    ]}>
+                      Propriétaire
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <View style={styles.inputContainer}>
@@ -287,6 +340,44 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     paddingVertical: 8,
+  },
+  roleSelectionContainer: {
+    marginVertical: 8,
+  },
+  roleTitle: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 8,
+  },
+  roleOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  roleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  roleButtonSelected: {
+    backgroundColor: '#0066FF',
+  },
+  roleIcon: {
+    marginRight: 8,
+  },
+  roleText: {
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    color: '#333',
+  },
+  roleTextSelected: {
+    color: '#fff',
   },
   eyeIcon: {
     padding: 8,
