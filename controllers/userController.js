@@ -1,8 +1,19 @@
+
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 
-// Récupérer tous les utilisateurs
+/**
+ * Contrôleur pour la gestion des utilisateurs
+ * Ce fichier contient toutes les fonctions pour gérer les opérations CRUD sur les utilisateurs
+ */
+
+/**
+ * Récupérer tous les utilisateurs
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Liste des utilisateurs sans les mots de passe
+ */
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll();
@@ -12,7 +23,12 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Récupérer un utilisateur spécifique
+/**
+ * Récupérer un utilisateur spécifique par son ID
+ * @param {Object} req - Objet requête Express avec l'ID en paramètre
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Informations détaillées de l'utilisateur demandé
+ */
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -25,7 +41,12 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Register User (Inscription)
+/**
+ * Inscription d'un nouvel utilisateur
+ * @param {Object} req - Objet requête Express avec les données d'utilisateur
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Confirmation de création avec l'ID de l'utilisateur
+ */
 exports.register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -33,7 +54,7 @@ exports.register = async (req, res) => {
   }
 
   try {
-    // Check if user with this email already exists
+    // Vérifier si un utilisateur avec cet email existe déjà
     const existingUser = await User.findByEmail(req.body.email);
     if (existingUser) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
@@ -46,12 +67,17 @@ exports.register = async (req, res) => {
       success: true 
     });
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.error("Erreur lors de la création de l'utilisateur:", error);
     res.status(400).json({ message: error.message });
   }
 };
 
-// Login User (Connexion)
+/**
+ * Connexion d'un utilisateur
+ * @param {Object} req - Objet requête Express avec email et mot de passe
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Données utilisateur et création d'une session
+ */
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -59,7 +85,7 @@ exports.login = async (req, res) => {
     const user = await User.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.password_hash))) {
-      // Set session data
+      // Configuration des données de session
       req.session.userId = user.user_id;
       req.session.role = user.role;
 
@@ -80,7 +106,12 @@ exports.login = async (req, res) => {
   }
 };
 
-// Logout User (Déconnexion)
+/**
+ * Déconnexion d'un utilisateur
+ * @param {Object} req - Objet requête Express
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Confirmation de déconnexion
+ */
 exports.logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -91,7 +122,12 @@ exports.logout = (req, res) => {
   });
 };
 
-// Get Current User (Récupérer l'utilisateur actuel)
+/**
+ * Récupérer le profil de l'utilisateur connecté
+ * @param {Object} req - Objet requête Express avec session utilisateur
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Informations du profil utilisateur
+ */
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.session.userId);
@@ -104,7 +140,12 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Update User (Mettre à jour un utilisateur)
+/**
+ * Mettre à jour un utilisateur
+ * @param {Object} req - Objet requête Express avec ID et données à mettre à jour
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Confirmation de mise à jour
+ */
 exports.updateUser = async (req, res) => {
   try {
     const userExists = await User.findById(req.params.id);
@@ -112,7 +153,7 @@ exports.updateUser = async (req, res) => {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
-    // Removing security checks as requested
+    // Pas de vérification de sécurité comme demandé
     await User.update(req.params.id, req.body);
     res.json({ message: "Utilisateur mis à jour avec succès" });
   } catch (error) {
@@ -120,7 +161,12 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Delete User (Supprimer un utilisateur)
+/**
+ * Supprimer un utilisateur
+ * @param {Object} req - Objet requête Express avec ID de l'utilisateur à supprimer
+ * @param {Object} res - Objet réponse Express
+ * @returns {Object} Confirmation de suppression
+ */
 exports.deleteUser = async (req, res) => {
   try {
     const userExists = await User.findById(req.params.id);
@@ -128,7 +174,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
-    // Removing security checks as requested
+    // Pas de vérification de sécurité comme demandé
     await User.delete(req.params.id);
     res.json({ message: "Utilisateur supprimé avec succès" });
   } catch (error) {

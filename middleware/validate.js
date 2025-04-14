@@ -1,36 +1,59 @@
+
+/**
+ * Middleware de validation des données
+ * Ce fichier contient les fonctions de validation pour les différentes routes de l'API
+ */
 const { body, validationResult, param } = require("express-validator");
 
+/**
+ * Validation des données pour l'inscription d'un utilisateur
+ * Vérifie que les champs obligatoires sont présents et valides
+ */
 exports.registerValidation = [
-  body("nom").notEmpty().withMessage("Nom is required"),
-  body("prenom").notEmpty().withMessage("Prenom is required"),
-  body("email").isEmail().withMessage("Invalid email"),
+  body("nom").notEmpty().withMessage("Le nom est obligatoire"),
+  body("prenom").notEmpty().withMessage("Le prénom est obligatoire"),
+  body("email").isEmail().withMessage("L'email est invalide"),
   body("password")
-    .isLength({ min: 6 })  // Changed from 8 to 6 to match the frontend validation
-    .withMessage("Password must be at least 6 characters"),
-  body("role").optional().isIn(["admin", "user"]).withMessage("Role must be either admin or user"),
+    .isLength({ min: 6 })  // Modifié de 8 à 6 pour correspondre à la validation frontend
+    .withMessage("Le mot de passe doit contenir au moins 6 caractères"),
+  body("role").optional().isIn(["admin", "user"]).withMessage("Le rôle doit être 'admin' ou 'user'"),
 ];
+
+/**
+ * Validation des données pour la connexion d'un utilisateur
+ * Vérifie que l'email est valide et le mot de passe est présent
+ */
 exports.loginValidation = [
-  body("email").isEmail().withMessage("Invalid email"),
-  body("password").notEmpty().withMessage("Password is required"),
+  body("email").isEmail().withMessage("L'email est invalide"),
+  body("password").notEmpty().withMessage("Le mot de passe est obligatoire"),
 ];
+
+/**
+ * Validation des données pour la création ou mise à jour d'un lieu
+ * Vérifie que les données sont valides selon les règles métier
+ */
 exports.placeValidation = [
   body("nom_place")
     .notEmpty()
-    .withMessage("Place name is required")
+    .withMessage("Le nom du lieu est obligatoire")
     .isLength({ max: 255 })
-    .withMessage("Name too long"),
+    .withMessage("Le nom est trop long"),
   body("description")
     .optional()
     .isLength({ max: 2000 })
-    .withMessage("Description too long"),
+    .withMessage("La description est trop longue"),
   body("longitude")
     .isFloat({ min: -180, max: 180 })
-    .withMessage("Invalid longitude"),
+    .withMessage("La longitude est invalide"),
   body("latitude")
     .isFloat({ min: -90, max: 90 })
-    .withMessage("Invalid latitude"),
-  body("url_img").optional().isURL().withMessage("Invalid image URL"),
-  body("url_web").optional().isURL().withMessage("Invalid website URL"),
+    .withMessage("La latitude est invalide"),
+  body("url_img").optional().isURL().withMessage("L'URL de l'image est invalide"),
+  body("url_web").optional().isURL().withMessage("L'URL du site web est invalide"),
 ];
 
-exports.idValidation = [param("id").isInt().withMessage("Invalid ID format")];
+/**
+ * Validation de l'ID dans les paramètres de l'URL
+ * Vérifie que l'ID est un nombre entier valide
+ */
+exports.idValidation = [param("id").isInt().withMessage("Le format de l'ID est invalide")];
