@@ -50,6 +50,13 @@ const register = async (data: RegisterData) => {
     console.log("Tentative d'inscription avec:", data.email);
     const response = await axios.post(`${API_URL}/register`, data);
     console.log("Réponse d'inscription:", response.data);
+    
+    // Si l'inscription inclut les données utilisateur, les stocker
+    if (response.data && response.data.user) {
+      await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(response.data.user));
+      console.log("Nouvel utilisateur stocké dans SecureStore");
+    }
+    
     return response.data;
   } catch (error: any) {
     console.error("Erreur d'inscription:", error.response?.data || error.message);

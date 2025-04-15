@@ -1,4 +1,3 @@
-
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Star, ArrowLeft, Wifi, Building, Briefcase, Car, Users, Clock, ChevronDown, ChevronUp, Heart } from 'lucide-react-native';
@@ -30,6 +29,10 @@ interface Property {
   printers?: number;
   kitchen?: number;
   flexible_hours?: number;
+  // Additional properties needed for the app
+  property_type?: string;
+  status?: string;
+  updated_at?: string;
 }
 
 const { width } = Dimensions.get('window');
