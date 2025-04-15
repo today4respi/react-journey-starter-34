@@ -22,6 +22,13 @@ const login = async (credentials: LoginCredentials) => {
       withCredentials: true
     });
     console.log("Réponse de connexion:", response.data);
+    
+    // Stocker immédiatement l'utilisateur dans le stockage sécurisé
+    if (response.data && response.data.user) {
+      await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(response.data.user));
+      console.log("Utilisateur stocké dans SecureStore:", response.data.user);
+    }
+    
     return response.data;
   } catch (error: any) {
     console.error("Erreur de connexion:", error.response?.data || error.message);
@@ -72,6 +79,7 @@ const logout = async () => {
     
     // Toujours effacer le stockage local
     await SecureStore.deleteItemAsync(USER_STORAGE_KEY);
+    console.log("Stockage utilisateur effacé lors de la déconnexion");
     return { success: true };
   } catch (error: any) {
     // Logger l'erreur mais toujours retourner succès
@@ -81,17 +89,37 @@ const logout = async () => {
 };
 
 /**
- * Récupère l'utilisateur actuellement connecté
+ * Récupère l'utilisateur actuellement connecté depuis le stockage local
+ * ET vérifie avec le serveur
  * @returns Les données de l'utilisateur connecté ou null
  */
 const getCurrentUser = async () => {
   try {
     console.log("Tentative de récupération de l'utilisateur courant");
-    const response = await axios.get(`${API_URL}/me`, {
-      withCredentials: true
-    });
-    console.log("Utilisateur courant récupéré:", response.data);
-    return response.data;
+    
+    // Récupérer d'abord depuis le stockage local
+    const storedUser = await SecureStore.getItemAsync(USER_STORAGE_KEY);
+    console.log("Utilisateur trouvé dans le stockage:", storedUser ? JSON.parse(storedUser) : null);
+    
+    if (!storedUser) {
+      return null;
+    }
+    
+    // Essayer de vérifier avec le serveur
+    try {
+      const response = await axios.get(`${API_URL}/me`, {
+        withCredentials: true
+      });
+      console.log("Utilisateur courant récupéré du serveur:", response.data);
+      
+      // Mettre à jour le stockage avec les données les plus récentes
+      await SecureStore.setItemAsync(USER_STORAGE_KEY, JSON.stringify(response.data));
+      return response.data;
+    } catch (serverError) {
+      console.warn("Impossible de vérifier l'utilisateur avec le serveur:", serverError);
+      // En cas d'échec de la requête au serveur, utiliser les données du stockage
+      return JSON.parse(storedUser);
+    }
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur courant:", error);
     return null;
@@ -137,6 +165,9 @@ const deleteUser = async (id: string) => {
       withCredentials: true
     });
     console.log("Réponse de suppression:", response.data);
+    
+    // Effacer les données utilisateur du stockage local
+    await SecureStore.deleteItemAsync(USER_STORAGE_KEY);
     return response.data;
   } catch (error: any) {
     console.error("Erreur lors de la suppression:", error.response?.data || error.message);
