@@ -6,7 +6,8 @@ import * as SecureStore from 'expo-secure-store';
 // Clé pour stocker les données utilisateur
 const USER_STORAGE_KEY = 'user_data';
 
-// URL de l'API
+// URL de l'API - ajustez cette URL selon votre configuration réseau
+// Pour les tests locaux sur Android avec Expo, utilisez l'adresse IP de votre machine
 const API_URL = 'http://192.168.1.6:3000/api/users';
 
 /**
@@ -16,11 +17,14 @@ const API_URL = 'http://192.168.1.6:3000/api/users';
  */
 const login = async (credentials: LoginCredentials) => {
   try {
+    console.log("Tentative de connexion avec:", credentials.email);
     const response = await axios.post(`${API_URL}/login`, credentials, {
       withCredentials: true
     });
+    console.log("Réponse de connexion:", response.data);
     return response.data;
   } catch (error: any) {
+    console.error("Erreur de connexion:", error.response?.data || error.message);
     if (error.response) {
       throw new Error(error.response.data.message || 'Identifiants invalides');
     } else {
@@ -36,9 +40,12 @@ const login = async (credentials: LoginCredentials) => {
  */
 const register = async (data: RegisterData) => {
   try {
+    console.log("Tentative d'inscription avec:", data.email);
     const response = await axios.post(`${API_URL}/register`, data);
+    console.log("Réponse d'inscription:", response.data);
     return response.data;
   } catch (error: any) {
+    console.error("Erreur d'inscription:", error.response?.data || error.message);
     if (error.response) {
       throw new Error(error.response.data.message || 'Erreur lors de l\'inscription');
     } else {
@@ -79,11 +86,14 @@ const logout = async () => {
  */
 const getCurrentUser = async () => {
   try {
+    console.log("Tentative de récupération de l'utilisateur courant");
     const response = await axios.get(`${API_URL}/me`, {
       withCredentials: true
     });
+    console.log("Utilisateur courant récupéré:", response.data);
     return response.data;
   } catch (error) {
+    console.error("Erreur lors de la récupération de l'utilisateur courant:", error);
     return null;
   }
 };
@@ -96,14 +106,17 @@ const getCurrentUser = async () => {
  */
 const updateUser = async (id: string, data: Partial<RegisterData>) => {
   try {
+    console.log("Mise à jour de l'utilisateur:", id, data);
     const response = await axios.put(`${API_URL}/${id}`, data, {
       withCredentials: true
     });
     
     // Obtenir les données utilisateur mises à jour
     const updatedUser = await getCurrentUser();
+    console.log("Utilisateur mis à jour:", updatedUser);
     return updatedUser;
   } catch (error: any) {
+    console.error("Erreur lors de la mise à jour:", error.response?.data || error.message);
     if (error.response) {
       throw new Error(error.response.data.message || 'Erreur lors de la mise à jour');
     } else {
@@ -119,11 +132,14 @@ const updateUser = async (id: string, data: Partial<RegisterData>) => {
  */
 const deleteUser = async (id: string) => {
   try {
+    console.log("Tentative de suppression de l'utilisateur:", id);
     const response = await axios.delete(`${API_URL}/${id}`, {
       withCredentials: true
     });
+    console.log("Réponse de suppression:", response.data);
     return response.data;
   } catch (error: any) {
+    console.error("Erreur lors de la suppression:", error.response?.data || error.message);
     if (error.response) {
       throw new Error(error.response.data.message || 'Erreur lors de la suppression');
     } else {
