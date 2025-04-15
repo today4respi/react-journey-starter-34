@@ -1,31 +1,30 @@
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MapPin, Star, ArrowLeft, Wifi, Building, Briefcase, Car, Users, Clock, ChevronDown, ChevronUp, Heart } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
-import { FavoriteProperty, isPropertyFavorite, toggleFavorite } from '../utils/favoriteUtils';
+import { LinearGradient } from 'expo-linear-gradient';
+import { getPropertyById } from '../utils/favoriteUtils';
+import { toggleFavorite, isFavorite } from '../utils/favoriteUtils';
 
-// Define TypeScript interfaces
+// Interface de propriété
 interface Property {
-  id: string;
+  id: number;
   title: string;
-  location?: string;
-  address?: string;
-  price: string;
-  rating: string;
-  reviews?: number;
-  image_url: string;
   description: string;
-  type?: string;
-  area?: string;
-  workstations?: number;
-  meeting_rooms?: number;
-  // Amenities flags
-  wifi?: number;
-  parking?: number;
-  coffee?: number;
-  reception?: number;
-  secured?: number;
-  accessible?: number;
+  address: string;
+  price: number;
+  images: string[];
+  amenities: string[];
+  rating: number;
+  reviews_count: number;
+  area: number;
+  workstations: number;
+  meeting_rooms: number;
+  availability: string[];
+  wifi_speed: number;
+  parking_spots: number;
+  coffee_machines?: number;
   printers?: number;
   kitchen?: number;
   flexible_hours?: number;
@@ -58,7 +57,7 @@ export default function PropertyScreen() {
     // Check if property is already a favorite
     const checkFavoriteStatus = async () => {
       if (id) {
-        const favorite = await isPropertyFavorite(id.toString());
+        const favorite = await isFavorite(id.toString());
         setIsFavorite(favorite);
       }
     };
@@ -163,11 +162,11 @@ export default function PropertyScreen() {
   const getPropertyAmenities = (property: Property): string[] => {
     const amenities: string[] = [];
     
-    if (property.wifi === 1) amenities.push('Wifi haut débit');
-    if (property.parking === 1) amenities.push('Parking sécurisé');
+    if (property.wifi_speed === 1) amenities.push('Wifi haut débit');
+    if (property.parking_spots === 1) amenities.push('Parking sécurisé');
     if (property.meeting_rooms && property.meeting_rooms > 0) amenities.push('Salles de réunion');
     if (property.kitchen === 1) amenities.push('Cuisine équipée');
-    if (property.coffee === 1) amenities.push('Café/Thé');
+    if (property.coffee_machines === 1) amenities.push('Café/Thé');
     if (property.reception === 1) amenities.push('Réception');
     if (property.secured === 1) amenities.push('Sécurisé');
     if (property.printers === 1) amenities.push('Imprimantes');
@@ -230,7 +229,7 @@ export default function PropertyScreen() {
           </TouchableOpacity>
           <Image 
             source={{
-              uri: property.image_url,
+              uri: property.images[0],
             }}
             style={styles.coverImage}
           />
@@ -248,7 +247,7 @@ export default function PropertyScreen() {
           <View style={styles.ratingContainer}>
             <Star size={16} color="#0066FF" fill="#0066FF" />
             <Text style={styles.rating}>{property.rating}</Text>
-            <Text style={styles.reviews}>({property.reviews || 0} avis professionnels)</Text>
+            <Text style={styles.reviews}>({property.reviews_count} avis professionnels)</Text>
           </View>
 
           {/* Expandable description section */}
