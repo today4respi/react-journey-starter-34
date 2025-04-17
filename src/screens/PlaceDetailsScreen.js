@@ -26,6 +26,7 @@ import { ROUTES } from '../navigation/navigationConstants';
 import TextToSpeech from '../components/TextToSpeech';
 import ReservationModal from '../components/ReservationModal';
 import { getEventsByPlace } from '../services/EventService';
+import EventRegistrationModal from '../components/EventRegistrationModal';
 
 const PlaceDetailsScreen = ({ route, navigation }) => {
   const { t } = useTranslation();
@@ -115,6 +116,14 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
 
   const handleReservation = () => {
     setIsReservationModalVisible(true);
+  };
+
+  const handleReservationConfirm = (reservationData) => {
+    console.log('Reservation data:', reservationData);
+    Alert.alert(
+      t('reservation.success', 'Réservation Confirmée'),
+      t('reservation.successMessage', 'Votre réservation a été enregistrée avec succès!')
+    );
   };
 
   const handleEventRegistration = (event) => {
