@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
@@ -35,7 +34,9 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isReservationModalVisible, setIsReservationModalVisible] = useState(false);
-  
+  const [isEventRegistrationVisible, setIsEventRegistrationVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState(null);
@@ -108,7 +109,6 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
 
   const formatPrice = (price) => {
     if (price === 0 || price === undefined || price === null) return t('placeDetails.freeEvent', 'Gratuit');
-    // Ensure price is a number before calling toFixed
     const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
     return isNaN(numericPrice) ? t('placeDetails.freeEvent', 'Gratuit') : `${numericPrice.toFixed(2)} TND`;
   };
@@ -116,13 +116,17 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
   const handleReservation = () => {
     setIsReservationModalVisible(true);
   };
-  
-  const handleReservationConfirm = (reservationData) => {
-    console.log('Reservation confirmed:', reservationData);
-    // Here you would typically send the data to your backend
+
+  const handleEventRegistration = (event) => {
+    setSelectedEvent(event);
+    setIsEventRegistrationVisible(true);
+  };
+
+  const handleEventRegistrationConfirm = (registrationData) => {
+    console.log('Event registration data:', registrationData);
     Alert.alert(
-      t('reservation.success', 'Réservation Confirmée'),
-      t('reservation.successMessage', 'Votre réservation a été enregistrée avec succès!')
+      t('eventRegistration.success', 'Inscription Confirmée'),
+      t('eventRegistration.successMessage', 'Votre inscription a été enregistrée avec succès!')
     );
   };
 
@@ -191,26 +195,23 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
 
       <TouchableOpacity 
         style={styles.registerEventButton}
-        onPress={() => navigation.navigate('EventRegistration', { event })}
+        onPress={() => handleEventRegistration(event)}
       >
         <Text style={styles.registerEventButtonText}>
-          {t('placeDetails.registerEvent', 'S\'inscrire à l\'événement')}
+          {t('placeDetails.registerEvent', "S'inscrire à l'événement")}
         </Text>
       </TouchableOpacity>
     </View>
   );
 
-  // Create sections for SectionList to replace nested ScrollView and FlatList
   const createSections = () => {
     const sections = [];
 
-    // Basic info section
     sections.push({
       type: 'header',
       data: [{ id: 'header' }]
     });
 
-    // Location section if available
     if (place?.location) {
       sections.push({
         type: 'location',
@@ -218,7 +219,6 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
       });
     }
 
-    // Description section if available
     if (place?.description) {
       sections.push({
         type: 'description',
@@ -226,7 +226,6 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
       });
     }
 
-    // Opening hours section if available
     if (place?.openingHours) {
       sections.push({
         type: 'openingHours',
@@ -234,7 +233,6 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
       });
     }
 
-    // Entrance fee section if available
     if (place?.entranceFee) {
       sections.push({
         type: 'entranceFee',
@@ -242,7 +240,6 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
       });
     }
 
-    // Events section if available
     if (events && events.length > 0) {
       sections.push({
         type: 'eventsHeader',
@@ -475,6 +472,13 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
         onClose={() => setIsReservationModalVisible(false)}
         place={place}
         onConfirm={handleReservationConfirm}
+      />
+      
+      <EventRegistrationModal
+        visible={isEventRegistrationVisible}
+        onClose={() => setIsEventRegistrationVisible(false)}
+        event={selectedEvent}
+        onConfirm={handleEventRegistrationConfirm}
       />
     </SafeAreaView>
   );
