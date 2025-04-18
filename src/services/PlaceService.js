@@ -1,5 +1,4 @@
-
-import { API_URL, ENDPOINTS } from '../config/apiConfig';
+import { getApiUrl, ENDPOINTS } from '../config/apiConfig';
 import { calculateDistance } from '../../common/calculateDistance';
 
 export const searchPlaces = async (query, userLocation = null) => {
@@ -8,12 +7,9 @@ export const searchPlaces = async (query, userLocation = null) => {
       return [];
     }
     
-    // Directly use API_URL and the endpoint string to avoid any issues
-    const url = `${API_URL}${ENDPOINTS.PLACES}`;
-    const response = await fetch(url);
-    
+    const response = await fetch(getApiUrl(ENDPOINTS.PLACES));
     if (!response.ok) {
-      throw new Error(`Erreur HTTP! statut: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const result = await response.json();
@@ -61,14 +57,9 @@ export const getPlaceDetails = async (placeId) => {
       throw new Error('Place ID is required');
     }
     
-    // Directly construct the URL to avoid any potential issues with helper functions
-    const url = `${API_URL}${ENDPOINTS.PLACE_BY_ID(placeId)}`;
-    console.log('Fetching place details from:', url);
-    
-    const response = await fetch(url);
-    
+    const response = await fetch(getApiUrl(ENDPOINTS.PLACE_BY_ID(placeId)));
     if (!response.ok) {
-      throw new Error(`Erreur HTTP! statut: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const result = await response.json();
@@ -85,12 +76,9 @@ export const getPlacesNearby = async (userLocation, maxDistance = 50) => {
       throw new Error('User location is required');
     }
     
-    // Directly use API_URL and the endpoint string
-    const url = `${API_URL}${ENDPOINTS.PLACES}`;
-    const response = await fetch(url);
-    
+    const response = await fetch(getApiUrl(ENDPOINTS.PLACES));
     if (!response.ok) {
-      throw new Error(`Erreur HTTP! statut: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const result = await response.json();
