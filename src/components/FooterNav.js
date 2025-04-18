@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { COLORS } from '../theme/colors';
@@ -48,21 +47,21 @@ export const FooterNav = ({ navigation, activeScreen }) => {
 
       <TouchableOpacity
         style={styles.navItem}
-        onPress={() => navigateTo(ROUTES.HISTORICAL_PLACES)}
+        onPress={() => navigateTo(ROUTES.EVENTS)}
         activeOpacity={0.7}
       >
         <Map
           size={24}
-          color={isActive(ROUTES.HISTORICAL_PLACES) ? COLORS.primary : COLORS.gray}
-          fill={isActive(ROUTES.HISTORICAL_PLACES) ? COLORS.primary : 'transparent'}
+          color={isActive(ROUTES.EVENTS) ? COLORS.primary : COLORS.gray}
+          fill={isActive(ROUTES.EVENTS) ? COLORS.primary : 'transparent'}
         />
         <Text
           style={[
             styles.navLabel,
-            isActive(ROUTES.HISTORICAL_PLACES) && styles.activeNavLabel
+            isActive(ROUTES.EVENTS) && styles.activeNavLabel
           ]}
         >
-          Lieux
+          Événements
         </Text>
       </TouchableOpacity>
 

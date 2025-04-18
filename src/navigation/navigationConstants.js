@@ -1,4 +1,3 @@
-
 // Navigation route names
 export const ROUTES = {
   // Auth Routes
@@ -16,7 +15,7 @@ export const ROUTES = {
   HOME: 'Home',        // Primary route for the home/map screen
   PROFILE: 'Profile', 
   SETTINGS: 'Settings',
-  HISTORICAL_PLACES: 'HistoricalPlaces',
+  EVENTS: 'Events', // Replacing HISTORICAL_PLACES
   ACOTE: 'Acote',
   RESERVATION: 'Reservation',
   CONFIDENTIALITE: 'Confidentialite',

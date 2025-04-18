@@ -19,6 +19,7 @@ import ConfidentialiteScreen from '../screens/ConfidentialiteScreen';
 import PlaceDetailsScreen from '../screens/PlaceDetailsScreen';
 import PlaceReviewsScreen from '../screens/PlaceReviewsScreen';
 import OTPScreen from '../screens/OTPScreen';
+import EventsScreen from '../screens/EventsScreen';
 
 // Admin screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -95,7 +96,7 @@ const UserStack = () => {
       <Stack.Screen name={ROUTES.HOME} component={MapScreen} />
       <Stack.Screen name={ROUTES.PROFILE} component={ProfileScreen} />
       <Stack.Screen name={ROUTES.SETTINGS} component={SettingsScreen} />
-      <Stack.Screen name={ROUTES.HISTORICAL_PLACES} component={HistoricalPlacesScreen} />
+      <Stack.Screen name={ROUTES.EVENTS} component={EventsScreen} />
       <Stack.Screen name={ROUTES.ACOTE} component={AcoteScreen} />
       <Stack.Screen name={ROUTES.RESERVATION} component={ReservationScreen} />
       <Stack.Screen name={ROUTES.CONFIDENTIALITE} component={ConfidentialiteScreen} />
