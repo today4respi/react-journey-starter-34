@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Modal, 
@@ -21,20 +20,60 @@ const EventRegistrationModal = ({ visible, onClose, event, onConfirm }) => {
     name: '',
     email: '',
     phone: '',
-    numberOfAttendees: '1',
-    specialRequirements: ''
+    numberOfTickets: '1',
+    specialRequirements: '',
+    paymentMethod: 'card'
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = () => {
-    onConfirm(formData);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check availability first
+      const availabilityCheck = await ReservationService.checkAvailability({
+        entityType: 'event',
+        entityId: event.id,
+        numberOfTickets: parseInt(formData.numberOfTickets)
+      });
+
+      if (!availabilityCheck.available) {
+        setError(t('event.notAvailable', 'Le nombre de places demandé n\'est pas disponible'));
+        return;
+      }
+
+      const reservationData = {
+        eventId: event.id,
+        numberOfTickets: parseInt(formData.numberOfTickets),
+        paymentMethod: formData.paymentMethod,
+        // Note: paymentId would typically come from payment processing
+        paymentId: 'temp-' + Date.now() // This should be replaced with actual payment processing
+      };
+
+      const result = await ReservationService.createReservation(reservationData);
+      
+      if (result.id) {
+        if (onConfirm) {
+          onConfirm(result);
+        }
+        onClose();
+      } else {
+        setError(t('event.registrationError', 'Erreur lors de l\'inscription'));
+      }
+    } catch (err) {
+      setError(t('common.error', 'Une erreur est survenue'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isFormValid = () => {
     return formData.name.trim() && 
            formData.email.trim() && 
            formData.phone.trim() &&
-           parseInt(formData.numberOfAttendees) > 0;
+           parseInt(formData.numberOfTickets) > 0;
   };
 
   return (
@@ -54,6 +93,12 @@ const EventRegistrationModal = ({ visible, onClose, event, onConfirm }) => {
           </View>
 
           <ScrollView style={styles.formContainer}>
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+            
             {event && (
               <View style={styles.eventInfo}>
                 <Text style={styles.eventTitle}>{event.title}</Text>
@@ -117,8 +162,8 @@ const EventRegistrationModal = ({ visible, onClose, event, onConfirm }) => {
               <Text style={styles.label}>Nombre de participants</Text>
               <TextInput
                 style={styles.input}
-                value={formData.numberOfAttendees}
-                onChangeText={(text) => setFormData({...formData, numberOfAttendees: text})}
+                value={formData.numberOfTickets}
+                onChangeText={(text) => setFormData({...formData, numberOfTickets: text})}
                 placeholder="Nombre de participants"
                 keyboardType="numeric"
               />
@@ -139,9 +184,10 @@ const EventRegistrationModal = ({ visible, onClose, event, onConfirm }) => {
 
           <View style={styles.footer}>
             <CustomButton
-              title="S'inscrire"
+              title={t('event.register', 'S\'inscrire')}
               onPress={handleSubmit}
               disabled={!isFormValid()}
+              loading={loading}
               style={[
                 styles.submitButton,
                 !isFormValid() && styles.submitButtonDisabled
@@ -153,6 +199,19 @@ const EventRegistrationModal = ({ visible, onClose, event, onConfirm }) => {
     </Modal>
   );
 };
+
+const additionalStyles = StyleSheet.create({
+  errorContainer: {
+    backgroundColor: COLORS.error_light,
+    padding: SPACING.md,
+    borderRadius: 8,
+    marginBottom: SPACING.md,
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: FONT_SIZE.sm,
+  },
+});
 
 const styles = StyleSheet.create({
   modalOverlay: {

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   View, 
@@ -16,13 +15,17 @@ import { SPACING } from '../theme/spacing';
 import { FONT_SIZE, FONT_WEIGHT } from '../theme/typography';
 import CustomButton from './CustomButton';
 import { useTranslation } from 'react-i18next';
+import { ReservationService } from '../services/ReservationService';
 
 const ReservationModal = ({ visible, onClose, place, onConfirm }) => {
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('10:00');
   const [personCount, setPersonCount] = useState(2);
-  const [step, setStep] = useState(1); // 1: form, 2: confirmation, 3: success
+  const [step, setStep] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // Available time slots
   const timeSlots = [
@@ -40,24 +43,65 @@ const ReservationModal = ({ visible, onClose, place, onConfirm }) => {
     });
   };
   
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (step === 1) {
-      setStep(2); // Move to confirmation step
-    } else if (step === 2) {
-      // Here you would typically send the reservation to your backend
-      setStep(3); // Move to success step
-      // After some time, you might want to close and reset
-      setTimeout(() => {
-        if (onConfirm) {
-          onConfirm({
-            date: selectedDate,
-            time: selectedTime,
-            persons: personCount,
-            place: place
-          });
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Check availability first
+        const availabilityCheck = await ReservationService.checkAvailability({
+          entityType: 'place',
+          entityId: place.id,
+          date: selectedDate.toISOString(),
+          numberOfPersons: personCount
+        });
+
+        if (!availabilityCheck.available) {
+          setError(t('reservation.notAvailable', 'Cette plage horaire n\'est pas disponible'));
+          return;
         }
-        resetAndClose();
-      }, 2000);
+
+        setStep(2);
+      } catch (err) {
+        setError(t('common.error', 'Une erreur est survenue'));
+      } finally {
+        setLoading(false);
+      }
+    } else if (step === 2) {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Combine date and time
+        const visitDate = new Date(selectedDate);
+        const [hours, minutes] = selectedTime.split(':');
+        visitDate.setHours(parseInt(hours), parseInt(minutes));
+
+        const reservationData = {
+          placeId: place.id,
+          numberOfPersons: personCount,
+          visitDate: visitDate.toISOString(),
+          paymentMethod: paymentMethod,
+          // Note: paymentId would typically come from payment processing
+          paymentId: 'temp-' + Date.now() // This should be replaced with actual payment processing
+        };
+
+        const result = await ReservationService.createReservation(reservationData);
+        
+        if (result.id) {
+          setStep(3);
+          if (onConfirm) {
+            onConfirm(result);
+          }
+        } else {
+          setError(t('reservation.createError', 'Erreur lors de la création de la réservation'));
+        }
+      } catch (err) {
+        setError(t('common.error', 'Une erreur est survenue'));
+      } finally {
+        setLoading(false);
+      }
     }
   };
   
@@ -237,6 +281,12 @@ const ReservationModal = ({ visible, onClose, place, onConfirm }) => {
         {t('reservation.title', 'Faire une réservation')}
       </Text>
       
+      {error && (
+        <View style={additionalStyles.errorContainer}>
+          <Text style={additionalStyles.errorText}>{error}</Text>
+        </View>
+      )}
+      
       {place && (
         <View style={styles.placeSummary}>
           <Text style={styles.placeName}>{place.name}</Text>
@@ -265,6 +315,7 @@ const ReservationModal = ({ visible, onClose, place, onConfirm }) => {
         <CustomButton
           title={t('reservation.continue', 'Continuer')}
           onPress={handleConfirm}
+          loading={loading}
           style={styles.confirmButton}
         />
       </View>
@@ -318,6 +369,19 @@ const ReservationModal = ({ visible, onClose, place, onConfirm }) => {
     </View>
   );
   
+  const additionalStyles = StyleSheet.create({
+    errorContainer: {
+      backgroundColor: COLORS.error_light,
+      padding: SPACING.md,
+      borderRadius: 8,
+      marginBottom: SPACING.md,
+    },
+    errorText: {
+      color: COLORS.error,
+      fontSize: FONT_SIZE.sm,
+    },
+  });
+
   return (
     <Modal
       visible={visible}
