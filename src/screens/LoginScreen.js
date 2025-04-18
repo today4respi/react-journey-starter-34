@@ -71,7 +71,6 @@ export default function LoginScreen({ navigation }) {
       const userData = await login(email, password);
       console.log('User data after login:', userData);
       
-      // Navigate to the appropriate stack based on user role
       let targetStack = STACKS.USER;
       if (userData.role === 'admin') {
         targetStack = STACKS.ADMIN;
@@ -81,7 +80,6 @@ export default function LoginScreen({ navigation }) {
       
       console.log('Navigating to stack:', targetStack);
       
-      // Use reset to replace the navigation history
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -174,9 +172,9 @@ export default function LoginScreen({ navigation }) {
                 onPress={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
-                  <EyeOff size={20} color={COLORS.gray} />
-                ) : (
                   <Eye size={20} color={COLORS.gray} />
+                ) : (
+                  <EyeOff size={20} color={COLORS.gray} />
                 )}
               </TouchableOpacity>
             </View>

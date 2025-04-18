@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
@@ -165,6 +164,17 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
       placeId: placeId,
       placeName: place?.name
     });
+  };
+
+  const handleContactOwner = () => {
+    if (place && place.owner && place.owner.email) {
+      Linking.openURL(`mailto:${place.owner.email}?subject=${encodeURIComponent(t('placeDetails.contactOwner', 'Contact concernant le lieu'))} ${place.name}`);
+    } else {
+      Alert.alert(
+        t('common.error', 'Erreur'),
+        t('placeDetails.noContactInfo', "Les informations de contact du propriétaire ne sont pas disponibles.")
+      );
+    }
   };
 
   const renderEventCard = ({ item: event }) => (
@@ -402,6 +412,18 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  const renderContactButton = () => (
+    <TouchableOpacity 
+      style={styles.contactOwnerButton}
+      onPress={handleContactOwner}
+    >
+      <Icons.Mail size={20} color={COLORS.white} style={styles.contactOwnerButtonIcon} />
+      <Text style={styles.contactOwnerButtonText}>
+        {t('placeDetails.contactOwner', 'Contacter le propriétaire')}
+      </Text>
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer} edges={['top', 'right', 'left']}>
@@ -466,7 +488,12 @@ const PlaceDetailsScreen = ({ route, navigation }) => {
         contentContainerStyle={styles.scrollContent}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
-        ListFooterComponent={<View style={styles.bottomSpacer} />}
+        ListFooterComponent={
+          <View>
+            {renderContactButton()}
+            <View style={styles.bottomSpacer} />
+          </View>
+        }
       />
       
       <View style={styles.reserveButtonContainer}>
@@ -817,6 +844,24 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: FONT_SIZE.sm,
     fontWeight: 'bold',
+  },
+  contactOwnerButton: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    padding: SPACING.md,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+  },
+  contactOwnerButtonIcon: {
+    marginRight: SPACING.sm,
+  },
+  contactOwnerButtonText: {
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.medium,
   },
 });
 
