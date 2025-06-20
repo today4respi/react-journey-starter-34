@@ -1,42 +1,22 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, User, Heart, ShoppingBag, Menu, MapPin } from 'lucide-react';
+import { Search, User, Heart, ShoppingBag, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import LanguageSelector from './LanguageSelector';
 import MobileSidebar from './MobileSidebar';
 import SearchModal from '../modals/SearchModal';
-import StoreFinderModal from '../modals/StoreFinderModal';
 
 const Header = () => {
   const { t } = useTranslation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isStoreFinderOpen, setIsStoreFinderOpen] = useState(false);
 
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          {/* Top bar */}
-          <div className="flex items-center justify-between py-2 text-sm">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-600 hover:text-gray-900"
-                onClick={() => setIsStoreFinderOpen(true)}
-              >
-                <MapPin className="w-4 h-4 mr-1" />
-                {t('header.findStore')}
-              </Button>
-            </div>
-            <div className="flex items-center space-x-4">
-              <LanguageSelector />
-            </div>
-          </div>
-
           {/* Main header */}
           <div className="flex items-center justify-between py-4">
             {/* Mobile menu */}
@@ -80,7 +60,8 @@ const Header = () => {
             </nav>
 
             {/* Right side actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <LanguageSelector />
               <Button
                 variant="ghost"
                 size="sm"
@@ -117,7 +98,6 @@ const Header = () => {
       </header>
 
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <StoreFinderModal isOpen={isStoreFinderOpen} onClose={() => setIsStoreFinderOpen(false)} />
     </>
   );
 };

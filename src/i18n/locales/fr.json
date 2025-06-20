@@ -11,7 +11,7 @@
   "header": {
     "summerSale": "Soldes d'Été",
     "shopNow": "Achetez Maintenant",
-    "findStore": "Localisation",
+    "location": "Localisation",
     "language": "Langue"
   },
   "hero": {
@@ -23,6 +23,17 @@
     "boys": "Garçons",
     "girls": "Filles",
     "seeDetails": "Voir les détails"
+  },
+  "store": {
+    "established": "ÉTABLI EN 2012",
+    "description": "Découvrez notre boutique flagship située au cœur de Tunis. Une expérience shopping unique dans un écrin de luxe et d'élégance.",
+    "address": "Adresse",
+    "contact": "Contact",
+    "hours": "Horaires d'ouverture",
+    "mondayToSaturday": "Lundi - Samedi",
+    "sunday": "Dimanche",
+    "getDirections": "Obtenir l'itinéraire",
+    "contactUs": "Nous contacter"
   },
   "common": {
     "menu": "Menu",
