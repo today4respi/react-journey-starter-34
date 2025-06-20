@@ -1,0 +1,35 @@
+
+{
+  "nav": {
+    "men": "Men",
+    "women": "Women",
+    "kids": "Kids",
+    "home": "Home",
+    "discover": "Discover",
+    "sale": "Sale"
+  },
+  "header": {
+    "summerSale": "Summer Sale",
+    "shopNow": "Shop Now",
+    "findStore": "Find a store",
+    "language": "Language"
+  },
+  "hero": {
+    "title": "Summer Collection",
+    "subtitle": "Discover timeless elegance",
+    "discount": "Up to 30% off",
+    "men": "Men",
+    "women": "Women",
+    "boys": "Boys",
+    "girls": "Girls",
+    "seeDetails": "See Details"
+  },
+  "common": {
+    "menu": "Menu",
+    "close": "Close",
+    "search": "Search",
+    "account": "Account",
+    "wishlist": "Wishlist",
+    "cart": "Cart"
+  }
+}

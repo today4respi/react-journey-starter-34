@@ -1,0 +1,35 @@
+
+{
+  "nav": {
+    "men": "Hommes",
+    "women": "Femmes",
+    "kids": "Enfants",
+    "home": "Maison",
+    "discover": "Découvrir",
+    "sale": "Soldes"
+  },
+  "header": {
+    "summerSale": "Soldes d'Été",
+    "shopNow": "Achetez Maintenant",
+    "findStore": "Trouver un magasin",
+    "language": "Langue"
+  },
+  "hero": {
+    "title": "Collection Été",
+    "subtitle": "Découvrez l'élégance intemporelle",
+    "discount": "Jusqu'à 30% de réduction",
+    "men": "Hommes",
+    "women": "Femmes",
+    "boys": "Garçons",
+    "girls": "Filles",
+    "seeDetails": "Voir les détails"
+  },
+  "common": {
+    "menu": "Menu",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "account": "Compte",
+    "wishlist": "Liste de souhaits",
+    "cart": "Panier"
+  }
+}
