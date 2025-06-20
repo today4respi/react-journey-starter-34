@@ -1,17 +1,21 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, User, Heart, ShoppingBag, Menu } from 'lucide-react';
+import { Search, ShoppingBag, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import LanguageSelector from './LanguageSelector';
 import MobileSidebar from './MobileSidebar';
 import SearchModal from '../modals/SearchModal';
 
 const Header = () => {
   const { t } = useTranslation();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleMenuClose = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -28,7 +32,7 @@ const Header = () => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 p-0">
-                  <MobileSidebar />
+                  <MobileSidebar isOpen={isMobileMenuOpen} onClose={handleMenuClose} />
                 </SheetContent>
               </Sheet>
             </div>
@@ -61,7 +65,6 @@ const Header = () => {
 
             {/* Right side actions */}
             <div className="flex items-center space-x-2">
-              <LanguageSelector />
               <Button
                 variant="ghost"
                 size="sm"
@@ -70,14 +73,11 @@ const Header = () => {
               >
                 <Search className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <User className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Heart className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="relative">
                 <ShoppingBag className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  1
+                </span>
               </Button>
             </div>
           </div>

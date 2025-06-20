@@ -33,15 +33,10 @@ const AnnouncementBar = () => {
             <span>{t('header.summerSale')} | {t('header.shopNow')}</span>
           </div>
 
-          {/* Right: Language Selector - Desktop only */}
-          <div className="hidden md:block">
-            <div className="scale-90">
-              <LanguageSelector />
-            </div>
+          {/* Right: Language Selector */}
+          <div className="scale-90">
+            <LanguageSelector />
           </div>
-          
-          {/* Mobile: Empty space for balance */}
-          <div className="md:hidden w-16"></div>
         </div>
       </div>
       
