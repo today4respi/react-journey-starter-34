@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { CalendarIcon, Clock, User, Mail, Phone, X } from 'lucide-react';
+import { CalendarIcon, Clock, User, Mail, Phone } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -84,13 +83,7 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 to-slate-800 text-white border-slate-700">
-        <DialogHeader className="relative pb-6">
-          <button
-            onClick={handleClose}
-            className="absolute right-0 top-0 p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <DialogHeader className="pb-6">
           <DialogTitle className="text-2xl font-serif text-center">
             {t('booking.title')}
           </DialogTitle>

@@ -1,6 +1,5 @@
-
 import { useTranslation } from 'react-i18next';
-import { X, MapPin, Phone, Clock, ExternalLink, Navigation } from 'lucide-react';
+import { MapPin, Phone, Clock, ExternalLink, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,13 +27,7 @@ const StoreFinderModal = ({ isOpen, onClose }: StoreFinderModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-slate-900 to-slate-800 text-white border-slate-700">
-        <DialogHeader className="relative pb-6">
-          <button
-            onClick={onClose}
-            className="absolute right-0 top-0 p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <DialogHeader className="pb-6">
           <DialogTitle className="text-2xl font-serif text-center">
             {t('store.title')}
           </DialogTitle>
