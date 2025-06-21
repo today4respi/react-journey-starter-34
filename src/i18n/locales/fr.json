@@ -1,0 +1,84 @@
+
+{
+  "nav": {
+    "men": "Hommes",
+    "women": "Femmes",
+    "kids": "Enfants",
+    "home": "Maison",
+    "discover": "Découvrir",
+    "sale": "Soldes"
+  },
+  "header": {
+    "summerSale": "Soldes d'Été",
+    "shopNow": "Achetez Maintenant",
+    "findStore": "Trouver un magasin",
+    "language": "Langue"
+  },
+  "hero": {
+    "title": "Collection Été",
+    "subtitle": "Découvrez l'élégance intemporelle",
+    "discount": "Jusqu'à 30% de réduction",
+    "men": "Hommes",
+    "women": "Femmes",
+    "boys": "Garçons",
+    "girls": "Filles",
+    "seeDetails": "Voir les détails"
+  },
+  "wimbledon": {
+    "brand": "POLO RALPH LAUREN",
+    "title": "Wimbledon",
+    "subtitle": "Partenaire officiel depuis 2006",
+    "explore": "EXPLORER MAINTENANT",
+    "rlxBrand": "RLX",
+    "summerTitle": "Styles d'Été",
+    "summerSubtitle1": "Conçus pour des performances optimales par temps chaud,",
+    "summerSubtitle2": "des essentiels raffinés offrent le style intemporel Ralph Lauren",
+    "shopMen": "ACHETER HOMMES"
+  },
+  "sophisticatedSportswear": {
+    "brand": "POLO RALPH LAUREN",
+    "title": "Expérience de Mesure Privée",
+    "subtitle1": "Réservez votre rendez-vous personnel pour un sur-mesure",
+    "subtitle2": "et des mesures personnalisées dans notre salon privé",
+    "bookNow": "RÉSERVER MAINTENANT"
+  },
+  "worldOfLuxury": {
+    "title": "L'Univers du Luxe",
+    "subtitle": "Explorez les collections saisonnières, les accessoires iconiques et plus encore",
+    "ralphLaurenHome": "RALPH LAUREN HOME",
+    "summerLiving": "Vie d'Été",
+    "shopNow": "ACHETER MAINTENANT",
+    "doubleRl": "DOUBLE RL",
+    "summerII": "Été II",
+    "summer": "Été",
+    "shopMen": "ACHETER HOMMES",
+    "shopWomen": "ACHETER FEMMES"
+  },
+  "booking": {
+    "title": "Réservez Votre Mesure Privée",
+    "subtitle": "Découvrez un service personnalisé dans notre salon exclusif",
+    "selectDate": "Sélectionner la Date",
+    "selectTime": "Choisir le Créneau",
+    "personalInfo": "Informations Personnelles",
+    "name": "Nom Complet",
+    "email": "Adresse Email",
+    "phone": "Numéro de Téléphone",
+    "submit": "CONFIRMER LE RENDEZ-VOUS",
+    "nameRequired": "Le nom est requis",
+    "emailRequired": "L'email est requis",
+    "emailInvalid": "Veuillez entrer un email valide",
+    "phoneRequired": "Le numéro de téléphone est requis",
+    "dateRequired": "Veuillez sélectionner une date",
+    "timeRequired": "Veuillez sélectionner un créneau",
+    "success": "Rendez-vous réservé avec succès!",
+    "error": "Veuillez remplir tous les champs requis"
+  },
+  "common": {
+    "menu": "Menu",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "account": "Compte",
+    "wishlist": "Liste de souhaits",
+    "cart": "Panier"
+  }
+}
