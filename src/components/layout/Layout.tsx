@@ -5,6 +5,7 @@ import MobileSidebar from './MobileSidebar';
 import AnnouncementBar from './AnnouncementBar';
 import Footer from './Footer';
 import StoreFinderModal from '../modals/StoreFinderModal';
+import ScrollToTop from '../ui/ScrollToTop';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -42,6 +43,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main>{children}</main>
       <Footer />
       <StoreFinderModal isOpen={isStoreFinderOpen} onClose={handleStoreFinderClose} />
+      <ScrollToTop />
     </div>
   );
 };

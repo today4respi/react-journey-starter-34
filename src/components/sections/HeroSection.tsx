@@ -1,9 +1,17 @@
 
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { ArrowDown } from 'lucide-react';
 
 const HeroSection = () => {
   const { t } = useTranslation();
+
+  const scrollToNextSection = () => {
+    window.scrollTo({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    });
+  };
 
   return (
     <section className="relative h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 overflow-hidden">
@@ -57,11 +65,18 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Enhanced scroll indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-        <div className="w-1 h-16 bg-white/30 rounded-full">
-          <div className="w-1 h-8 bg-white rounded-full animate-pulse"></div>
-        </div>
+        <button
+          onClick={scrollToNextSection}
+          className="flex flex-col items-center space-y-2 text-white/80 hover:text-white transition-colors cursor-pointer group"
+        >
+          <span className="text-sm font-light tracking-wide">Voir les détails</span>
+          <div className="flex flex-col items-center space-y-1">
+            <div className="w-px h-8 bg-white/30 group-hover:bg-white/50 transition-colors"></div>
+            <ArrowDown className="w-5 h-5 animate-bounce" />
+          </div>
+        </button>
       </div>
     </section>
   );
