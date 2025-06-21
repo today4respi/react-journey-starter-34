@@ -12,7 +12,8 @@
     "summerSale": "Summer Sale",
     "shopNow": "Shop Now",
     "findStore": "Find a store",
-    "language": "Language"
+    "language": "Language",
+    "location": "Location"
   },
   "hero": {
     "title": "Summer Collection",
@@ -72,6 +73,18 @@
     "timeRequired": "Please select a time slot",
     "success": "Appointment booked successfully!",
     "error": "Please fill in all required fields"
+  },
+  "store": {
+    "title": "Visit Our Store",
+    "subtitle": "Discover our flagship boutique in the heart of Tunis",
+    "address": "Address",
+    "phone": "Phone",
+    "hours": "Opening Hours",
+    "mondayToSaturday": "Monday - Saturday",
+    "sunday": "Sunday",
+    "getDirections": "GET DIRECTIONS",
+    "contactUs": "CONTACT US",
+    "established": "ESTABLISHED 2012"
   },
   "common": {
     "menu": "Menu",

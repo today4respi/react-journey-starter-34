@@ -12,7 +12,8 @@
     "summerSale": "Soldes d'Été",
     "shopNow": "Achetez Maintenant",
     "findStore": "Trouver un magasin",
-    "language": "Langue"
+    "language": "Langue",
+    "location": "Localisation"
   },
   "hero": {
     "title": "Collection Été",
@@ -72,6 +73,18 @@
     "timeRequired": "Veuillez sélectionner un créneau",
     "success": "Rendez-vous réservé avec succès!",
     "error": "Veuillez remplir tous les champs requis"
+  },
+  "store": {
+    "title": "Visitez Notre Boutique",
+    "subtitle": "Découvrez notre boutique flagship au cœur de Tunis",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "hours": "Horaires d'ouverture",
+    "mondayToSaturday": "Lundi - Samedi",
+    "sunday": "Dimanche",
+    "getDirections": "OBTENIR L'ITINÉRAIRE",
+    "contactUs": "NOUS CONTACTER",
+    "established": "ÉTABLI EN 2012"
   },
   "common": {
     "menu": "Menu",
