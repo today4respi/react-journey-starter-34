@@ -1,3 +1,4 @@
+
 -- Create products table with all specified fields
 CREATE TABLE IF NOT EXISTS `products` (
   `id_product` int(11) NOT NULL AUTO_INCREMENT,
@@ -160,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `delivery_addresses` (
   KEY `idx_order_delivery` (`id_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Create newsletter_subscribers table for email subscriptions
+-- Create simplified newsletter_subscribers table for email subscriptions
 CREATE TABLE IF NOT EXISTS `newsletter_subscribers` (
   `id_subscriber` int(11) NOT NULL AUTO_INCREMENT,
   `email_subscriber` varchar(255) NOT NULL,
@@ -178,54 +179,6 @@ CREATE TABLE IF NOT EXISTS `newsletter_subscribers` (
   KEY `idx_status_subscriber` (`status_subscriber`),
   KEY `idx_date_inscription` (`date_inscription`),
   KEY `idx_source_subscriber` (`source_subscriber`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Create newsletter_campaigns table for email campaigns
-CREATE TABLE IF NOT EXISTS `newsletter_campaigns` (
-  `id_campaign` int(11) NOT NULL AUTO_INCREMENT,
-  `nom_campaign` varchar(255) NOT NULL,
-  `objet_campaign` varchar(255) NOT NULL,
-  `contenu_campaign` longtext NOT NULL,
-  `contenu_html_campaign` longtext DEFAULT NULL,
-  `expediteur_campaign` varchar(255) DEFAULT 'LUCCI BY E.Y <contact@lucci.com>',
-  `status_campaign` enum('draft','scheduled','sending','sent','cancelled') DEFAULT 'draft',
-  `date_creation_campaign` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `date_envoi_campaign` timestamp NULL DEFAULT NULL,
-  `date_programmee_campaign` timestamp NULL DEFAULT NULL,
-  `nb_destinataires` int(11) DEFAULT 0,
-  `nb_envoyes` int(11) DEFAULT 0,
-  `nb_ouverts` int(11) DEFAULT 0,
-  `nb_clics` int(11) DEFAULT 0,
-  `nb_desabonnes` int(11) DEFAULT 0,
-  `taux_ouverture` decimal(5,2) DEFAULT 0.00,
-  `taux_clic` decimal(5,2) DEFAULT 0.00,
-  PRIMARY KEY (`id_campaign`),
-  KEY `idx_status_campaign` (`status_campaign`),
-  KEY `idx_date_creation_campaign` (`date_creation_campaign`),
-  KEY `idx_date_envoi_campaign` (`date_envoi_campaign`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Create newsletter_campaign_sends table for tracking individual sends
-CREATE TABLE IF NOT EXISTS `newsletter_campaign_sends` (
-  `id_send` int(11) NOT NULL AUTO_INCREMENT,
-  `id_campaign` int(11) NOT NULL,
-  `id_subscriber` int(11) NOT NULL,
-  `email_destinataire` varchar(255) NOT NULL,
-  `status_send` enum('pending','sent','opened','clicked','bounced','failed','unsubscribed') DEFAULT 'pending',
-  `date_envoi` timestamp NULL DEFAULT NULL,
-  `date_ouverture` timestamp NULL DEFAULT NULL,
-  `date_clic` timestamp NULL DEFAULT NULL,
-  `nb_ouvertures` int(11) DEFAULT 0,
-  `nb_clics` int(11) DEFAULT 0,
-  `user_agent` text DEFAULT NULL,
-  `ip_ouverture` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id_send`),
-  FOREIGN KEY (`id_campaign`) REFERENCES `newsletter_campaigns`(`id_campaign`) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (`id_subscriber`) REFERENCES `newsletter_subscribers`(`id_subscriber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  KEY `idx_campaign_send` (`id_campaign`),
-  KEY `idx_subscriber_send` (`id_subscriber`),
-  KEY `idx_status_send` (`status_send`),
-  KEY `idx_date_envoi` (`date_envoi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert some sample data for products
@@ -263,8 +216,3 @@ INSERT INTO `newsletter_subscribers` (`email_subscriber`, `nom_subscriber`, `pre
 ('sophie.bernard@email.com', 'Bernard', 'Sophie', 'active', 'social', '2024-01-18 14:20:00'),
 ('claire.moreau@email.com', 'Moreau', 'Claire', 'active', 'website', '2024-01-20 11:30:00'),
 ('lucas.petit@email.com', 'Petit', 'Lucas', 'active', 'manual', '2024-01-22 15:45:00');
-
--- Insert sample newsletter campaigns
-INSERT INTO `newsletter_campaigns` (`nom_campaign`, `objet_campaign`, `contenu_campaign`, `status_campaign`, `date_creation_campaign`, `date_envoi_campaign`, `nb_destinataires`, `nb_envoyes`, `nb_ouverts`, `nb_clics`, `taux_ouverture`, `taux_clic`) VALUES
-('Nouvelle Collection Automne', 'Découvrez notre nouvelle collection automne/hiver', 'Chers clients, nous sommes ravis de vous présenter notre nouvelle collection...', 'sent', '2024-01-10 08:00:00', '2024-01-10 10:00:00', 150, 150, 102, 15, 68.00, 10.00),
-('Soldes d\'Hiver', 'Soldes exceptionnels jusqu\'à -50%', 'Ne manquez pas nos soldes d\'hiver avec des réductions jusqu\'à 50%...', 'sent', '2024-01-15 09:00:00', '2024-01-15 11:00:00', 180, 180, 126, 28, 70.00, 15.56);
