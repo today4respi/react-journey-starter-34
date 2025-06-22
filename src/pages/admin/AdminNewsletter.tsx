@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { StatusFilter } from '@/components/admin/filters/StatusFilter';
 import { useTableSort } from '@/hooks/useTableSort';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
   Filter, 
@@ -18,48 +19,169 @@ import {
   Trash2
 } from 'lucide-react';
 
+interface NewsletterSubscriber {
+  id_subscriber: number;
+  email_subscriber: string;
+  nom_subscriber?: string;
+  prenom_subscriber?: string;
+  status_subscriber: string;
+  source_subscriber: string;
+  date_inscription: string;
+  date_unsubscribe?: string;
+}
+
+interface NewsletterStats {
+  total_subscribers: number;
+  active_subscribers: number;
+  unsubscribed_count: number;
+  today_subscribers: number;
+  this_month_subscribers: number;
+}
+
 const AdminNewsletter = () => {
+  const { toast } = useToast();
+  const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
+  const [stats, setStats] = useState<NewsletterStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [newEmail, setNewEmail] = useState('');
-
-  // Mock data - simplified to only show essential information
-  const mockSubscribers = [
-    {
-      id: 1,
-      email: 'jean.dupont@email.com',
-      date_inscription: '2024-01-15T10:30:00Z',
-      status: 'active'
-    },
-    {
-      id: 2,
-      email: 'marie.martin@email.com',
-      date_inscription: '2024-01-10T09:15:00Z',
-      status: 'active'
-    },
-    {
-      id: 3,
-      email: 'pierre.dubois@email.com',
-      date_inscription: '2023-12-20T16:45:00Z',
-      status: 'unsubscribed'
-    },
-    {
-      id: 4,
-      email: 'sophie.bernard@email.com',
-      date_inscription: '2024-01-18T14:20:00Z',
-      status: 'active'
-    }
-  ];
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const statusOptions = [
     { value: 'active', label: 'Actif' },
-    { value: 'unsubscribed', label: 'Désabonné' }
+    { value: 'unsubscribed', label: 'Désabonné' },
+    { value: 'bounced', label: 'Bounced' },
+    { value: 'pending', label: 'En attente' }
   ];
 
-  const filteredSubscribers = mockSubscribers.filter(subscriber => {
-    const matchesSearch = subscriber.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || subscriber.status === statusFilter;
+  const fetchNewsletterData = async () => {
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/get_all_newsletter.php');
+      const result = await response.json();
+      
+      if (result.success) {
+        setSubscribers(result.data || []);
+        setStats(result.stats);
+      } else {
+        throw new Error(result.message || 'Failed to fetch newsletter data');
+      }
+    } catch (error) {
+      console.error('Error fetching newsletter data:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les données newsletter',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddSubscriber = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newEmail.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir une adresse email',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(newEmail)) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir une adresse email valide',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/insert_newsletter.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newEmail,
+          source: 'manual'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Succès',
+          description: 'Email ajouté avec succès'
+        });
+        setNewEmail('');
+        fetchNewsletterData(); // Refresh the list
+      } else {
+        throw new Error(result.message || 'Failed to add subscriber');
+      }
+    } catch (error) {
+      console.error('Error adding subscriber:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'ajouter l\'email',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteSubscriber = async (subscriberId: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet abonné ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/delete_newsletter.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: subscriberId
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Succès',
+          description: 'Abonné supprimé avec succès'
+        });
+        fetchNewsletterData(); // Refresh the list
+      } else {
+        throw new Error(result.message || 'Failed to delete subscriber');
+      }
+    } catch (error) {
+      console.error('Error deleting subscriber:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'abonné',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchNewsletterData();
+  }, []);
+
+  const filteredSubscribers = subscribers.filter(subscriber => {
+    const matchesSearch = subscriber.email_subscriber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || subscriber.status_subscriber === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -68,14 +190,25 @@ const AdminNewsletter = () => {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       active: { label: 'Actif', variant: 'default' as const },
-      unsubscribed: { label: 'Désabonné', variant: 'destructive' as const }
+      unsubscribed: { label: 'Désabonné', variant: 'destructive' as const },
+      bounced: { label: 'Bounced', variant: 'secondary' as const },
+      pending: { label: 'En attente', variant: 'outline' as const }
     };
     
     const statusInfo = statusMap[status as keyof typeof statusMap] || { label: status, variant: 'secondary' as const };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
-  const activeSubscribers = mockSubscribers.filter(s => s.status === 'active').length;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p>Chargement des abonnés...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -88,7 +221,7 @@ const AdminNewsletter = () => {
                 Newsletter
               </h1>
               <p className="text-gray-600 mt-1">
-                Gestion simple des abonnés email
+                Gestion des abonnés email
               </p>
             </div>
             <Button variant="outline">
@@ -101,52 +234,54 @@ const AdminNewsletter = () => {
 
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-900">
-                Total Abonnés
-              </CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{mockSubscribers.length}</div>
-              <p className="text-xs text-blue-600">
-                Inscrits à la newsletter
-              </p>
-            </CardContent>
-          </Card>
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-blue-900">
+                  Total Abonnés
+                </CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-900">{stats.total_subscribers}</div>
+                <p className="text-xs text-blue-600">
+                  Inscrits à la newsletter
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900">
-                Abonnés Actifs
-              </CardTitle>
-              <Mail className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-900">{activeSubscribers}</div>
-              <p className="text-xs text-green-600">
-                {Math.round((activeSubscribers / mockSubscribers.length) * 100)}% du total
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-green-900">
+                  Abonnés Actifs
+                </CardTitle>
+                <Mail className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-900">{stats.active_subscribers}</div>
+                <p className="text-xs text-green-600">
+                  {stats.total_subscribers > 0 ? Math.round((stats.active_subscribers / stats.total_subscribers) * 100) : 0}% du total
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-900">
-                Nouveaux ce Mois
-              </CardTitle>
-              <Plus className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-900">3</div>
-              <p className="text-xs text-purple-600">
-                Nouvelles inscriptions
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-purple-900">
+                  Nouveaux ce Mois
+                </CardTitle>
+                <Plus className="h-4 w-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-900">{stats.this_month_subscribers}</div>
+                <p className="text-xs text-purple-600">
+                  Nouvelles inscriptions
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Add Subscriber */}
         <Card className="border-0 shadow-lg">
@@ -159,18 +294,24 @@ const AdminNewsletter = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex space-x-2">
+            <form onSubmit={handleAddSubscriber} className="flex space-x-2">
               <Input
                 placeholder="email@exemple.com"
+                type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
+                disabled={isSubmitting}
                 className="flex-1"
               />
-              <Button className="bg-gray-900 hover:bg-gray-800">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-gray-900 hover:bg-gray-800"
+              >
                 <Plus className="mr-2 h-4 w-4" />
-                Ajouter
+                {isSubmitting ? 'Ajout...' : 'Ajouter'}
               </Button>
-            </div>
+            </form>
           </CardContent>
         </Card>
 
@@ -224,7 +365,7 @@ const AdminNewsletter = () => {
                 <TableHeader>
                   <TableRow>
                     <SortableTableHead 
-                      sortKey="email" 
+                      sortKey="email_subscriber" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
@@ -238,7 +379,14 @@ const AdminNewsletter = () => {
                       Date d'Inscription
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="status" 
+                      sortKey="source_subscriber" 
+                      sortConfig={sortConfig} 
+                      onSort={requestSort}
+                    >
+                      Source
+                    </SortableTableHead>
+                    <SortableTableHead 
+                      sortKey="status_subscriber" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
@@ -249,18 +397,26 @@ const AdminNewsletter = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedSubscribers.map((subscriber) => (
-                    <TableRow key={subscriber.id}>
+                    <TableRow key={subscriber.id_subscriber}>
                       <TableCell className="font-medium">
-                        {subscriber.email}
+                        {subscriber.email_subscriber}
                       </TableCell>
                       <TableCell>
                         {new Date(subscriber.date_inscription).toLocaleDateString('fr-FR')} à {new Date(subscriber.date_inscription).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </TableCell>
+                      <TableCell className="capitalize">
+                        {subscriber.source_subscriber}
+                      </TableCell>
                       <TableCell>
-                        {getStatusBadge(subscriber.status)}
+                        {getStatusBadge(subscriber.status_subscriber)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteSubscriber(subscriber.id_subscriber)}
+                          className="text-red-600 hover:text-red-800"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>

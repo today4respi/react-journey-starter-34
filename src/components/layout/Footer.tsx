@@ -1,12 +1,75 @@
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 const Footer = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir votre adresse email',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir une adresse email valide',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/insert_newsletter.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          source: 'website'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: 'Succès !',
+          description: 'Vous êtes maintenant inscrit(e) à notre newsletter'
+        });
+        setEmail('');
+      } else {
+        throw new Error(result.message || 'Failed to subscribe');
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de l\'inscription',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const socialLinks = [
     { icon: Facebook, href: '#', label: 'Facebook' },
@@ -51,16 +114,23 @@ const Footer = () => {
               Inscrivez-vous à notre newsletter pour recevoir les dernières nouvelles, 
               offres exclusives et aperçus des nouvelles collections.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <Input 
                 type="email" 
                 placeholder="Votre adresse email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
                 className="bg-slate-800 border-slate-600 text-white placeholder-slate-400"
               />
-              <Button className="bg-white text-slate-900 hover:bg-slate-100 px-8">
-                S'inscrire
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-white text-slate-900 hover:bg-slate-100 px-8 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Envoi...' : "S'inscrire"}
               </Button>
-            </div>
+            </form>
           </div>
         </div>
       </div>

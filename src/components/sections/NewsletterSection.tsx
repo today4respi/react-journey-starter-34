@@ -3,16 +3,69 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Mail, Gift, Star, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const NewsletterSection = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubscribed(true);
-    setTimeout(() => setIsSubscribed(false), 3000);
+    
+    if (!email.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir votre adresse email',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez saisir une adresse email valide',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/insert_newsletter.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          source: 'website'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsSubmitted(true);
+        setEmail('');
+        setTimeout(() => setIsSubmitted(false), 5000);
+      } else {
+        throw new Error(result.message || 'Failed to subscribe');
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de l\'inscription',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -66,21 +119,23 @@ const NewsletterSection = () => {
 
         {/* Newsletter Form */}
         <div className="max-w-md mx-auto">
-          {!isSubscribed ? (
+          {!isSubmitted ? (
             <form onSubmit={handleSubmit} className="flex gap-3">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
                 placeholder="Votre adresse email"
-                className="flex-1 px-6 py-4 rounded-full bg-white/95 backdrop-blur-sm border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-900 placeholder-gray-500"
+                className="flex-1 px-6 py-4 rounded-full bg-white/95 backdrop-blur-sm border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-gray-900 placeholder-gray-500 disabled:opacity-50"
                 required
               />
               <Button
                 type="submit"
-                className="px-8 py-4 bg-white text-blue-900 hover:bg-gray-100 rounded-full font-medium transition-all duration-300 hover:scale-105"
+                disabled={isSubmitting}
+                className="px-8 py-4 bg-white text-blue-900 hover:bg-gray-100 rounded-full font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50"
               >
-                S'inscrire
+                {isSubmitting ? "Envoi..." : "S'inscrire"}
               </Button>
             </form>
           ) : (

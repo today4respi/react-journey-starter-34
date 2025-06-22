@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -26,7 +27,9 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -53,25 +56,63 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      toast({
-        title: t('booking.success'),
-        description: `${format(selectedDate!, 'PPP')} at ${selectedTime}`,
-      });
-      // Reset form
-      setSelectedDate(undefined);
-      setSelectedTime('');
-      setName('');
-      setEmail('');
-      setPhone('');
-      setErrors({});
-      onClose();
-    } else {
+  const handleSubmit = async () => {
+    if (!validateForm()) {
       toast({
         title: t('booking.error'),
         variant: "destructive",
       });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const reservationData = {
+        nom_client: name,
+        email_client: email,
+        telephone_client: phone,
+        date_reservation: format(selectedDate!, 'yyyy-MM-dd'),
+        heure_reservation: selectedTime + ':00',
+        notes_reservation: notes.trim() || null
+      };
+
+      const response = await fetch('https://draminesaid.com/lucci/api/insert_reservation.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: t('booking.success'),
+          description: `${format(selectedDate!, 'PPP')} at ${selectedTime}`,
+        });
+        // Reset form
+        setSelectedDate(undefined);
+        setSelectedTime('');
+        setName('');
+        setEmail('');
+        setPhone('');
+        setNotes('');
+        setErrors({});
+        onClose();
+      } else {
+        throw new Error(result.message || 'Failed to create reservation');
+      }
+    } catch (error) {
+      console.error('Error creating reservation:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la création de la réservation',
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -162,7 +203,7 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('booking.name')}
+                  {t('booking.name')} *
                 </label>
                 <input
                   type="text"
@@ -176,7 +217,7 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('booking.email')}
+                  {t('booking.email')} *
                 </label>
                 <input
                   type="email"
@@ -190,7 +231,7 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('booking.phone')}
+                  {t('booking.phone')} *
                 </label>
                 <input
                   type="tel"
@@ -201,15 +242,29 @@ const BookingModal = ({ isOpen, onClose }: BookingModalProps) => {
                 />
                 {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone}</p>}
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Notes (optionnel)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-md bg-slate-800 border border-slate-600 text-white placeholder-slate-400 focus:border-white focus:outline-none resize-none"
+                  placeholder="Détails spécifiques sur votre demande..."
+                />
+              </div>
             </div>
           </div>
 
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
-            className="w-full h-12 bg-white text-black hover:bg-gray-200 font-medium text-lg"
+            disabled={isSubmitting}
+            className="w-full h-12 bg-white text-black hover:bg-gray-200 font-medium text-lg disabled:opacity-50"
           >
-            {t('booking.submit')}
+            {isSubmitting ? 'Envoi en cours...' : t('booking.submit')}
           </Button>
         </div>
       </DialogContent>

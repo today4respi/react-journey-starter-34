@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { StatusFilter } from '@/components/admin/filters/StatusFilter';
 import { DateFilter } from '@/components/admin/filters/DateFilter';
 import { useTableSort } from '@/hooks/useTableSort';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
   Filter, 
@@ -21,51 +22,30 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Circle
+  Circle,
+  Trash2
 } from 'lucide-react';
 
+interface Reservation {
+  id_reservation: number;
+  nom_client: string;
+  email_client: string;
+  telephone_client: string;
+  date_reservation: string;
+  heure_reservation: string;
+  statut_reservation: string;
+  notes_reservation?: string;
+  date_creation: string;
+}
+
 const AdminReservations = () => {
+  const { toast } = useToast();
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-
-  // Mock data - will be replaced with real API calls
-  const mockReservations = [
-    {
-      id_reservation: 1,
-      nom_client: 'Jean Dupont',
-      email_client: 'jean.dupont@email.com',
-      telephone_client: '+33123456789',
-      date_reservation: '2024-01-25',
-      heure_reservation: '10:00:00',
-      statut_reservation: 'confirmed',
-      notes_reservation: 'Mesure pour costume sur mesure',
-      date_creation: '2024-01-15T10:30:00Z'
-    },
-    {
-      id_reservation: 2,
-      nom_client: 'Marie Martin',
-      email_client: 'marie.martin@email.com',
-      telephone_client: '+33987654321',
-      date_reservation: '2024-01-26',
-      heure_reservation: '14:30:00',
-      statut_reservation: 'pending',
-      notes_reservation: 'Première consultation pour robe de soirée',
-      date_creation: '2024-01-16T14:20:00Z'
-    },
-    {
-      id_reservation: 3,
-      nom_client: 'Pierre Dubois',
-      email_client: 'pierre.dubois@email.com',
-      telephone_client: '+33123987654',
-      date_reservation: '2024-01-27',
-      heure_reservation: '16:00:00',
-      statut_reservation: 'completed',
-      notes_reservation: 'Retouches finales',
-      date_creation: '2024-01-18T11:30:00Z'
-    }
-  ];
 
   const statusOptions = [
     { value: 'pending', label: 'En attente' },
@@ -74,7 +54,91 @@ const AdminReservations = () => {
     { value: 'completed', label: 'Terminé' }
   ];
 
-  const filteredReservations = mockReservations.filter(reservation => {
+  const fetchReservations = async () => {
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/get_all_reservations.php');
+      const result = await response.json();
+      
+      if (result.success) {
+        setReservations(result.data || []);
+      } else {
+        throw new Error(result.message || 'Failed to fetch reservations');
+      }
+    } catch (error) {
+      console.error('Error fetching reservations:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les réservations',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmReservation = async (reservationId: number) => {
+    try {
+      const response = await fetch(`https://draminesaid.com/lucci/api/confirmer_reservation.php?id=${reservationId}`, {
+        method: 'PUT'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: 'Succès',
+          description: 'Réservation confirmée avec succès'
+        });
+        fetchReservations(); // Refresh the list
+      } else {
+        throw new Error(result.message || 'Failed to confirm reservation');
+      }
+    } catch (error) {
+      console.error('Error confirming reservation:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de confirmer la réservation',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteReservation = async (reservationId: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://draminesaid.com/lucci/api/delete_reservation.php?id=${reservationId}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: 'Succès',
+          description: 'Réservation supprimée avec succès'
+        });
+        fetchReservations(); // Refresh the list
+      } else {
+        throw new Error(result.message || 'Failed to delete reservation');
+      }
+    } catch (error) {
+      console.error('Error deleting reservation:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la réservation',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  const filteredReservations = reservations.filter(reservation => {
     const matchesSearch = reservation.nom_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.email_client.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reservation.telephone_client.includes(searchTerm);
@@ -128,6 +192,17 @@ const AdminReservations = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p>Chargement des réservations...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       {/* Header */}
@@ -161,9 +236,9 @@ const AdminReservations = () => {
               <Calendar className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{mockReservations.length}</div>
+              <div className="text-2xl font-bold text-blue-900">{reservations.length}</div>
               <p className="text-xs text-blue-600">
-                +12% ce mois-ci
+                Toutes les réservations
               </p>
             </CardContent>
           </Card>
@@ -177,7 +252,7 @@ const AdminReservations = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-900">
-                {mockReservations.filter(r => r.statut_reservation === 'confirmed').length}
+                {reservations.filter(r => r.statut_reservation === 'confirmed').length}
               </div>
               <p className="text-xs text-green-600">
                 Prêtes pour rendez-vous
@@ -194,7 +269,7 @@ const AdminReservations = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-900">
-                {mockReservations.filter(r => r.statut_reservation === 'pending').length}
+                {reservations.filter(r => r.statut_reservation === 'pending').length}
               </div>
               <p className="text-xs text-orange-600">
                 À confirmer
@@ -205,14 +280,16 @@ const AdminReservations = () => {
           <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-purple-900">
-                Aujourd'hui
+                Terminées
               </CardTitle>
-              <Clock className="h-4 w-4 text-purple-600" />
+              <Circle className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900">2</div>
+              <div className="text-2xl font-bold text-purple-900">
+                {reservations.filter(r => r.statut_reservation === 'completed').length}
+              </div>
               <p className="text-xs text-purple-600">
-                Rendez-vous du jour
+                Rendez-vous terminés
               </p>
             </CardContent>
           </Card>
@@ -300,6 +377,7 @@ const AdminReservations = () => {
                       Statut
                     </SortableTableHead>
                     <TableHead>Notes</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -343,6 +421,28 @@ const AdminReservations = () => {
                       <TableCell>
                         <div className="max-w-xs truncate text-sm text-gray-600">
                           {reservation.notes_reservation || '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          {reservation.statut_reservation === 'pending' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleConfirmReservation(reservation.id_reservation)}
+                              className="text-green-600 hover:text-green-800"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteReservation(reservation.id_reservation)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
