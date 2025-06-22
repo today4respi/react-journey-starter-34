@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { StatusFilter } from '@/components/admin/filters/StatusFilter';
 import { DateFilter } from '@/components/admin/filters/DateFilter';
 import { useTableSort } from '@/hooks/useTableSort';
 import { useToast } from '@/hooks/use-toast';
+import ReservationCalendar from '@/components/admin/ReservationCalendar';
 import { 
   Search, 
   Filter, 
@@ -23,7 +25,9 @@ import {
   XCircle,
   AlertCircle,
   Circle,
-  Trash2
+  Trash2,
+  CalendarDays,
+  TableIcon
 } from 'lucide-react';
 
 interface Reservation {
@@ -89,7 +93,7 @@ const AdminReservations = () => {
           title: 'Succès',
           description: 'Réservation confirmée avec succès'
         });
-        fetchReservations(); // Refresh the list
+        fetchReservations();
       } else {
         throw new Error(result.message || 'Failed to confirm reservation');
       }
@@ -120,7 +124,7 @@ const AdminReservations = () => {
           title: 'Succès',
           description: 'Réservation supprimée avec succès'
         });
-        fetchReservations(); // Refresh the list
+        fetchReservations();
       } else {
         throw new Error(result.message || 'Failed to delete reservation');
       }
@@ -295,163 +299,188 @@ const AdminReservations = () => {
           </Card>
         </div>
 
-        {/* Reservations Table */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-              <div>
-                <CardTitle className="font-playfair text-gray-900">
-                  Liste des Réservations
-                </CardTitle>
-                <CardDescription>
-                  Rendez-vous de mesure privée (cliquez sur les en-têtes pour trier)
-                </CardDescription>
-              </div>
-              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-none min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Rechercher un client..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+        {/* Tabs for Calendar and Table View */}
+        <Tabs defaultValue="calendar" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              Vue Calendrier
+            </TabsTrigger>
+            <TabsTrigger value="table" className="flex items-center gap-2">
+              <TableIcon className="h-4 w-4" />
+              Vue Tableau
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Calendar View */}
+          <TabsContent value="calendar">
+            <ReservationCalendar 
+              reservations={reservations}
+              onConfirmReservation={handleConfirmReservation}
+              onDeleteReservation={handleDeleteReservation}
+            />
+          </TabsContent>
+
+          {/* Table View */}
+          <TabsContent value="table">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                  <div>
+                    <CardTitle className="font-playfair text-gray-900">
+                      Liste des Réservations
+                    </CardTitle>
+                    <CardDescription>
+                      Rendez-vous de mesure privée (cliquez sur les en-têtes pour trier)
+                    </CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-none min-w-[200px]">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Rechercher un client..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className={showFilters ? 'bg-gray-100' : ''}
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={showFilters ? 'bg-gray-100' : ''}
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {showFilters && (
-              <div className="flex flex-wrap gap-2 pt-4 border-t">
-                <StatusFilter
-                  value={statusFilter}
-                  onValueChange={setStatusFilter}
-                  options={statusOptions}
-                  placeholder="Filtrer par statut"
-                />
-                <DateFilter
-                  value={dateFilter}
-                  onValueChange={setDateFilter}
-                />
-              </div>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <SortableTableHead 
-                      sortKey="nom_client" 
-                      sortConfig={sortConfig} 
-                      onSort={requestSort}
-                    >
-                      Client
-                    </SortableTableHead>
-                    <SortableTableHead 
-                      sortKey="date_reservation" 
-                      sortConfig={sortConfig} 
-                      onSort={requestSort}
-                    >
-                      Date & Heure
-                    </SortableTableHead>
-                    <SortableTableHead 
-                      sortKey="email_client" 
-                      sortConfig={sortConfig} 
-                      onSort={requestSort}
-                    >
-                      Contact
-                    </SortableTableHead>
-                    <SortableTableHead 
-                      sortKey="statut_reservation" 
-                      sortConfig={sortConfig} 
-                      onSort={requestSort}
-                    >
-                      Statut
-                    </SortableTableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedReservations.map((reservation) => (
-                    <TableRow key={reservation.id_reservation}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{reservation.nom_client}</div>
-                          <div className="text-sm text-gray-500">
-                            Créé le {new Date(reservation.date_creation).toLocaleDateString('fr-FR')}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center text-sm font-medium">
-                            <Calendar className="mr-2 h-3 w-3 text-gray-400" />
-                            {new Date(reservation.date_reservation).toLocaleDateString('fr-FR')}
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                            {reservation.heure_reservation.slice(0, 5)}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center text-sm">
-                            <Mail className="mr-2 h-3 w-3 text-gray-400" />
-                            {reservation.email_client}
-                          </div>
-                          <div className="flex items-center text-sm">
-                            <Phone className="mr-2 h-3 w-3 text-gray-400" />
-                            {reservation.telephone_client}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(reservation.statut_reservation)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-xs truncate text-sm text-gray-600">
-                          {reservation.notes_reservation || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          {reservation.statut_reservation === 'pending' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleConfirmReservation(reservation.id_reservation)}
-                              className="text-green-600 hover:text-green-800"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDeleteReservation(reservation.id_reservation)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                
+                {showFilters && (
+                  <div className="flex flex-wrap gap-2 pt-4 border-t">
+                    <StatusFilter
+                      value={statusFilter}
+                      onValueChange={setStatusFilter}
+                      options={statusOptions}
+                      placeholder="Filtrer par statut"
+                    />
+                    <DateFilter
+                      value={dateFilter}
+                      onValueChange={setDateFilter}
+                    />
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <SortableTableHead 
+                          sortKey="nom_client" 
+                          sortConfig={sortConfig} 
+                          onSort={requestSort}
+                        >
+                          Client
+                        </SortableTableHead>
+                        <SortableTableHead 
+                          sortKey="date_reservation" 
+                          sortConfig={sortConfig} 
+                          onSort={requestSort}
+                        >
+                          Date & Heure
+                        </SortableTableHead>
+                        <SortableTableHead 
+                          sortKey="email_client" 
+                          sortConfig={sortConfig} 
+                          onSort={requestSort}
+                        >
+                          Contact
+                        </SortableTableHead>
+                        <SortableTableHead 
+                          sortKey="statut_reservation" 
+                          sortConfig={sortConfig} 
+                          onSort={requestSort}
+                        >
+                          Statut
+                        </SortableTableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedReservations.map((reservation) => (
+                        <TableRow key={reservation.id_reservation}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{reservation.nom_client}</div>
+                              <div className="text-sm text-gray-500">
+                                Créé le {new Date(reservation.date_creation).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center text-sm font-medium">
+                                <Calendar className="mr-2 h-3 w-3 text-gray-400" />
+                                {new Date(reservation.date_reservation).toLocaleDateString('fr-FR')}
+                              </div>
+                              <div className="flex items-center text-sm text-gray-500">
+                                <Clock className="mr-2 h-3 w-3 text-gray-400" />
+                                {reservation.heure_reservation.slice(0, 5)}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="flex items-center text-sm">
+                                <Mail className="mr-2 h-3 w-3 text-gray-400" />
+                                {reservation.email_client}
+                              </div>
+                              <div className="flex items-center text-sm">
+                                <Phone className="mr-2 h-3 w-3 text-gray-400" />
+                                {reservation.telephone_client}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(reservation.statut_reservation)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-xs truncate text-sm text-gray-600">
+                              {reservation.notes_reservation || '-'}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              {reservation.statut_reservation === 'pending' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleConfirmReservation(reservation.id_reservation)}
+                                  className="text-green-600 hover:text-green-800"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteReservation(reservation.id_reservation)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
