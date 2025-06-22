@@ -1,0 +1,112 @@
+
+{
+  "nav": {
+    "men": "Hommes",
+    "women": "Femmes",
+    "kids": "Enfants",
+    "home": "Maison",
+    "discover": "Découvrir",
+    "sale": "Soldes"
+  },
+  "header": {
+    "summerSale": "Soldes d'Été",
+    "shopNow": "Achetez Maintenant",
+    "findStore": "Trouver un magasin",
+    "language": "Langue",
+    "location": "Localisation"
+  },
+  "hero": {
+    "title": "Collection Été",
+    "subtitle": "Découvrez l'élégance intemporelle",
+    "discount": "Jusqu'à 30% de réduction",
+    "men": "Hommes",
+    "women": "Femmes",
+    "boys": "Garçons",
+    "girls": "Filles",
+    "seeDetails": "Voir les détails"
+  },
+  "wimbledon": {
+    "brand": "luccy by ey",
+    "title": "le luxe",
+    "subtitle": "sur mesure depuis 2012",
+    "aboutUs": "À PROPOS",
+    "aboutTitle": "À Propos de Lucci by E.Y",
+    "aboutDescription": "Sur la route de la Marsa, voici un sublime atelier de prêt à porter de luxe pour hommes qui existe depuis 2012. Des costumes taillés sur mesure, des chemises, des polos et même un parfum. Un style british sublimant des matières premières finement choisies et travaillées avec passion. Un univers rempli de sensualité et de liberté non conformiste, un mode de vie très chic ! À découvrir absolument.",
+    "rlxBrand": "SINCE 2012",
+    "summerTitle": "Artisanat sur Mesure",
+    "summerSubtitle1": "Créé pour l'excellence dans chaque détail,",
+    "summerSubtitle2": "nos pièces sur mesure incarnent le savoir-faire traditionnel",
+    "shopMen": "ACHETER HOMMES"
+  },
+  "sophisticatedSportswear": {
+    "brand": "LUCCI BY E.Y",
+    "title": "Expérience de Mesure Privée",
+    "subtitle1": "Réservez votre rendez-vous personnel pour un sur-mesure",
+    "subtitle2": "et des mesures personnalisées dans notre salon privé",
+    "bookNow": "RÉSERVER MAINTENANT"
+  },
+  "worldOfLuxury": {
+    "title": "L'Univers du Luxe",
+    "subtitle": "Explorez les collections saisonnières, les accessoires iconiques et plus encore",
+    "privateSalon": "SALON PRIVÉ",
+    "exclusiveConsultation": "Consultation Exclusive",
+    "shopNow": "ACHETER MAINTENANT",
+    "ceremonialElegance": "ÉLÉGANCE CÉRÉMONIALE",
+    "weddingCollection": "Collection Mariage",
+    "shopWedding": "COLLECTION MARIAGE",
+    "eveningWear": "TENUE DE SOIRÉE",
+    "formalCollection": "Collection Formelle",
+    "shopFormal": "COLLECTION FORMELLE",
+    "businessLuxury": "LUXE BUSINESS",
+    "executiveStyle": "Style Exécutif",
+    "shopBusiness": "STYLE BUSINESS",
+    "parisianElegance": "ÉLÉGANCE PARISIENNE",
+    "parisCollection": "Collection Paris",
+    "shopParis": "COLLECTION PARIS",
+    "summerSophistication": "SOPHISTICATION D'ÉTÉ",
+    "summerLuxury": "Luxe d'Été",
+    "shopSummer": "COLLECTION ÉTÉ",
+    "heritageStyle": "STYLE HÉRITAGE",
+    "timelessElegance": "Élégance Intemporelle",
+    "shopHeritage": "COLLECTION HÉRITAGE"
+  },
+  "booking": {
+    "title": "Réservez Votre Mesure Privée",
+    "subtitle": "Découvrez un service personnalisé dans notre salon exclusif",
+    "selectDate": "Sélectionner la Date",
+    "selectTime": "Choisir le Créneau",
+    "personalInfo": "Informations Personnelles",
+    "name": "Nom Complet",
+    "email": "Adresse Email",
+    "phone": "Numéro de Téléphone",
+    "submit": "CONFIRMER LE RENDEZ-VOUS",
+    "nameRequired": "Le nom est requis",
+    "emailRequired": "L'email est requis",
+    "emailInvalid": "Veuillez entrer un email valide",
+    "phoneRequired": "Le numéro de téléphone est requis",
+    "dateRequired": "Veuillez sélectionner une date",
+    "timeRequired": "Veuillez sélectionner un créneau",
+    "success": "Rendez-vous réservé avec succès!",
+    "error": "Veuillez remplir tous les champs requis"
+  },
+  "store": {
+    "title": "Visitez Notre Boutique",
+    "subtitle": "Découvrez notre boutique flagship au cœur de Tunis",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "hours": "Horaires d'ouverture",
+    "mondayToSaturday": "Lundi - Samedi",
+    "sunday": "Dimanche",
+    "getDirections": "OBTENIR L'ITINÉRAIRE",
+    "contactUs": "NOUS CONTACTER",
+    "established": "ÉTABLI EN 2012"
+  },
+  "common": {
+    "menu": "Menu",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "account": "Compte",
+    "wishlist": "Liste de souhaits",
+    "cart": "Panier"
+  }
+}
