@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { useTableSort } from '@/hooks/useTableSort';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Eye, 
   EyeOff,
@@ -23,97 +25,160 @@ import {
   Mail,
   FileText,
   Languages,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { generateOrderPDF } from '@/utils/pdfGenerator';
 
 const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrder, setSelectedOrder]= useState<any>(null);
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      numero_commande: 'CMD-2024-001',
-      customer: {
-        nom: 'Dupont',
-        prenom: 'Jean',
-        email: 'jean.dupont@email.com',
-        telephone: '+33123456789',
-        adresse: '123 Rue de la Paix, Paris 75001'
-      },
-      total: 935.00,
-      status: 'confirmed',
-      date_creation: '2024-01-15T10:30:00Z',
-      vue_par_admin: true,
-      items: [
-        { nom: 'Chemise en Coton Rayé', quantity: 2, price: 320.00, size: 'L', color: 'Blue' },
-        { nom: 'Sac à Main Élégant', quantity: 1, price: 650.00, color: 'Black' }
-      ],
-      delivery_cost: 15.00,
-      discount: 50.00
-    },
-    {
-      id: 2,
-      numero_commande: 'CMD-2024-002',
-      customer: {
-        nom: 'Martin',
-        prenom: 'Marie',
-        email: 'marie.martin@email.com',
-        telephone: '+33987654321',
-        adresse: '456 Avenue des Champs, Lyon 69001'
-      },
-      total: 430.00,
-      status: 'pending',
-      date_creation: '2024-01-16T14:20:00Z',
-      vue_par_admin: false,
-      items: [
-        { nom: 'Blouse en Soie Premium', quantity: 1, price: 420.00, size: 'M', color: 'White' }
-      ],
-      delivery_cost: 10.00,
-      discount: 0.00
-    }
-  ]);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const filteredOrders = orders.filter(order =>
+  const fetchOrders = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('https://draminesaid.com/lucci/api/get_all_orders.php');
+      const result = await response.json();
+      
+      if (result.success) {
+        setOrders(result.data);
+      } else {
+        throw new Error(result.message || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les commandes',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const filteredOrders = orders.filter((order: any) =>
     order.numero_commande.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customer.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.customer.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const { sortedData: sortedOrders, sortConfig, requestSort } = useTableSort(filteredOrders, 'date_creation');
+  const { sortedData: sortedOrders, sortConfig, requestSort } = useTableSort(filteredOrders, 'date_creation_order');
 
   // Calculate stats including unread orders
   const statsData = {
-    ordersToday: orders.filter(order => 
-      new Date(order.date_creation).toDateString() === new Date().toDateString()
+    ordersToday: orders.filter((order: any) => 
+      new Date(order.date_creation_order).toDateString() === new Date().toDateString()
     ).length,
     ordersTotal: orders.length,
-    revenueTotal: orders.reduce((sum, order) => sum + order.total, 0),
-    unreadOrders: orders.filter(order => !order.vue_par_admin).length
+    revenueTotal: orders.reduce((sum: number, order: any) => sum + parseFloat(order.total_order), 0),
+    unreadOrders: orders.filter((order: any) => !order.vue_par_admin).length
   };
 
-  const handleViewOrder = (order: any) => {
+  const handleViewOrder = async (order: any) => {
     setSelectedOrder(order);
     // Mark as viewed if not already viewed
     if (!order.vue_par_admin) {
-      setOrders(prevOrders => 
-        prevOrders.map(o => 
-          o.id === order.id 
-            ? { ...o, vue_par_admin: true }
-            : o
-        )
-      );
+      try {
+        const response = await fetch('https://draminesaid.com/lucci/api/update_order_vue.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            order_id: order.id_order
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          setOrders(prevOrders => 
+            prevOrders.map((o: any) => 
+              o.id_order === order.id_order 
+                ? { ...o, vue_par_admin: 1 }
+                : o
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Error updating order view status:', error);
+      }
     }
   };
 
-  const toggleOrderView = (orderId: number) => {
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.id === orderId 
-          ? { ...order, vue_par_admin: !order.vue_par_admin }
-          : order
-      )
-    );
+  const toggleOrderView = async (orderId: number) => {
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/update_order_vue.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        setOrders(prevOrders => 
+          prevOrders.map((order: any) => 
+            order.id_order === orderId 
+              ? { ...order, vue_par_admin: result.new_status }
+              : order
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error toggling order view status:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le statut',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: number) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('https://draminesaid.com/lucci/api/delete_order.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        setOrders(prevOrders => prevOrders.filter((order: any) => order.id_order !== orderId));
+        toast({
+          title: 'Succès',
+          description: 'Commande supprimée avec succès'
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer la commande',
+        variant: 'destructive'
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -133,6 +198,17 @@ const AdminOrders = () => {
   const handleGeneratePDF = (order: any, language: 'fr' | 'en') => {
     generateOrderPDF(order, language);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Chargement des commandes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -277,21 +353,21 @@ const AdminOrders = () => {
                       Client
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="total" 
+                      sortKey="total_order" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
                       Total
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="status" 
+                      sortKey="status_order" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
                       Statut
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="date_creation" 
+                      sortKey="date_creation_order" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
@@ -301,13 +377,13 @@ const AdminOrders = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedOrders.map((order) => (
-                    <TableRow key={order.id} className={!order.vue_par_admin ? 'bg-red-50 border-l-4 border-red-500' : ''}>
+                  {sortedOrders.map((order: any) => (
+                    <TableRow key={order.id_order} className={!order.vue_par_admin ? 'bg-red-50 border-l-4 border-red-500' : ''}>
                       <TableCell>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleOrderView(order.id)}
+                          onClick={() => toggleOrderView(order.id_order)}
                           className={`p-1 ${order.vue_par_admin ? 'text-green-600' : 'text-red-600'}`}
                         >
                           {order.vue_par_admin ? (
@@ -336,159 +412,169 @@ const AdminOrders = () => {
                         </div>
                       </TableCell>
                       <TableCell className="font-semibold">
-                        €{order.total.toFixed(2)}
+                        €{parseFloat(order.total_order).toFixed(2)}
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(order.status)}
+                        {getStatusBadge(order.status_order)}
                       </TableCell>
                       <TableCell>
-                        {new Date(order.date_creation).toLocaleDateString('fr-FR')}
+                        {new Date(order.date_creation_order).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleViewOrder(order)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="font-playfair">
-                                Détails de la Commande {order.numero_commande}
-                              </DialogTitle>
-                              <DialogDescription>
-                                Informations complètes de la commande
-                              </DialogDescription>
-                            </DialogHeader>
-                            
-                            {selectedOrder && (
-                              <div className="space-y-6">
-                                {/* PDF Generation Buttons */}
-                                <div className="flex justify-end space-x-2 p-4 bg-gray-50 rounded-lg">
-                                  <Button
-                                    onClick={() => handleGeneratePDF(selectedOrder, 'fr')}
-                                    className="bg-gray-900 hover:bg-gray-800"
-                                  >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    PDF en Français
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleGeneratePDF(selectedOrder, 'en')}
-                                    variant="outline"
-                                    className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
-                                  >
-                                    <Languages className="mr-2 h-4 w-4" />
-                                    PDF in English
-                                  </Button>
-                                </div>
+                        <div className="flex justify-end space-x-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewOrder(order)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="font-playfair">
+                                  Détails de la Commande {order.numero_commande}
+                                </DialogTitle>
+                                <DialogDescription>
+                                  Informations complètes de la commande
+                                </DialogDescription>
+                              </DialogHeader>
+                              
+                              {selectedOrder && (
+                                <div className="space-y-6">
+                                  {/* PDF Generation Buttons */}
+                                  <div className="flex justify-end space-x-2 p-4 bg-gray-50 rounded-lg">
+                                    <Button
+                                      onClick={() => handleGeneratePDF(selectedOrder, 'fr')}
+                                      className="bg-gray-900 hover:bg-gray-800"
+                                    >
+                                      <FileText className="mr-2 h-4 w-4" />
+                                      PDF en Français
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleGeneratePDF(selectedOrder, 'en')}
+                                      variant="outline"
+                                      className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
+                                    >
+                                      <Languages className="mr-2 h-4 w-4" />
+                                      PDF in English
+                                    </Button>
+                                  </div>
 
-                                {/* Customer Info */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {/* Customer Info */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-lg flex items-center">
+                                          <User className="mr-2 h-5 w-5" />
+                                          Informations Client
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-2">
+                                        <div className="flex items-center space-x-2">
+                                          <User className="h-4 w-4 text-gray-500" />
+                                          <span>{selectedOrder.customer.prenom} {selectedOrder.customer.nom}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <Mail className="h-4 w-4 text-gray-500" />
+                                          <span>{selectedOrder.customer.email}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <Phone className="h-4 w-4 text-gray-500" />
+                                          <span>{selectedOrder.customer.telephone}</span>
+                                        </div>
+                                        <div className="flex items-start space-x-2">
+                                          <MapPin className="h-4 w-4 text-gray-500 mt-1" />
+                                          <span>{selectedOrder.customer.adresse}</span>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-lg flex items-center">
+                                          <Package className="mr-2 h-5 w-5" />
+                                          Résumé Commande
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent className="space-y-2">
+                                        <div className="flex justify-between">
+                                          <span>Statut:</span>
+                                          {getStatusBadge(selectedOrder.status_order)}
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span>Date:</span>
+                                          <span>{new Date(selectedOrder.date_creation_order).toLocaleString('fr-FR')}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span>Livraison:</span>
+                                          <span>€{parseFloat(selectedOrder.delivery_cost_order).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span>Remise:</span>
+                                          <span>-€{parseFloat(selectedOrder.discount_amount_order || 0).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                                          <span>Total:</span>
+                                          <span>€{parseFloat(selectedOrder.total_order).toFixed(2)}</span>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+
+                                  {/* Order Items */}
                                   <Card>
                                     <CardHeader>
-                                      <CardTitle className="text-lg flex items-center">
-                                        <User className="mr-2 h-5 w-5" />
-                                        Informations Client
-                                      </CardTitle>
+                                      <CardTitle className="text-lg">Produits Commandés</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-2">
-                                      <div className="flex items-center space-x-2">
-                                        <User className="h-4 w-4 text-gray-500" />
-                                        <span>{selectedOrder.customer.prenom} {selectedOrder.customer.nom}</span>
-                                      </div>
-                                      <div className="flex items-center space-x-2">
-                                        <Mail className="h-4 w-4 text-gray-500" />
-                                        <span>{selectedOrder.customer.email}</span>
-                                      </div>
-                                      <div className="flex items-center space-x-2">
-                                        <Phone className="h-4 w-4 text-gray-500" />
-                                        <span>{selectedOrder.customer.telephone}</span>
-                                      </div>
-                                      <div className="flex items-start space-x-2">
-                                        <MapPin className="h-4 w-4 text-gray-500 mt-1" />
-                                        <span>{selectedOrder.customer.adresse}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  <Card>
-                                    <CardHeader>
-                                      <CardTitle className="text-lg flex items-center">
-                                        <Package className="mr-2 h-5 w-5" />
-                                        Résumé Commande
-                                      </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-2">
-                                      <div className="flex justify-between">
-                                        <span>Statut:</span>
-                                        {getStatusBadge(selectedOrder.status)}
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Date:</span>
-                                        <span>{new Date(selectedOrder.date_creation).toLocaleString('fr-FR')}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Livraison:</span>
-                                        <span>€{selectedOrder.delivery_cost.toFixed(2)}</span>
-                                      </div>
-                                      <div className="flex justify-between">
-                                        <span>Remise:</span>
-                                        <span>-€{selectedOrder.discount.toFixed(2)}</span>
-                                      </div>
-                                      <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                                        <span>Total:</span>
-                                        <span>€{selectedOrder.total.toFixed(2)}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </div>
-
-                                {/* Order Items */}
-                                <Card>
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">Produits Commandés</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                    <Table>
-                                      <TableHeader>
-                                        <TableRow>
-                                          <TableHead>Produit</TableHead>
-                                          <TableHead>Quantité</TableHead>
-                                          <TableHead>Prix Unitaire</TableHead>
-                                          <TableHead>Total</TableHead>
-                                        </TableRow>
-                                      </TableHeader>
-                                      <TableBody>
-                                        {selectedOrder.items.map((item: any, index: number) => (
-                                          <TableRow key={index}>
-                                            <TableCell>
-                                              <div>
-                                                <div className="font-medium">{item.nom}</div>
-                                                <div className="text-sm text-gray-500">
-                                                  {item.size && `Taille: ${item.size}`}
-                                                  {item.color && ` - Couleur: ${item.color}`}
-                                                </div>
-                                              </div>
-                                            </TableCell>
-                                            <TableCell>{item.quantity}</TableCell>
-                                            <TableCell>€{item.price.toFixed(2)}</TableCell>
-                                            <TableCell className="font-semibold">
-                                              €{(item.quantity * item.price).toFixed(2)}
-                                            </TableCell>
+                                    <CardContent>
+                                      <Table>
+                                        <TableHeader>
+                                          <TableRow>
+                                            <TableHead>Produit</TableHead>
+                                            <TableHead>Quantité</TableHead>
+                                            <TableHead>Prix Unitaire</TableHead>
+                                            <TableHead>Total</TableHead>
                                           </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  </CardContent>
-                                </Card>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {selectedOrder.items.map((item: any, index: number) => (
+                                            <TableRow key={index}>
+                                              <TableCell>
+                                                <div>
+                                                  <div className="font-medium">{item.nom_product_snapshot}</div>
+                                                  <div className="text-sm text-gray-500">
+                                                    {item.size_selected && `Taille: ${item.size_selected}`}
+                                                    {item.color_selected && ` - Couleur: ${item.color_selected}`}
+                                                  </div>
+                                                </div>
+                                              </TableCell>
+                                              <TableCell>{item.quantity_ordered}</TableCell>
+                                              <TableCell>€{parseFloat(item.price_product_snapshot).toFixed(2)}</TableCell>
+                                              <TableCell className="font-semibold">
+                                                €{parseFloat(item.total_item).toFixed(2)}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </CardContent>
+                                  </Card>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteOrder(order.id_order)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -93,6 +93,15 @@ try {
         $deliveryAddress = $deliveryStmt->fetch();
         
         $orders[$key]['delivery_address'] = $deliveryAddress ?: null;
+        
+        // Format customer data for admin interface
+        $orders[$key]['customer'] = [
+            'nom' => $order['nom_customer'],
+            'prenom' => $order['prenom_customer'],
+            'email' => $order['email_customer'],
+            'telephone' => $order['telephone_customer'],
+            'adresse' => $order['adresse_customer'] . ', ' . $order['ville_customer'] . ' ' . $order['code_postal_customer']
+        ];
     }
     
     echo json_encode([

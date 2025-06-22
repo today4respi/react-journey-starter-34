@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { DateFilter } from '@/components/admin/filters/DateFilter';
 import { useTableSort } from '@/hooks/useTableSort';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
   Filter, 
@@ -21,65 +23,46 @@ const AdminClients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock data - will be replaced with real API calls
-  const mockClients = [
-    {
-      id: 1,
-      nom: 'Dupont',
-      prenom: 'Jean',
-      email: 'jean.dupont@email.com',
-      telephone: '+33123456789',
-      adresse: '123 Rue de la Paix',
-      ville: 'Paris',
-      code_postal: '75001',
-      pays: 'France',
-      date_creation: '2024-01-15T10:30:00Z',
-      total_orders: 3,
-      total_spent: 2850.00,
-      last_order: '2024-01-20T14:20:00Z'
-    },
-    {
-      id: 2,
-      nom: 'Martin',
-      prenom: 'Marie',
-      email: 'marie.martin@email.com',
-      telephone: '+33987654321',
-      adresse: '456 Avenue des Champs',
-      ville: 'Lyon',
-      code_postal: '69001',
-      pays: 'France',
-      date_creation: '2024-01-10T09:15:00Z',
-      total_orders: 1,
-      total_spent: 430.00,
-      last_order: '2024-01-16T14:20:00Z'
-    },
-    {
-      id: 3,
-      nom: 'Dubois',
-      prenom: 'Pierre',
-      email: 'pierre.dubois@email.com',
-      telephone: '+33123987654',
-      adresse: '789 Boulevard Saint-Germain',
-      ville: 'Marseille',
-      code_postal: '13001',
-      pays: 'France',
-      date_creation: '2023-12-20T16:45:00Z',
-      total_orders: 7,
-      total_spent: 5620.00,
-      last_order: '2024-01-18T11:30:00Z'
+  const fetchClients = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('https://draminesaid.com/lucci/api/get_all_customers.php');
+      const result = await response.json();
+      
+      if (result.success) {
+        setClients(result.data);
+      } else {
+        throw new Error(result.message || 'Failed to fetch clients');
+      }
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les clients',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
-  const filteredClients = mockClients.filter(client => {
-    const matchesSearch = client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.ville.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const filteredClients = clients.filter((client: any) => {
+    const matchesSearch = client.nom_customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.prenom_customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email_customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.ville_customer.toLowerCase().includes(searchTerm.toLowerCase());
 
     let matchesDate = true;
     if (dateFilter !== 'all') {
-      const clientDate = new Date(client.date_creation);
+      const clientDate = new Date(client.date_creation_customer);
       const today = new Date();
       
       switch (dateFilter) {
@@ -103,7 +86,30 @@ const AdminClients = () => {
     return matchesSearch && matchesDate;
   });
 
-  const { sortedData: sortedClients, sortConfig, requestSort } = useTableSort(filteredClients, 'date_creation');
+  const { sortedData: sortedClients, sortConfig, requestSort } = useTableSort(filteredClients, 'date_creation_customer');
+
+  // Calculate stats
+  const statsData = {
+    totalClients: clients.length,
+    vipClients: clients.filter((c: any) => c.total_orders >= 5).length,
+    newThisMonth: clients.filter((c: any) => {
+      const clientDate = new Date(c.date_creation_customer);
+      const today = new Date();
+      return clientDate.getMonth() === today.getMonth() && clientDate.getFullYear() === today.getFullYear();
+    }).length,
+    averageSpent: clients.length > 0 ? clients.reduce((sum: number, c: any) => sum + parseFloat(c.total_spent || 0), 0) / clients.length : 0
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+          <p className="mt-4 text-gray-600">Chargement des clients...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
@@ -138,10 +144,7 @@ const AdminClients = () => {
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-900">{mockClients.length}</div>
-              <p className="text-xs text-blue-600">
-                +12% ce mois-ci
-              </p>
+              <div className="text-2xl font-bold text-blue-900">{statsData.totalClients}</div>
             </CardContent>
           </Card>
 
@@ -153,9 +156,7 @@ const AdminClients = () => {
               <Users className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-900">
-                {mockClients.filter(c => c.total_orders >= 5).length}
-              </div>
+              <div className="text-2xl font-bold text-green-900">{statsData.vipClients}</div>
               <p className="text-xs text-green-600">
                 Clients premium
               </p>
@@ -170,10 +171,7 @@ const AdminClients = () => {
               <Calendar className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-900">8</div>
-              <p className="text-xs text-purple-600">
-                +33% vs mois dernier
-              </p>
+              <div className="text-2xl font-bold text-purple-900">{statsData.newThisMonth}</div>
             </CardContent>
           </Card>
 
@@ -185,7 +183,7 @@ const AdminClients = () => {
               <Mail className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-900">€157</div>
+              <div className="text-2xl font-bold text-orange-900">€{statsData.averageSpent.toFixed(0)}</div>
               <p className="text-xs text-orange-600">
                 Par client
               </p>
@@ -241,21 +239,21 @@ const AdminClients = () => {
                 <TableHeader>
                   <TableRow>
                     <SortableTableHead 
-                      sortKey="nom" 
+                      sortKey="nom_customer" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
                       Client
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="email" 
+                      sortKey="email_customer" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
                       Contact
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="ville" 
+                      sortKey="ville_customer" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
@@ -276,7 +274,7 @@ const AdminClients = () => {
                       Total Dépensé
                     </SortableTableHead>
                     <SortableTableHead 
-                      sortKey="last_order" 
+                      sortKey="last_order_date" 
                       sortConfig={sortConfig} 
                       onSort={requestSort}
                     >
@@ -285,16 +283,16 @@ const AdminClients = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedClients.map((client) => {
+                  {sortedClients.map((client: any) => {
                     return (
-                      <TableRow key={client.id}>
+                      <TableRow key={client.id_customer}>
                         <TableCell>
                           <div>
                             <div className="font-medium">
-                              {client.prenom} {client.nom}
+                              {client.prenom_customer} {client.nom_customer}
                             </div>
                             <div className="text-sm text-gray-500">
-                              Client depuis {new Date(client.date_creation).toLocaleDateString('fr-FR')}
+                              Client depuis {new Date(client.date_creation_customer).toLocaleDateString('fr-FR')}
                             </div>
                           </div>
                         </TableCell>
@@ -302,11 +300,11 @@ const AdminClients = () => {
                           <div className="space-y-1">
                             <div className="flex items-center text-sm">
                               <Mail className="mr-2 h-3 w-3 text-gray-400" />
-                              {client.email}
+                              {client.email_customer}
                             </div>
                             <div className="flex items-center text-sm">
                               <Phone className="mr-2 h-3 w-3 text-gray-400" />
-                              {client.telephone}
+                              {client.telephone_customer}
                             </div>
                           </div>
                         </TableCell>
@@ -314,9 +312,9 @@ const AdminClients = () => {
                           <div className="flex items-start text-sm">
                             <MapPin className="mr-2 h-3 w-3 text-gray-400 mt-1" />
                             <div>
-                              <div>{client.adresse}</div>
+                              <div>{client.adresse_customer}</div>
                               <div className="text-gray-500">
-                                {client.code_postal} {client.ville}
+                                {client.code_postal_customer} {client.ville_customer}
                               </div>
                             </div>
                           </div>
@@ -325,10 +323,10 @@ const AdminClients = () => {
                           {client.total_orders}
                         </TableCell>
                         <TableCell className="font-semibold">
-                          €{client.total_spent.toFixed(2)}
+                          €{parseFloat(client.total_spent || 0).toFixed(2)}
                         </TableCell>
                         <TableCell>
-                          {new Date(client.last_order).toLocaleDateString('fr-FR')}
+                          {client.last_order_date ? new Date(client.last_order_date).toLocaleDateString('fr-FR') : 'Aucune'}
                         </TableCell>
                       </TableRow>
                     );
