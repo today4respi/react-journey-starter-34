@@ -83,7 +83,7 @@ const ProductDetailsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-screen bg-white pt-32 pb-16">
+        <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
             <div className="animate-pulse">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
@@ -106,7 +106,7 @@ const ProductDetailsPage = () => {
   if (error || !product) {
     return (
       <Layout>
-        <div className="min-h-screen bg-white pt-32 pb-16">
+        <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16">
           <div className="max-w-7xl mx-auto px-4 md:px-6 text-center">
             <h1 className="text-2xl font-serif text-slate-900 mb-4">Product Not Found</h1>
             <p className="text-slate-600">The product you're looking for doesn't exist.</p>
@@ -118,7 +118,7 @@ const ProductDetailsPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-white pt-32 pb-16">
+      <div className="min-h-screen bg-white pt-20 md:pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <ProductDetailsContent product={product} />
         </div>

@@ -39,7 +39,7 @@ const ProductBreadcrumb = ({ category, subcategory, productName }: ProductBreadc
   };
 
   return (
-    <nav className="flex items-center space-x-2 text-sm text-slate-600 mb-8">
+    <nav className="hidden md:flex items-center space-x-2 text-sm text-slate-600 mb-4">
       <Link 
         to="/" 
         className="hover:text-slate-900 transition-colors uppercase tracking-wide"
