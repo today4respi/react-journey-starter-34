@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +11,10 @@ interface ProductImageGalleryProps {
 
 const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImageGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showMagnifier, setShowMagnifier] = useState(false);
+  const [magnifierPos, setMagnifierPos] = useState({ x: 0, y: 0 });
+  const [imagePos, setImagePos] = useState({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // Array of placeholder images to use randomly
   const placeholderImages = [
@@ -35,6 +39,22 @@ const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImag
     return `https://draminesaid.com/lucci/uploads/${imagePath}`;
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageRef.current) return;
+    
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    setMagnifierPos({ x, y });
+    
+    // Calculate the position on the actual image
+    const imageX = (x / rect.width) * imageRef.current.naturalWidth;
+    const imageY = (y / rect.height) * imageRef.current.naturalHeight;
+    
+    setImagePos({ x: imageX, y: imageY });
+  };
+
   const nextImage = () => {
     setSelectedImageIndex((prev) => (prev + 1) % images.length);
   };
@@ -45,12 +65,37 @@ const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImag
 
   if (images.length === 1) {
     return (
-      <div className="aspect-[4/5] overflow-hidden rounded-lg bg-slate-100">
-        <img
-          src={getImageSrc(images[0])}
-          alt={productName}
-          className="w-full h-full object-cover"
-        />
+      <div className="aspect-[4/5] overflow-hidden rounded-lg bg-slate-100 relative">
+        <div
+          className="w-full h-full relative cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setShowMagnifier(true)}
+          onMouseLeave={() => setShowMagnifier(false)}
+        >
+          <img
+            ref={imageRef}
+            src={getImageSrc(images[0])}
+            alt={productName}
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Magnifier */}
+          {showMagnifier && (
+            <div
+              className="absolute border-2 border-white shadow-lg rounded-full pointer-events-none z-10"
+              style={{
+                width: '150px',
+                height: '150px',
+                left: `${magnifierPos.x - 75}px`,
+                top: `${magnifierPos.y - 75}px`,
+                backgroundImage: `url(${getImageSrc(images[0])})`,
+                backgroundSize: `${imageRef.current?.naturalWidth! * 2}px ${imageRef.current?.naturalHeight! * 2}px`,
+                backgroundPosition: `-${imagePos.x * 2 - 75}px -${imagePos.y * 2 - 75}px`,
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          )}
+        </div>
       </div>
     );
   }
@@ -59,11 +104,36 @@ const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImag
     <div className="space-y-4">
       {/* Main Image */}
       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-slate-100 group">
-        <img
-          src={getImageSrc(images[selectedImageIndex], selectedImageIndex)}
-          alt={`${productName} - Vue ${selectedImageIndex + 1}`}
-          className="w-full h-full object-cover"
-        />
+        <div
+          className="w-full h-full relative cursor-crosshair"
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setShowMagnifier(true)}
+          onMouseLeave={() => setShowMagnifier(false)}
+        >
+          <img
+            ref={imageRef}
+            src={getImageSrc(images[selectedImageIndex], selectedImageIndex)}
+            alt={`${productName} - Vue ${selectedImageIndex + 1}`}
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Magnifier */}
+          {showMagnifier && (
+            <div
+              className="absolute border-2 border-white shadow-lg rounded-full pointer-events-none z-10"
+              style={{
+                width: '150px',
+                height: '150px',
+                left: `${magnifierPos.x - 75}px`,
+                top: `${magnifierPos.y - 75}px`,
+                backgroundImage: `url(${getImageSrc(images[selectedImageIndex], selectedImageIndex)})`,
+                backgroundSize: `${imageRef.current?.naturalWidth! * 2}px ${imageRef.current?.naturalHeight! * 2}px`,
+                backgroundPosition: `-${imagePos.x * 2 - 75}px -${imagePos.y * 2 - 75}px`,
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          )}
+        </div>
         
         {/* Navigation Arrows */}
         {images.length > 1 && (
