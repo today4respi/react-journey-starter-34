@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Search, ShoppingBag, MapPin, Menu, Heart, Instagram, Facebook } from 'lucide-react';
+import { Search, ShoppingBag, MapPin, Menu, Heart, Instagram, Facebook, X, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LanguageSelector from './LanguageSelector';
 import SearchModal from '../modals/SearchModal';
@@ -10,6 +9,17 @@ import StoreFinderModal from '../modals/StoreFinderModal';
 import CartDropdown from '../modals/CartDropdown';
 import ProductDropdown from './ProductDropdown';
 import { useCart } from '@/contexts/CartContext';
+
+interface Product {
+  id_product: string;
+  nom_product: string;
+  img_product: string;
+  price_product: string;
+  type_product: string;
+  category_product: string;
+  itemgroup_product: string;
+  discount_product?: string;
+}
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -28,6 +38,12 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Mobile search states
+  const [mobileSearchTerm, setMobileSearchTerm] = useState('');
+  const [mobileSearchResults, setMobileSearchResults] = useState<Product[]>([]);
+  const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
+  const [mobileRecentSearches, setMobileRecentSearches] = useState<string[]>([]);
 
   // Check if we're on the index page
   const isIndexPage = location.pathname === '/';
@@ -41,6 +57,45 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Load recent searches for mobile
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      setMobileRecentSearches(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen || mobileSearchTerm.trim() === '') {
+      setMobileSearchResults([]);
+      return;
+    }
+
+    const searchProducts = async () => {
+      setMobileSearchLoading(true);
+      try {
+        const response = await fetch(
+          `https://draminesaid.com/lucci/api/get_all_products.php?search=${encodeURIComponent(mobileSearchTerm)}&limit=10`
+        );
+        const result = await response.json();
+        
+        if (result.success) {
+          setMobileSearchResults(result.data);
+        } else {
+          setMobileSearchResults([]);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        setMobileSearchResults([]);
+      } finally {
+        setMobileSearchLoading(false);
+      }
+    };
+
+    const timeoutId = setTimeout(searchProducts, 300);
+    return () => clearTimeout(timeoutId);
+  }, [mobileSearchTerm, isSearchOpen]);
 
   // For non-index pages, always use the non-transparent header
   const shouldUseTransparentHeader = isIndexPage && !isScrolled;
@@ -65,6 +120,10 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
 
   const handleSearchToggle = () => {
     setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      setMobileSearchTerm('');
+      setMobileSearchResults([]);
+    }
   };
 
   const handleStoreFinderOpen = () => {
@@ -119,6 +178,39 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
       setActiveDropdown(null);
     }, 3000);
     setCloseTimeout(timeout);
+  };
+
+  const handleMobileProductClick = (product: Product) => {
+    // Save to recent searches
+    const newRecentSearches = [product.nom_product, ...mobileRecentSearches.filter(s => s !== product.nom_product)].slice(0, 5);
+    setMobileRecentSearches(newRecentSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(newRecentSearches));
+    
+    // Navigate to product details
+    navigate(`/product/${product.id_product}`);
+    setIsSearchOpen(false);
+    setMobileSearchTerm('');
+  };
+
+  const handleMobileRecentSearchClick = (term: string) => {
+    setMobileSearchTerm(term);
+  };
+
+  const formatPrice = (price: string | number, discount?: string) => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    const numDiscount = discount ? parseFloat(discount) : 0;
+    
+    if (numDiscount > 0) {
+      const discountedPrice = numPrice - (numPrice * numDiscount / 100);
+      return (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-slate-900">{discountedPrice.toFixed(0)} TND</span>
+          <span className="text-sm text-red-500 line-through">{numPrice.toFixed(0)} TND</span>
+        </div>
+      );
+    }
+    
+    return <span className="font-medium text-slate-900">{numPrice.toFixed(0)} TND</span>;
   };
 
   // Clean up timeout on unmount
@@ -278,26 +370,109 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
 
           {/* Mobile Search Dropdown */}
           {isSearchOpen && (
-            <div className="md:hidden mt-4 pt-4 border-t border-gray-100 animate-fade-in">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Rechercher parmi nos collections premium"
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent ${
-                    shouldUseTransparentHeader 
-                      ? 'border-white/30 bg-white/10 text-white placeholder-white/70 backdrop-blur-sm' 
-                      : 'border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500'
-                  }`}
-                  autoFocus
-                />
-              </div>
-              <div className="mt-3 text-center">
-                <p className={`text-xs ${
-                  shouldUseTransparentHeader ? 'text-white/70' : 'text-gray-500'
-                }`}>
-                  Recherchez parmi nos collections premium
-                </p>
+            <div className="md:hidden border-t border-gray-100 animate-fade-in bg-white">
+              <div className="px-4 py-4">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher parmi nos collections premium"
+                    value={mobileSearchTerm}
+                    onChange={(e) => setMobileSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+                    autoFocus
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSearchToggle}
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Mobile Search Results */}
+                {mobileSearchTerm.trim() !== '' && (
+                  <div className="max-h-80 overflow-y-auto">
+                    {mobileSearchLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-900 mx-auto"></div>
+                        <p className="text-gray-600 text-sm mt-2">Recherche...</p>
+                      </div>
+                    ) : mobileSearchResults.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-500 mb-3">
+                          {mobileSearchResults.length} résultat{mobileSearchResults.length > 1 ? 's' : ''} trouvé{mobileSearchResults.length > 1 ? 's' : ''}
+                        </p>
+                        {mobileSearchResults.map((product) => (
+                          <div
+                            key={product.id_product}
+                            onClick={() => handleMobileProductClick(product)}
+                            className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <img
+                              src={product.img_product}
+                              alt={product.nom_product}
+                              className="w-10 h-10 object-cover rounded-md bg-gray-100"
+                              onError={(e) => {
+                                e.currentTarget.src = '/placeholder.svg';
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-slate-900 truncate text-sm">
+                                {product.nom_product}
+                              </h4>
+                              <p className="text-xs text-gray-500">
+                                {product.type_product} • {product.itemgroup_product}
+                              </p>
+                            </div>
+                            <div className="text-right text-sm">
+                              {formatPrice(product.price_product, product.discount_product)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-gray-600 text-sm">Aucun produit trouvé</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Essayez avec d'autres mots-clés
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mobile Recent Searches */}
+                {mobileSearchTerm.trim() === '' && mobileRecentSearches.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Recherches récentes
+                    </p>
+                    <div className="space-y-1">
+                      {mobileRecentSearches.map((term, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleMobileRecentSearchClick(term)}
+                          className="block w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md transition-colors text-sm"
+                        >
+                          {term}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile Default state */}
+                {mobileSearchTerm.trim() === '' && mobileRecentSearches.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600 text-sm">
+                      Recherchez parmi nos collections premium
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
