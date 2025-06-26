@@ -244,24 +244,6 @@ const ProductDetailsContent = ({ product }: ProductDetailsContentProps) => {
             )}
           </div>
 
-          {/* Color */}
-          {product.color_product && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm font-medium text-slate-900 uppercase tracking-wide">
-                  COLOR:
-                </span>
-                <span className="text-sm text-slate-600">
-                  {product.color_product}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <div className="w-8 h-8 rounded border border-slate-200 bg-white"></div>
-                <div className="w-8 h-8 rounded bg-blue-600"></div>
-              </div>
-            </div>
-          )}
-
           {/* Size Selector - only show for products that need sizes */}
           <ProductSizeSelector 
             product={product}

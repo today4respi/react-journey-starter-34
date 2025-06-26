@@ -84,13 +84,13 @@ const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImag
             <div
               className="absolute border-2 border-white shadow-lg rounded-full pointer-events-none z-10"
               style={{
-                width: '150px',
-                height: '150px',
-                left: `${magnifierPos.x - 75}px`,
-                top: `${magnifierPos.y - 75}px`,
+                width: '120px',
+                height: '120px',
+                left: `${magnifierPos.x - 60}px`,
+                top: `${magnifierPos.y - 60}px`,
                 backgroundImage: `url(${getImageSrc(images[0])})`,
                 backgroundSize: `${imageRef.current?.naturalWidth! * 2}px ${imageRef.current?.naturalHeight! * 2}px`,
-                backgroundPosition: `-${imagePos.x * 2 - 75}px -${imagePos.y * 2 - 75}px`,
+                backgroundPosition: `-${imagePos.x * 2 - 60}px -${imagePos.y * 2 - 60}px`,
                 backgroundRepeat: 'no-repeat',
               }}
             />
@@ -122,13 +122,13 @@ const ProductImageGallery = ({ images, productName, productId = 1 }: ProductImag
             <div
               className="absolute border-2 border-white shadow-lg rounded-full pointer-events-none z-10"
               style={{
-                width: '150px',
-                height: '150px',
-                left: `${magnifierPos.x - 75}px`,
-                top: `${magnifierPos.y - 75}px`,
+                width: '120px',
+                height: '120px',
+                left: `${magnifierPos.x - 60}px`,
+                top: `${magnifierPos.y - 60}px`,
                 backgroundImage: `url(${getImageSrc(images[selectedImageIndex], selectedImageIndex)})`,
                 backgroundSize: `${imageRef.current?.naturalWidth! * 2}px ${imageRef.current?.naturalHeight! * 2}px`,
-                backgroundPosition: `-${imagePos.x * 2 - 75}px -${imagePos.y * 2 - 75}px`,
+                backgroundPosition: `-${imagePos.x * 2 - 60}px -${imagePos.y * 2 - 60}px`,
                 backgroundRepeat: 'no-repeat',
               }}
             />
