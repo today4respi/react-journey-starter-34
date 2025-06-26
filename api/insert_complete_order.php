@@ -1,5 +1,11 @@
 
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', 'php_errors.log');
+
 require_once 'config.php';
 
 // Function to save order to fallback text file
@@ -20,36 +26,10 @@ function saveToFallbackFile($orderData, $isSuccess = true, $errorMessage = '') {
     $logEntry .= "Customer Data:\n";
     if (isset($orderData['customer'])) {
         $customer = $orderData['customer'];
-        $logEntry .= "  - Name: {$customer['prenom']} {$customer['nom']}\n";
-        $logEntry .= "  - Email: {$customer['email']}\n";
-        $logEntry .= "  - Phone: {$customer['telephone']}\n";
-        $logEntry .= "  - Address: {$customer['adresse']}, {$customer['ville']}, {$customer['code_postal']}, {$customer['pays']}\n";
-    }
-    
-    $logEntry .= "Order Data:\n";
-    if (isset($orderData['order'])) {
-        $order = $orderData['order'];
-        $logEntry .= "  - Total: {$order['total_order']} TND\n";
-        $logEntry .= "  - Payment Method: " . ($order['payment_method'] ?? 'N/A') . "\n";
-        $logEntry .= "  - Status: " . ($order['status'] ?? 'pending') . "\n";
-        
-        if (isset($order['items']) && is_array($order['items'])) {
-            $logEntry .= "  - Items:\n";
-            foreach ($order['items'] as $item) {
-                $logEntry .= "    * {$item['nom_product']} - Qty: {$item['quantity']} - Price: {$item['price']} TND\n";
-                if (isset($item['size'])) $logEntry .= "      Size: {$item['size']}\n";
-                if (isset($item['color'])) $logEntry .= "      Color: {$item['color']}\n";
-            }
-        }
-        
-        if (isset($order['delivery_address'])) {
-            $delivery = $order['delivery_address'];
-            $logEntry .= "  - Delivery Address: {$delivery['adresse']}, {$delivery['ville']}, {$delivery['code_postal']}, {$delivery['pays']}\n";
-        }
-        
-        if (isset($order['notes'])) {
-            $logEntry .= "  - Notes: {$order['notes']}\n";
-        }
+        $logEntry .= "  - Name: " . (isset($customer['prenom']) ? $customer['prenom'] : 'N/A') . " " . (isset($customer['nom']) ? $customer['nom'] : 'N/A') . "\n";
+        $logEntry .= "  - Email: " . (isset($customer['email']) ? $customer['email'] : 'N/A') . "\n";
+        $logEntry .= "  - Phone: " . (isset($customer['telephone']) ? $customer['telephone'] : 'N/A') . "\n";
+        $logEntry .= "  - Address: " . (isset($customer['adresse']) ? $customer['adresse'] : 'N/A') . "\n";
     }
     
     $logEntry .= "Raw JSON: " . json_encode($orderData, JSON_PRETTY_PRINT) . "\n";
@@ -100,8 +80,23 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     
+    if (!$db) {
+        throw new Exception('Database connection failed');
+    }
+    
     // Get JSON input
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    if (empty($rawInput)) {
+        throw new Exception('No input data received');
+    }
+    
+    $input = json_decode($rawInput, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Invalid JSON data: ' . json_last_error_msg());
+    }
+    
+    // Log received data for debugging
+    error_log("Received data: " . json_encode($input));
     
     // Handle payment confirmation from success page
     if (isset($input['action']) && $input['action'] === 'confirm_payment') {
@@ -182,12 +177,6 @@ try {
     }
     
     // Validate required fields for new order
-    $requiredFields = [
-        'customer' => ['nom', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'pays'],
-        'order' => ['items', 'total_order'],
-        'items' => [] // Will be validated separately
-    ];
-    
     if (!isset($input['customer']) || !isset($input['order'])) {
         throw new Exception('Customer and order information are required');
     }
@@ -197,15 +186,20 @@ try {
     $language = isset($input['language']) ? $input['language'] : 'fr';
     
     // Validate customer fields
-    foreach ($requiredFields['customer'] as $field) {
-        if (!isset($customer[$field]) || empty($customer[$field])) {
-            throw new Exception("Customer field '$field' is required");
+    $requiredCustomerFields = ['nom', 'prenom', 'email', 'telephone', 'adresse', 'ville', 'code_postal', 'pays'];
+    foreach ($requiredCustomerFields as $field) {
+        if (!isset($customer[$field]) || empty(trim($customer[$field]))) {
+            throw new Exception("Customer field '$field' is required and cannot be empty");
         }
     }
     
     // Validate order fields
     if (!isset($orderData['items']) || empty($orderData['items'])) {
         throw new Exception('Order must contain at least one item');
+    }
+    
+    if (!isset($orderData['total_order']) || !is_numeric($orderData['total_order'])) {
+        throw new Exception('Order total is required and must be numeric');
     }
     
     // Start transaction
@@ -290,21 +284,19 @@ try {
         // Generate order number
         $orderNumber = 'CMD-' . date('Y') . '-' . str_pad($customerId . time(), 6, '0', STR_PAD_LEFT);
         
-        // Insert order
-        $sousTotal = isset($orderData['sous_total']) ? $orderData['sous_total'] : 0;
-        $discountAmount = isset($orderData['discount_amount']) ? $orderData['discount_amount'] : 0;
-        $discountPercentage = isset($orderData['discount_percentage']) ? $orderData['discount_percentage'] : 0;
-        $deliveryCost = isset($orderData['delivery_cost']) ? $orderData['delivery_cost'] : 0;
-        $totalOrder = $orderData['total_order'];
-        $status = isset($orderData['status']) ? $orderData['status'] : 'pending';
-        $paymentMethod = isset($orderData['payment_method']) ? $orderData['payment_method'] : null;
+        // Extract order data with defaults
+        $sousTotal = isset($orderData['sous_total']) ? floatval($orderData['sous_total']) : 0;
+        $discountAmount = isset($orderData['discount_amount']) ? floatval($orderData['discount_amount']) : 0;
+        $discountPercentage = isset($orderData['discount_percentage']) ? floatval($orderData['discount_percentage']) : 0;
+        $deliveryCost = isset($orderData['delivery_cost']) ? floatval($orderData['delivery_cost']) : 0;
+        $totalOrder = floatval($orderData['total_order']);
+        $paymentMethod = isset($orderData['payment_method']) ? $orderData['payment_method'] : 'pending';
         $notes = isset($orderData['notes']) ? $orderData['notes'] : null;
         
-        // Determine order status based on payment method
-        $status = isset($orderData['status']) ? $orderData['status'] : 'pending';
+        // Determine order status and payment status based on payment method
+        $status = 'pending';
         $paymentStatus = 'pending';
         
-        // Set appropriate status based on payment method
         if (isset($orderData['payment_method'])) {
             switch ($orderData['payment_method']) {
                 case 'Cash on Delivery':
@@ -323,6 +315,7 @@ try {
             }
         }
         
+        // Insert order
         $insertOrderQuery = "
             INSERT INTO orders (
                 id_customer,
@@ -367,7 +360,7 @@ try {
         $insertOrderStmt->bindParam(':notes', $notes);
         
         if (!$insertOrderStmt->execute()) {
-            throw new Exception('Failed to insert order');
+            throw new Exception('Failed to insert order: ' . implode(', ', $insertOrderStmt->errorInfo()));
         }
         
         $orderId = $db->lastInsertId();
@@ -381,9 +374,9 @@ try {
             $reference = isset($item['reference']) ? $item['reference'] : '';
             $size = isset($item['size']) ? $item['size'] : null;
             $color = isset($item['color']) ? $item['color'] : null;
-            $quantity = $item['quantity'];
-            $price = $item['price'];
-            $discount = isset($item['discount']) ? $item['discount'] : 0;
+            $quantity = intval($item['quantity']);
+            $price = floatval($item['price']);
+            $discount = isset($item['discount']) ? floatval($item['discount']) : 0;
             $subtotal = $quantity * $price;
             $total = $subtotal - $discount;
             
@@ -417,7 +410,7 @@ try {
             
             $insertItemStmt = $db->prepare($insertItemQuery);
             $insertItemStmt->bindParam(':order_id', $orderId);
-            $insertItemStmt->bindParam(':product_id', isset($item['product_id']) ? $item['product_id'] : null);
+            $insertItemStmt->bindParam(':product_id', isset($item['product_id']) ? intval($item['product_id']) : null);
             $insertItemStmt->bindParam(':nom_product', $item['nom_product']);
             $insertItemStmt->bindParam(':reference', $reference);
             $insertItemStmt->bindParam(':price', $price);
@@ -429,7 +422,7 @@ try {
             $insertItemStmt->bindParam(':total', $total);
             
             if (!$insertItemStmt->execute()) {
-                throw new Exception('Failed to insert order item');
+                throw new Exception('Failed to insert order item: ' . implode(', ', $insertItemStmt->errorInfo()));
             }
         }
         
@@ -503,11 +496,20 @@ try {
 
 } catch (Exception $e) {
     // Save failed order to fallback file
-    saveToFallbackFile($input ?? [], false, $e->getMessage());
+    $errorData = isset($input) ? $input : ['raw_input' => $rawInput ?? 'No input'];
+    saveToFallbackFile($errorData, false, $e->getMessage());
+    
+    // Log error for debugging
+    error_log("Order creation error: " . $e->getMessage());
+    error_log("Stack trace: " . $e->getTraceAsString());
     
     echo json_encode([
         'success' => false,
-        'message' => 'Error creating order: ' . $e->getMessage()
+        'message' => 'Error creating order: ' . $e->getMessage(),
+        'debug' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]
     ]);
 }
 ?>

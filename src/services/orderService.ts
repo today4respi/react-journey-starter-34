@@ -82,11 +82,17 @@ export const submitOrder = async (orderData: CompleteOrderRequest, language?: st
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Server response error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
 
     const result = await response.json();
     console.log('Order submission result:', result);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Order submission failed');
+    }
     
     return result;
   } catch (error) {
@@ -115,8 +121,17 @@ export const submitOrderWithPayment = async (
       return await submitOrder(orderDataWithStatus, language);
     }
     
-    // For card payments, the order will be submitted after payment confirmation
-    return await submitOrder(orderData, language);
+    // For card payments, we'll submit the order but it will be pending until payment confirmation
+    const orderDataWithPending = {
+      ...orderData,
+      order: {
+        ...orderData.order,
+        status: 'pending',
+        payment_method: 'Konnect'
+      }
+    };
+    
+    return await submitOrder(orderDataWithPending, language);
   } catch (error) {
     console.error('Error submitting order with payment:', error);
     throw error;
@@ -143,11 +158,17 @@ export const confirmPaymentAndUpdateOrder = async (
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Payment confirmation error:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
 
     const result = await response.json();
     console.log('Payment confirmation result:', result);
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Payment confirmation failed');
+    }
     
     return result;
   } catch (error) {

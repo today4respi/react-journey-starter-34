@@ -216,13 +216,13 @@ const Checkout = () => {
         discount_amount: totalDiscountAmount,
         delivery_cost: deliveryCost,
         total_order: total,
-        status: paymentMethod === 'cash_on_delivery' ? 'pending_cash_payment' : 'pending',
-        payment_method: paymentMethod === 'card' ? 'Konnect' : paymentMethod === 'test' ? 'Test Payment' : 'Cash on Delivery',
         notes: formData.notes,
       };
 
       // Submit order based on payment method
       if (paymentMethod === 'cash_on_delivery' || paymentMethod === 'test') {
+        console.log(`Processing ${paymentMethod} order...`);
+        
         // Submit order directly for cash on delivery or test mode
         const orderResult = await submitOrderWithPayment({
           customer: customerData,
@@ -247,8 +247,9 @@ const Checkout = () => {
         navigate(`/payment-success?order_id=${orderResult.order_number}&payment_method=${paymentMethodParam}`);
         
       } else {
-        // Card payment flow
-        // First submit the order
+        console.log('Processing card payment order...');
+        
+        // For card payment, first submit the order (it will be pending)
         const orderResult = await submitOrderWithPayment({
           customer: customerData,
           order: orderData,
@@ -258,9 +259,9 @@ const Checkout = () => {
           throw new Error(orderResult.message);
         }
 
-        console.log('Order created successfully:', orderResult);
+        console.log('Order created successfully, initializing payment:', orderResult);
 
-        // Remove newsletter discount after successful order
+        // Remove newsletter discount after successful order creation
         if (hasNewsletterDiscount) {
           localStorage.removeItem('isNewsletter');
           setHasNewsletterDiscount(false);
@@ -278,13 +279,18 @@ const Checkout = () => {
           orderId: konnectOrderId,
         });
 
+        console.log('Payment initialized:', paymentResult);
+
+        // Clear cart before redirect
+        clearCart();
+
         // Redirect to Konnect payment page
         window.location.href = paymentResult.payUrl;
       }
 
     } catch (error) {
       console.error('Error processing order:', error);
-      toast.error('Une erreur est survenue lors du traitement de votre commande');
+      toast.error(`Une erreur est survenue: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsSubmitting(false);
     }
