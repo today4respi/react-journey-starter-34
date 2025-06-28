@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomScrollbar } from '@/components/ui/custom-scrollbar';
@@ -124,12 +125,12 @@ const Index = () => {
             </div>
 
             {/* Hero Section */}
-            <div className="relative z-20 pt-32 pb-16">
+            <div className="relative z-20 pt-20 pb-16">
               <div className="container mx-auto px-4">
                 {/* Main Hero Content - with large background image */}
                 <div className="lg:px-8 mb-16 relative">
-                  {/* Large background image positioned to touch left border and extend down */}
-                  <div className="absolute -left-4 lg:-left-8 top-0 w-[70%] lg:w-[60%] h-[120%] lg:h-[140%] z-0 overflow-hidden">
+                  {/* Large background image positioned to touch left border and extend higher */}
+                  <div className="absolute -left-4 lg:-left-8 -top-12 w-[75%] lg:w-[65%] h-[150%] lg:h-[160%] z-0 overflow-hidden">
                     <img 
                       src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" 
                       alt="Créez une histoire magique" 
