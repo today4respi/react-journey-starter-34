@@ -11,11 +11,10 @@ import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 import { useToast } from '@/hooks/use-toast';
 import NewsletterService from '@/services/newsletterService';
 import { Book, Camera, Heart, Gift, ArrowRight, ArrowLeft } from 'lucide-react';
+
 const Index = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   // Track visitor for homepage
   useVisitorTracking('Homepage');
@@ -24,9 +23,11 @@ const Index = () => {
   // Newsletter state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isNewsletterLoading, setIsNewsletterLoading] = useState(false);
+
   const handlePersonalizeClick = useCallback(() => {
     setShowLoading(true);
   }, []);
+
   const handleLoadingComplete = useCallback(() => {
     setShowLoading(false);
     window.scrollTo(0, 0);
@@ -70,10 +71,13 @@ const Index = () => {
       setIsNewsletterLoading(false);
     }
   };
+
   if (showLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
-  return <>      
+
+  return (
+    <>      
       <CustomScrollbar className="min-h-screen">
         <div className="min-h-screen relative font-baloo">
           
@@ -81,9 +85,9 @@ const Index = () => {
           
           {/* Background gradient container with floating elements - ends before footer */}
           <div className="relative overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #E8D5FF 0%, #F3E8FF 25%, #E0E7FF 50%, #F0F4FF 75%, #F8FAFF 100%)',
-          minHeight: '100vh'
-        }}>
+            background: 'linear-gradient(135deg, #E8D5FF 0%, #F3E8FF 25%, #E0E7FF 50%, #F0F4FF 75%, #F8FAFF 100%)',
+            minHeight: '100vh'
+          }}>
             {/* Floating background elements covering entire content area */}
             <div className="absolute inset-0 pointer-events-none z-5">
               <FloatingBackgroundElements />
@@ -92,44 +96,55 @@ const Index = () => {
             {/* Scattered dots background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-5">
               {/* Generate scattered dots */}
-              {Array.from({
-              length: 40
-            }).map((_, i) => <div key={i} className="absolute w-1 h-1 bg-white/40 rounded-full animate-pulse" style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }} />)}
+              {Array.from({ length: 40 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 bg-white/40 rounded-full animate-pulse"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 3}s`,
+                    animationDuration: `${2 + Math.random() * 2}s`
+                  }}
+                />
+              ))}
               {/* Some larger dots */}
-              {Array.from({
-              length: 15
-            }).map((_, i) => <div key={`large-${i}`} className="absolute w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 4}s`,
-              animationDuration: `${3 + Math.random() * 2}s`
-            }} />)}
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div
+                  key={`large-${i}`}
+                  className="absolute w-2 h-2 bg-white/30 rounded-full animate-pulse"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 4}s`,
+                    animationDuration: `${3 + Math.random() * 2}s`
+                  }}
+                />
+              ))}
             </div>
 
             {/* Hero Section */}
             <div className="relative z-20 pt-32 pb-16">
               <div className="container mx-auto px-4">
-                {/* Main Hero Content - aligned with cards */}
-                <div className="lg:px-8 mb-16">
-                  <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 max-w-6xl mx-auto">
-                    {/* Left Side - Image */}
+                {/* Main Hero Content - with large background image */}
+                <div className="lg:px-8 mb-16 relative">
+                  {/* Large background image positioned to touch left border and extend down */}
+                  <div className="absolute -left-4 lg:-left-8 top-0 w-[70%] lg:w-[60%] h-[120%] lg:h-[140%] z-0 overflow-hidden">
+                    <img 
+                      src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" 
+                      alt="Créez une histoire magique" 
+                      className="w-full h-full object-cover object-left-top rounded-none"
+                    />
+                    {/* Decorative elements around image */}
+                    <div className="absolute -top-4 -left-4 w-8 h-8 bg-yellow-300 rounded-full animate-pulse"></div>
+                    <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-pink-300 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="absolute top-1/4 -right-6 w-4 h-4 bg-blue-300 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                  </div>
+
+                  <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 max-w-6xl mx-auto relative z-10">
+                    {/* Left Side - Space for background image */}
                     <div className="flex-1 flex justify-center lg:justify-start">
-                      <div className="relative">
-                        <img src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" alt="Créez une histoire magique" className="w-full max-w-lg h-auto rounded-3xl" />
-                        {/* Decorative elements around image */}
-                        <div className="absolute -top-4 -left-4 w-8 h-8 bg-yellow-300 rounded-full animate-pulse"></div>
-                        <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-pink-300 rounded-full animate-pulse" style={{
-                        animationDelay: '0.5s'
-                      }}></div>
-                        <div className="absolute top-1/4 -right-6 w-4 h-4 bg-blue-300 rounded-full animate-pulse" style={{
-                        animationDelay: '1s'
-                      }}></div>
-                      </div>
+                      <div className="w-full max-w-lg h-64 lg:h-80"></div>
                     </div>
 
                     {/* Right Side - Text and Button */}
@@ -140,7 +155,10 @@ const Index = () => {
                       <p className="text-sm md:text-base lg:text-xl text-purple-600 mb-4 md:mb-6 lg:mb-8 font-baloo max-w-lg mx-auto lg:mx-0">
                         Des aventures remplies de valeurs, de confiance et d'émotions... à son image.
                       </p>
-                      <button onClick={handlePersonalizeClick} className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 md:py-4 px-8 md:px-12 lg:px-20 rounded-full text-sm md:text-base lg:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg font-baloo">
+                      <button 
+                        onClick={handlePersonalizeClick} 
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 md:py-4 px-8 md:px-12 lg:px-20 rounded-full text-sm md:text-base lg:text-lg transition-all duration-300 transform hover:scale-105 shadow-lg font-baloo"
+                      >
                         Je personnalise mon livre
                       </button>
                     </div>
@@ -148,7 +166,7 @@ const Index = () => {
                 </div>
 
                 {/* Feature Cards - positioned to span from image start to text end */}
-                <div className="lg:px-8">
+                <div className="lg:px-8 relative z-15">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
                     <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-200/30 hover:shadow-xl transition-all duration-300">
                       <div className="flex flex-col items-center text-center gap-4 mb-3">
@@ -378,8 +396,19 @@ const Index = () => {
                   Recevez nos dernières histoires et offres spéciales
                 </p>
                 <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                  <input type="email" placeholder="Votre email" value={newsletterEmail} onChange={e => setNewsletterEmail(e.target.value)} disabled={isNewsletterLoading} className="flex-1 px-4 py-3 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 text-base font-baloo border border-slate-300 bg-white/80" />
-                  <button type="submit" disabled={isNewsletterLoading} className="bg-slate-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-slate-600 transition-colors text-base font-baloo disabled:opacity-50 disabled:cursor-not-allowed">
+                  <input
+                    type="email"
+                    placeholder="Votre email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    disabled={isNewsletterLoading}
+                    className="flex-1 px-4 py-3 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50 text-base font-baloo border border-slate-300 bg-white/80"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isNewsletterLoading}
+                    className="bg-slate-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-slate-600 transition-colors text-base font-baloo disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     {isNewsletterLoading ? 'Inscription...' : "S'abonner"}
                   </button>
                 </form>
@@ -394,6 +423,8 @@ const Index = () => {
           <WhatsAppButton />
         </div>
       </CustomScrollbar>
-    </>;
+    </>
+  );
 };
+
 export default Index;
