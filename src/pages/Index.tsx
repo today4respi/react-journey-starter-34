@@ -120,7 +120,7 @@ const Index = () => {
                     {/* Left Side - Image */}
                     <div className="flex-1 flex justify-center lg:justify-start">
                       <div className="relative">
-                        <img src="/lovable-uploads/65d07e9c-0d6f-4910-bc15-e952ea8efab7.png" alt="Créez une histoire magique" className="w-full max-w-md h-auto rounded-3xl" />
+                        <img src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" alt="Créez une histoire magique" className="w-full max-w-md h-auto rounded-3xl" />
                         {/* Decorative elements around image */}
                         <div className="absolute -top-4 -left-4 w-8 h-8 bg-yellow-300 rounded-full animate-pulse"></div>
                         <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-pink-300 rounded-full animate-pulse" style={{
