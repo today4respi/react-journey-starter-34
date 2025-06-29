@@ -6,7 +6,7 @@ import VideoGallery from '@/components/VideoGallery';
 import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/ui/WhatsAppButton';
 import LoadingScreen from '@/components/LoadingScreen';
-import FloatingBackgroundElements from '@/components/ui/FloatingBackgroundElements';
+import ResponsiveFloatingElements from '@/components/ui/ResponsiveFloatingElements';
 import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 import { useToast } from '@/hooks/use-toast';
 import NewsletterService from '@/services/newsletterService';
@@ -90,7 +90,7 @@ const Index = () => {
           }}>
             {/* Floating background elements covering entire content area */}
             <div className="absolute inset-0 pointer-events-none z-5">
-              <FloatingBackgroundElements />
+              <ResponsiveFloatingElements />
             </div>
             
             {/* Scattered dots background */}
