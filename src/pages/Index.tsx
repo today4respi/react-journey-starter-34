@@ -134,8 +134,8 @@ const Index = () => {
               <div className="container mx-auto px-4">
                 {/* Main Hero Content - Mobile: Image first, then text. Desktop: Side by side */}
                 <div className="lg:px-8 mb-16 md:mb-20 relative">
-                  {/* Desktop: Large background image positioned higher and made 10% smaller */}
-                  <div className="hidden lg:block absolute -left-0 lg:-left-0 -top-40 w-[100%] lg:w-[90%] h-[220%] lg:h-[230%] z-0 overflow-visible">
+                  {/* Desktop: Large background image positioned higher and made 15% smaller and closer to left edge */}
+                  <div className="hidden lg:block absolute -left-8 lg:-left-12 -top-40 w-[85%] lg:w-[75%] h-[220%] lg:h-[230%] z-0 overflow-visible">
                     <div className="relative w-full h-full">
                       <img alt="Créez une histoire magique" className="w-full h-full object-contain object-left-top" src="/lovable-uploads/1fa69aed-e90c-43d8-b63e-519b1bb4aa5b.png" />
                     </div>
