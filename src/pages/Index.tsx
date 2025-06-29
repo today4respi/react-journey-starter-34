@@ -1,4 +1,5 @@
 
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomScrollbar } from '@/components/ui/custom-scrollbar';
@@ -11,6 +12,7 @@ import ResponsiveFloatingElements from '@/components/ui/ResponsiveFloatingElemen
 import { useVisitorTracking } from '@/hooks/useVisitorTracking';
 import { useToast } from '@/hooks/use-toast';
 import NewsletterService from '@/services/newsletterService';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Book, Camera, Heart, Gift, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const Index = () => {
@@ -24,6 +26,13 @@ const Index = () => {
   // Newsletter state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isNewsletterLoading, setIsNewsletterLoading] = useState(false);
+
+  // Scroll animations
+  const heroAnimation = useScrollAnimation({ threshold: 0.2 });
+  const cardsAnimation = useScrollAnimation({ threshold: 0.2 });
+  const stepsAnimation = useScrollAnimation({ threshold: 0.2 });
+  const videoAnimation = useScrollAnimation({ threshold: 0.1 });
+  const newsletterAnimation = useScrollAnimation({ threshold: 0.3 });
 
   const handlePersonalizeClick = useCallback(() => {
     setShowLoading(true);
@@ -125,7 +134,12 @@ const Index = () => {
             </div>
 
             {/* Hero Section */}
-            <div className="relative z-20 pt-20 md:pt-32 pb-16">
+            <div 
+              ref={heroAnimation.ref}
+              className={`relative z-20 pt-20 md:pt-32 pb-16 transition-all duration-1000 ${
+                heroAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
               <div className="container mx-auto px-4">
                 {/* Main Hero Content - Mobile: Image first, then text. Desktop: Side by side */}
                 <div className="lg:px-8 mb-16 md:mb-20 relative">
@@ -204,145 +218,124 @@ const Index = () => {
                 </div>
 
                 {/* Feature Cards - positioned to span from image start to text end with higher z-index */}
-                <div className="lg:px-8 relative z-15 mt-8">
+                <div 
+                  ref={cardsAnimation.ref}
+                  className={`lg:px-8 relative z-15 mt-8 transition-all duration-1000 delay-300 ${
+                    cardsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`}
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto relative z-30">
-                    <div className="bg-purple-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-300/40 hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <img src="https://i.ibb.co/B5pNZYj5/instructions.png" alt="Instructions" className="w-10 h-10 object-contain" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
-                            <div className="font-bold">Un livre sur-mesure</div>
-                            <div>pour votre enfant</div>
+                    {[
+                      {
+                        icon: "https://i.ibb.co/B5pNZYj5/instructions.png",
+                        title: "Un livre sur-mesure",
+                        subtitle: "pour votre enfant",
+                        delay: "delay-[100ms]"
+                      },
+                      {
+                        icon: "https://i.ibb.co/hxPKDRmc/family-picture.png",
+                        title: "Photo, prénom, âge",
+                        subtitle: "et message personnalisés",
+                        delay: "delay-[200ms]"
+                      },
+                      {
+                        icon: "https://i.ibb.co/0pjrrN4J/butterfly.png",
+                        title: "Des histoires éducatives :",
+                        subtitle: "confiance, courage, partage, etc.",
+                        delay: "delay-[300ms]"
+                      },
+                      {
+                        icon: "https://i.ibb.co/Z1GCrKv5/gift.png",
+                        title: "À offrir ou à vivre en famille",
+                        subtitle: "encore et encore",
+                        delay: "delay-[400ms]"
+                      }
+                    ].map((card, index) => (
+                      <div 
+                        key={index}
+                        className={`bg-purple-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-300/40 hover:shadow-xl transition-all duration-700 ${card.delay} ${
+                          cardsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <img src={card.icon} alt={card.title} className="w-10 h-10 object-contain" />
+                          </div>
+                          <div className="flex-1 flex flex-col justify-center">
+                            <div className="text-base md:text-lg font-baloo text-black leading-tight">
+                              <div className="font-bold">{card.title}</div>
+                              <div>{card.subtitle}</div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="bg-purple-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-300/40 hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <img src="https://i.ibb.co/hxPKDRmc/family-picture.png" alt="Family picture" className="w-10 h-10 object-contain" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
-                            <div className="font-bold">Photo, prénom, âge</div>
-                            <div>et message personnalisés</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-purple-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-300/40 hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <img src="https://i.ibb.co/0pjrrN4J/butterfly.png" alt="Butterfly" className="w-10 h-10 object-contain" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
-                            <div className="font-bold">Des histoires éducatives :</div>
-                            <div>confiance, courage, partage, etc.</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-purple-100/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-purple-300/40 hover:shadow-xl transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <img src="https://i.ibb.co/Z1GCrKv5/gift.png" alt="Gift" className="w-10 h-10 object-contain" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
-                            <div className="font-bold">À offrir ou à vivre en famille</div>
-                            <div>encore et encore</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Step-by-Step Process Section - Responsive design with 2x2 mobile layout */}
-                <div className="lg:px-8 mt-16">
+                <div 
+                  ref={stepsAnimation.ref}
+                  className={`lg:px-8 mt-16 transition-all duration-1000 delay-500 ${
+                    stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                  }`}
+                >
                   <div className="bg-purple-100/50 backdrop-blur-sm rounded-3xl p-4 md:p-6 shadow-lg border border-purple-300/40 max-w-6xl mx-auto">
                     
                     {/* Desktop Layout - Horizontal */}
                     <div className="hidden md:flex items-center justify-between gap-1 md:gap-2 min-w-max">
                       
-                      {/* Step 1 */}
-                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                        <div className="text-center min-w-[100px] md:min-w-[140px]">
-                          <div className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 flex items-center justify-center">
-                            <img src="https://i.ibb.co/9kQjQgB4/children.png" alt="Children" className="w-full h-full" />
+                      {[
+                        {
+                          icon: "https://i.ibb.co/9kQjQgB4/children.png",
+                          title: "Combien d'enfants ?",
+                          subtitle: "1, 2 ou 3 ?",
+                          delay: "delay-[600ms]"
+                        },
+                        {
+                          icon: "https://i.ibb.co/2Yg0q9rB/control.png",
+                          title: "Personnalisation",
+                          subtitle: "Indiquez le prénom, âge, message perso",
+                          delay: "delay-[700ms]"
+                        },
+                        {
+                          icon: "https://i.ibb.co/Cp55n822/books.png",
+                          title: "Choisissez votre formule",
+                          subtitle: "2 types de formule",
+                          delay: "delay-[800ms]"
+                        },
+                        {
+                          icon: "https://i.ibb.co/ycBXn998/launch.png",
+                          title: "Bravo !",
+                          subtitle: "Votre aventure commence",
+                          delay: "delay-[900ms]",
+                          isLast: true
+                        }
+                      ].map((step, index) => (
+                        <div key={index} className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                          <div 
+                            className={`text-center min-w-[100px] md:min-w-[140px] transition-all duration-700 ${step.delay} ${
+                              stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                            }`}
+                          >
+                            <div className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 flex items-center justify-center">
+                              <img src={step.icon} alt={step.title} className="w-full h-full" />
+                            </div>
+                            <h3 className="text-xs md:text-sm font-bold text-black mb-1 font-baloo leading-tight">
+                              {step.title}
+                            </h3>
+                            <p className="text-xs text-black font-baloo">
+                              {step.subtitle}
+                            </p>
                           </div>
-                          <h3 className="text-xs md:text-sm font-bold text-black mb-1 font-baloo leading-tight">
-                            Combien d'enfants ?
-                          </h3>
-                          <p className="text-xs text-black font-baloo">
-                            1, 2 ou 3 ?
-                          </p>
+                          
+                          {!step.isLast && (
+                            <div className="flex-shrink-0">
+                              <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-purple-400" />
+                            </div>
+                          )}
                         </div>
-                        
-                        {/* Arrow 1 */}
-                        <div className="flex-shrink-0">
-                          <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-purple-400" />
-                        </div>
-                      </div>
-
-                      {/* Step 2 */}
-                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                        <div className="text-center min-w-[100px] md:min-w-[140px]">
-                          <div className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 flex items-center justify-center">
-                            <img src="https://i.ibb.co/2Yg0q9rB/control.png" alt="Control" className="w-full h-full" />
-                          </div>
-                          <h3 className="text-xs md:text-sm font-bold text-black mb-1 font-baloo leading-tight">
-                            Personnalisation
-                          </h3>
-                          <p className="text-xs text-black font-baloo">
-                            Indiquez le prénom, âge, message perso
-                          </p>
-                        </div>
-                        
-                        {/* Arrow 2 */}
-                        <div className="flex-shrink-0">
-                          <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-purple-400" />
-                        </div>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                        <div className="text-center min-w-[100px] md:min-w-[140px]">
-                          <div className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 flex items-center justify-center">
-                            <img src="https://i.ibb.co/Cp55n822/books.png" alt="Books" className="w-full h-full" />
-                          </div>
-                          <h3 className="text-xs md:text-sm font-bold text-black mb-1 font-baloo leading-tight">
-                            Choisissez votre formule
-                          </h3>
-                          <p className="text-xs text-black font-baloo">
-                            2 types de formule
-                          </p>
-                        </div>
-                        
-                        {/* Arrow 3 */}
-                        <div className="flex-shrink-0">
-                          <ArrowRight className="w-3 h-3 md:w-4 md:h-4 text-purple-400" />
-                        </div>
-                      </div>
-
-                      {/* Step 4 */}
-                      <div className="text-center min-w-[100px] md:min-w-[140px] flex-shrink-0">
-                        <div className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 md:mb-3 flex items-center justify-center">
-                          <img src="https://i.ibb.co/ycBXn998/launch.png" alt="Launch" className="w-full h-full" />
-                        </div>
-                        <h3 className="text-xs md:text-sm font-bold text-black mb-1 font-baloo leading-tight">
-                          Bravo !
-                        </h3>
-                        <p className="text-xs text-black font-baloo">
-                          Votre aventure commence
-                        </p>
-                      </div>
+                      ))}
                     </div>
 
                     {/* Mobile Layout - 2x2 Grid with Custom Arrow Flow */}
@@ -350,7 +343,11 @@ const Index = () => {
                       {/* First Row - Steps 1 and 2 */}
                       <div className="flex items-center justify-center gap-3 mb-4">
                         {/* Step 1 */}
-                        <div className="text-center flex-1 max-w-[130px]">
+                        <div 
+                          className={`text-center flex-1 max-w-[130px] transition-all duration-700 delay-[600ms] ${
+                            stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                          }`}
+                        >
                           <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center">
                             <img src="https://i.ibb.co/9kQjQgB4/children.png" alt="Children" className="w-full h-full" />
                           </div>
@@ -368,7 +365,11 @@ const Index = () => {
                         </div>
 
                         {/* Step 2 */}
-                        <div className="text-center flex-1 max-w-[130px] relative">
+                        <div 
+                          className={`text-center flex-1 max-w-[130px] relative transition-all duration-700 delay-[700ms] ${
+                            stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                          }`}
+                        >
                           <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center">
                             <img src="https://i.ibb.co/2Yg0q9rB/control.png" alt="Control" className="w-full h-full" />
                           </div>
@@ -394,7 +395,11 @@ const Index = () => {
                       {/* Second Row - Steps 4 and 3 (reversed for left arrow flow) */}
                       <div className="flex items-center justify-center gap-3">
                         {/* Step 4 */}
-                        <div className="text-center flex-1 max-w-[130px]">
+                        <div 
+                          className={`text-center flex-1 max-w-[130px] transition-all duration-700 delay-[900ms] ${
+                            stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                          }`}
+                        >
                           <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center">
                             <img src="https://i.ibb.co/ycBXn998/launch.png" alt="Launch" className="w-full h-full" />
                           </div>
@@ -412,7 +417,11 @@ const Index = () => {
                         </div>
 
                         {/* Step 3 */}
-                        <div className="text-center flex-1 max-w-[130px]">
+                        <div 
+                          className={`text-center flex-1 max-w-[130px] transition-all duration-700 delay-[800ms] ${
+                            stepsAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                          }`}
+                        >
                           <div className="w-14 h-14 mx-auto mb-2 flex items-center justify-center">
                             <img src="https://i.ibb.co/Cp55n822/books.png" alt="Books" className="w-full h-full" />
                           </div>
@@ -432,12 +441,22 @@ const Index = () => {
             </div>
 
             {/* Video Gallery Section - now the main content */}
-            <div className="relative z-20">
+            <div 
+              ref={videoAnimation.ref}
+              className={`relative z-20 transition-all duration-1000 delay-700 ${
+                videoAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
               <VideoGallery />
             </div>
 
             {/* Newsletter Section */}
-            <div className="relative py-8 md:py-12 z-20">
+            <div 
+              ref={newsletterAnimation.ref}
+              className={`relative py-8 md:py-12 z-20 transition-all duration-1000 delay-300 ${
+                newsletterAnimation.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
               <div className="container mx-auto px-4 text-center">
                 <h3 className="text-xl md:text-2xl font-bold text-slate-700 mb-4 font-baloo">
                   Restez informé de nos nouveautés !
@@ -478,3 +497,4 @@ const Index = () => {
 };
 
 export default Index;
+
