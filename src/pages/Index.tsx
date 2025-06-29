@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomScrollbar } from '@/components/ui/custom-scrollbar';
@@ -146,7 +147,7 @@ const Index = () => {
                   {/* Mobile Layout: Background image behind text */}
                   <div className="lg:hidden relative">
                     {/* Mobile: Semi-transparent background image positioned behind text and moved up and to the left */}
-                    <div className="absolute -left-12 -top-8 w-96 h-96 z-0">
+                    <div className="absolute -left-16 -top-12 w-96 h-96 z-0">
                       <div className="relative w-full h-full">
                         <img 
                           src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" 
@@ -161,7 +162,7 @@ const Index = () => {
                     </div>
 
                     {/* Mobile: Text content with higher z-index and moved down slightly */}
-                    <div className="text-center relative z-10 py-8 pt-16">
+                    <div className="text-center relative z-10 py-8 pt-20">
                       <h1 className="text-2xl md:text-3xl font-bold text-purple-800 mb-3 md:mb-4 font-baloo leading-tight">
                         Créez une histoire magique où votre enfant devient le héros
                       </h1>
@@ -211,7 +212,7 @@ const Index = () => {
                           <img src="https://i.ibb.co/B5pNZYj5/instructions.png" alt="Instructions" className="w-10 h-10 object-contain" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-lg font-baloo text-black leading-tight">
+                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
                             <div className="font-bold">Un livre sur-mesure</div>
                             <div>pour votre enfant</div>
                           </div>
@@ -225,7 +226,7 @@ const Index = () => {
                           <img src="https://i.ibb.co/hxPKDRmc/family-picture.png" alt="Family picture" className="w-10 h-10 object-contain" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-lg font-baloo text-black leading-tight">
+                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
                             <div className="font-bold">Photo, prénom, âge</div>
                             <div>et message personnalisés</div>
                           </div>
@@ -239,7 +240,7 @@ const Index = () => {
                           <img src="https://i.ibb.co/0pjrrN4J/butterfly.png" alt="Butterfly" className="w-10 h-10 object-contain" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-lg font-baloo text-black leading-tight">
+                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
                             <div className="font-bold">Des histoires éducatives :</div>
                             <div>confiance, courage, partage, etc.</div>
                           </div>
@@ -253,7 +254,7 @@ const Index = () => {
                           <img src="https://i.ibb.co/Z1GCrKv5/gift.png" alt="Gift" className="w-10 h-10 object-contain" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
-                          <div className="text-lg font-baloo text-black leading-tight">
+                          <div className="text-base md:text-lg font-baloo text-black leading-tight">
                             <div className="font-bold">À offrir ou à vivre en famille</div>
                             <div>encore et encore</div>
                           </div>
