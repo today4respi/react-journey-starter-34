@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomScrollbar } from '@/components/ui/custom-scrollbar';
@@ -130,10 +129,10 @@ const Index = () => {
                 {/* Main Hero Content - Mobile: Image first, then text. Desktop: Side by side */}
                 <div className="lg:px-8 mb-16 md:mb-20 relative">
                   {/* Desktop: Large background image positioned higher and made 10% smaller */}
-                  <div className="hidden lg:block absolute -left-16 lg:-left-24 -top-32 w-[88.55%] lg:w-[82.225%] h-[202.4%] lg:h-[215.05%] z-0 overflow-visible">
+                  <div className="hidden lg:block absolute -left-0 lg:-left-0 -top-40 w-[100%] lg:w-[90%] h-[220%] lg:h-[230%] z-0 overflow-visible">
                     <div className="relative w-full h-full">
                       <img 
-                        src="/lovable-uploads/f218fb72-085b-4d20-be11-41ac710e6e08.png" 
+                        src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" 
                         alt="Créez une histoire magique" 
                         className="w-full h-full object-contain object-left-top"
                       />
@@ -146,11 +145,11 @@ const Index = () => {
 
                   {/* Mobile Layout: Background image behind text */}
                   <div className="lg:hidden relative">
-                    {/* Mobile: Semi-transparent background image positioned behind text and closer to left edge */}
-                    <div className="absolute -left-8 top-0 w-96 h-96 z-0">
+                    {/* Mobile: Semi-transparent background image positioned behind text and moved up and to the left */}
+                    <div className="absolute -left-12 -top-8 w-96 h-96 z-0">
                       <div className="relative w-full h-full">
                         <img 
-                          src="/lovable-uploads/f218fb72-085b-4d20-be11-41ac710e6e08.png" 
+                          src="/lovable-uploads/445098bd-b0d8-48f4-8dde-cd5474c0c175.png" 
                           alt="Créez une histoire magique" 
                           className="w-full h-full object-contain object-left-top opacity-30"
                         />
@@ -161,8 +160,8 @@ const Index = () => {
                       <div className="absolute top-1/4 -right-3 w-2 h-2 bg-blue-300/50 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
                     </div>
 
-                    {/* Mobile: Text content with higher z-index */}
-                    <div className="text-center relative z-10 py-8">
+                    {/* Mobile: Text content with higher z-index and moved down slightly */}
+                    <div className="text-center relative z-10 py-8 pt-16">
                       <h1 className="text-2xl md:text-3xl font-bold text-purple-800 mb-3 md:mb-4 font-baloo leading-tight">
                         Créez une histoire magique où votre enfant devient le héros
                       </h1>
