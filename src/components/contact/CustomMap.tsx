@@ -66,7 +66,7 @@ const CustomMap = () => {
                 <Button
                   onClick={callUs}
                   size="sm"
-                  className="bg-slate-900 hover:bg-slate-800 text-white"
+                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:via-slate-700 hover:to-slate-800 text-white transition-all"
                 >
                   <Phone className="w-4 h-4 mr-2" />
                   {t('callUs')}
@@ -75,7 +75,7 @@ const CustomMap = () => {
                 <Button
                   onClick={getDirections}
                   size="sm"
-                  className="bg-slate-900 hover:bg-slate-800 text-white"
+                  className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 hover:from-slate-800 hover:via-slate-700 hover:to-slate-800 text-white transition-all"
                 >
                   <Navigation className="w-4 h-4 mr-2" />
                   {t('getDirections')}
@@ -85,7 +85,7 @@ const CustomMap = () => {
                   onClick={openInGoogleMaps}
                   variant="outline"
                   size="sm"
-                  className="border-slate-900 text-slate-900 hover:bg-slate-50"
+                  className="border-slate-900 text-slate-900 hover:bg-gradient-to-br hover:from-slate-900 hover:via-slate-800 hover:to-slate-900 hover:text-white transition-all"
                 >
                   {t('viewOnGoogleMaps')}
                 </Button>
