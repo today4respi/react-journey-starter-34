@@ -81,6 +81,174 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
   return response.data.data;
 };
 
+interface Reservation {
+  id_reservation: number;
+  nom_complet: string;
+  email: string;
+  telephone: string;
+  date_reservation: string;
+  heure_reservation: string;
+  nombre_personnes: number;
+  message_special?: string;
+  statut_reservation: string;
+  date_creation: string;
+}
+
+const fetchTodayTomorrowReservations = async (): Promise<{ today: Reservation[], tomorrow: Reservation[] }> => {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  
+  const response = await axios.get('https://draminesaid.com/lucci/api/get_all_reservations.php');
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to fetch reservations');
+  }
+  
+  const allReservations: Reservation[] = response.data.data || [];
+  const todayDate = formatDate(today);
+  const tomorrowDate = formatDate(tomorrow);
+  
+  const todayReservations = allReservations.filter(r => r.date_reservation === todayDate);
+  const tomorrowReservations = allReservations.filter(r => r.date_reservation === tomorrowDate);
+  
+  return {
+    today: todayReservations,
+    tomorrow: tomorrowReservations
+  };
+};
+
+const TodayTomorrowReservations = () => {
+  const { data: reservations, isLoading } = useQuery({
+    queryKey: ['todayTomorrowReservations'],
+    queryFn: fetchTodayTomorrowReservations,
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const getReservationStatusBadge = (status: string) => {
+    const statusMap = {
+      pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
+      confirmed: { label: 'Confirmée', color: 'bg-green-100 text-green-800' },
+      cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800' },
+    };
+    
+    const statusInfo = statusMap[status as keyof typeof statusMap] || { 
+      label: status, 
+      color: 'bg-gray-100 text-gray-800' 
+    };
+    
+    return (
+      <Badge className={statusInfo.color}>
+        {statusInfo.label}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  const todayCount = reservations?.today?.length || 0;
+  const tomorrowCount = reservations?.tomorrow?.length || 0;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Today's Reservations */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-lg flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-blue-600" />
+              Aujourd'hui
+            </h3>
+            <Badge variant="outline" className="bg-blue-50 text-blue-600">
+              {todayCount} réservation{todayCount !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+          {todayCount === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Aucune réservation aujourd'hui</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reservations?.today?.map((reservation) => (
+                <div key={reservation.id_reservation} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-medium text-gray-900">{reservation.nom_complet}</div>
+                    {getReservationStatusBadge(reservation.statut_reservation)}
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div className="flex items-center">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {reservation.heure_reservation}
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="mr-1 h-3 w-3" />
+                      {reservation.nombre_personnes} personne{reservation.nombre_personnes !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex items-center">
+                      <Mail className="mr-1 h-3 w-3" />
+                      {reservation.email}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tomorrow's Reservations */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-lg flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-green-600" />
+              Demain
+            </h3>
+            <Badge variant="outline" className="bg-green-50 text-green-600">
+              {tomorrowCount} réservation{tomorrowCount !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+          {tomorrowCount === 0 ? (
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Aucune réservation demain</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {reservations?.tomorrow?.map((reservation) => (
+                <div key={reservation.id_reservation} className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-medium text-gray-900">{reservation.nom_complet}</div>
+                    {getReservationStatusBadge(reservation.statut_reservation)}
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div className="flex items-center">
+                      <Clock className="mr-1 h-3 w-3" />
+                      {reservation.heure_reservation}
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="mr-1 h-3 w-3" />
+                      {reservation.nombre_personnes} personne{reservation.nombre_personnes !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex items-center">
+                      <Mail className="mr-1 h-3 w-3" />
+                      {reservation.email}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   
@@ -335,6 +503,22 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Today's and Tomorrow's Reservations */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center text-base sm:text-lg">
+                <Calendar className="mr-2 h-5 w-5" />
+                Réservations du Jour & Demain
+              </CardTitle>
+              <CardDescription>
+                Réservations prévues pour aujourd'hui et demain
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TodayTomorrowReservations />
+            </CardContent>
+          </Card>
 
           {/* Charts and Analytics */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
