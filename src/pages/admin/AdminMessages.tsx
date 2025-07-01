@@ -9,6 +9,14 @@ import { StatusFilter } from '@/components/admin/filters/StatusFilter';
 import { useTableSort } from '@/hooks/useTableSort';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   Search, 
   Filter, 
@@ -17,7 +25,9 @@ import {
   MailOpen,
   MessageSquare,
   Eye,
-  EyeOff
+  Phone,
+  Calendar,
+  User
 } from 'lucide-react';
 
 interface Message {
@@ -278,13 +288,14 @@ const AdminMessages = () => {
                       >
                         Contact
                       </SortableTableHead>
-                      <SortableTableHead 
+                       <SortableTableHead 
                         sortKey="date_creation" 
                         sortConfig={sortConfig} 
                         onSort={requestSort}
                       >
                         Date
                       </SortableTableHead>
+                      <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -308,18 +319,90 @@ const AdminMessages = () => {
                         <TableCell>
                           {new Date(message.date_creation).toLocaleDateString('fr-FR')} à {new Date(message.date_creation).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         </TableCell>
+                        <TableCell>
+                          <Badge variant={message.vue_par_admin ? "default" : "destructive"}>
+                            {message.vue_par_admin ? 'Lu' : 'Non lu'}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleMarkAsRead(message.id_message)}
-                          >
-                            {message.vue_par_admin ? (
-                              <Eye className="h-4 w-4" />
-                            ) : (
-                              <EyeOff className="h-4 w-4" />
-                            )}
-                          </Button>
+                          <div className="flex gap-2 justify-end">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <MessageSquare className="h-5 w-5" />
+                                    Message de {message.nom_client}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Détails complets du message de contact
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">Nom:</span>
+                                      </div>
+                                      <p className="text-gray-700 ml-6">{message.nom_client}</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <Mail className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">Email:</span>
+                                      </div>
+                                      <p className="text-gray-700 ml-6">{message.email_client}</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <Phone className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">Téléphone:</span>
+                                      </div>
+                                      <p className="text-gray-700 ml-6">{message.telephone_client}</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <Calendar className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">Date de création:</span>
+                                      </div>
+                                      <p className="text-gray-700 ml-6">
+                                        {new Date(message.date_creation).toLocaleDateString('fr-FR')} à {new Date(message.date_creation).toLocaleTimeString('fr-FR')}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <MessageSquare className="h-4 w-4 text-gray-500" />
+                                      <span className="font-medium">Message:</span>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 rounded-lg ml-6">
+                                      <p className="text-gray-700 whitespace-pre-wrap">{message.message_client}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between pt-4 border-t">
+                                    <Badge variant={message.vue_par_admin ? "default" : "destructive"}>
+                                      {message.vue_par_admin ? 'Lu' : 'Non lu'}
+                                    </Badge>
+                                    {message.vue_par_admin === 0 && (
+                                      <Button 
+                                        onClick={() => {
+                                          handleMarkAsRead(message.id_message);
+                                        }}
+                                        size="sm"
+                                      >
+                                        Marquer comme lu
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
