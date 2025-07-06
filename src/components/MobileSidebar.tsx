@@ -117,7 +117,7 @@ const MobileSidebar = ({
         {/* Header */}
         <SheetHeader className="bg-black text-white p-6 shadow-lg flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center justify-center flex-1 mx-[71px] px-0 my-[-20px] mr-[18%]">
+            <div className="flex items-center justify-center flex-1 mx-[71px] px-0 my-[-20px] mr-[18%] ml-[34%]">
               <img src="/lovable-uploads/ef1b651c-de8a-48ff-81e8-2d1b42e10df9.png" alt="Paola Di Battaglia" className="h-20 object-scale-down" />
             </div>
             <Button variant="ghost" size="sm" onClick={handleMainClose} className="text-white hover:bg-white/20 rounded-full h-10 w-10 p-0 transition-all duration-200">
