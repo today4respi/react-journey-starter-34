@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductDropdownProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ProductDropdownProps {
 
 const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategory, onClose }) => {
   const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   const handleMouseEnter = () => {
     if (closeTimeout) {
@@ -36,24 +38,25 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
     surMesure: {
       title: 'Sur Mesure',
       image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png',
+      url: '/category/surMesure',
       sections: [
         {
           title: 'Homme',
           items: [
-            { name: 'Blazers', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'Blousons', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' },
-            { name: 'Manteaux', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' },
-            { name: 'Djine', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'Slack', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' },
-            { name: 'Pantalons', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' }
+            { name: 'Blazers', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/surMesure/homme-blazers', itemgroup: 'blazers' },
+            { name: 'Blousons', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/surMesure/homme-blouson', itemgroup: 'blouson' },
+            { name: 'Manteaux', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/surMesure/homme-manteau', itemgroup: 'manteau' },
+            { name: 'Djine', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/surMesure/homme-djine', itemgroup: 'djine' },
+            { name: 'Slack', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/surMesure/homme-slack', itemgroup: 'slack' },
+            { name: 'Pantalons', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/surMesure/homme-pantalon', itemgroup: 'pantalon' }
           ]
         },
         {
           title: 'Femme',
           items: [
-            { name: 'Chemises', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'Costumes', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' },
-            { name: 'Blazers', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' }
+            { name: 'Chemises', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/surMesure/femme-chemise', itemgroup: 'chemise' },
+            { name: 'Costumes', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/surMesure/femme-costume', itemgroup: 'costume' },
+            { name: 'Blazers', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/surMesure/femme-blazer', itemgroup: 'blazer' }
           ]
         }
       ]
@@ -61,16 +64,17 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
     pretAPorter: {
       title: 'Prêt à Porter',
       image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png',
+      url: '/category/pretAPorter',
       sections: [
         {
           title: 'Collections',
           items: [
-            { name: 'Chemises', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'T-shirts', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' },
-            { name: 'Polos', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' },
-            { name: 'Chaussures', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'Ceintures', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' },
-            { name: 'Maroquinerie', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' }
+            { name: 'Chemises', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/pretAPorter/chemise', itemgroup: 'chemise' },
+            { name: 'T-shirts', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/pretAPorter/tshirt', itemgroup: 'tshirt' },
+            { name: 'Polos', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/pretAPorter/polo', itemgroup: 'polo' },
+            { name: 'Chaussures', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/pretAPorter/chaussure', itemgroup: 'chaussure' },
+            { name: 'Ceintures', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/pretAPorter/ceinture', itemgroup: 'ceinture' },
+            { name: 'Maroquinerie', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/pretAPorter/maroquinerie', itemgroup: 'maroquinerie' }
           ]
         }
       ]
@@ -78,14 +82,15 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
     accessoires: {
       title: 'Accessoires',
       image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png',
+      url: '/category/accessoires',
       sections: [
         {
           title: 'Collections',
           items: [
-            { name: 'Cravates', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' },
-            { name: 'Pochettes', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png' },
-            { name: 'Maroquinerie', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png' },
-            { name: 'Autres Accessoires', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png' }
+            { name: 'Cravates', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/accessoires/cravate', itemgroup: 'cravate' },
+            { name: 'Pochettes', image: '/lovable-uploads/850ce6f3-3077-447e-a7d5-f634b4f1bf6c.png', url: '/category/accessoires/pochette', itemgroup: 'pochette' },
+            { name: 'Maroquinerie', image: '/lovable-uploads/d96e264c-4c78-436f-8046-7b929a4d5ce8.png', url: '/category/accessoires/maroquinerie', itemgroup: 'maroquinerie' },
+            { name: 'Autres Accessoires', image: '/lovable-uploads/47f47df0-faf6-4178-8ae1-526655f4230c.png', url: '/category/accessoires/autre', itemgroup: 'autre' }
           ]
         }
       ]
@@ -124,7 +129,13 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 </div>
-                <button className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium text-sm font-hm-sans">
+                <button 
+                  onClick={() => {
+                    navigate(category.url);
+                    onClose();
+                  }}
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium text-sm font-hm-sans"
+                >
                   Voir Toute la Collection
                 </button>
               </div>
@@ -145,8 +156,7 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
                         key={itemIndex}
                         className="group flex items-center gap-4 w-full p-3 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm"
                         onClick={() => {
-                          // Handle item click - navigate to category page
-                          console.log(`Navigate to ${activeCategory}/${item.name}`);
+                          navigate(item.url);
                           onClose();
                         }}
                       >
@@ -179,10 +189,22 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
               Besoin d'aide pour trouver le produit parfait ?
             </p>
             <div className="flex justify-center gap-4">
-              <button className="bg-white text-gray-900 border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium font-hm-sans">
+              <button 
+                onClick={() => {
+                  navigate('/contact');
+                  onClose();
+                }}
+                className="bg-white text-gray-900 border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium font-hm-sans"
+              >
                 Contacter un Expert
               </button>
-              <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium font-hm-sans">
+              <button 
+                onClick={() => {
+                  navigate('/');
+                  onClose();
+                }}
+                className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium font-hm-sans"
+              >
                 Voir Tous les Produits
               </button>
             </div>
