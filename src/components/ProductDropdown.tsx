@@ -105,109 +105,57 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
 
   return (
     <div 
-      className="fixed top-[120px] left-0 right-0 bg-white border-t border-gray-100 shadow-2xl z-50 animate-fade-in"
+      className="fixed top-[120px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-12 gap-8 max-w-7xl mx-auto">
-          {/* Left Side - Category Hero */}
-          <div className="col-span-12 lg:col-span-4">
-            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 h-full">
-              <div className="absolute inset-0 bg-black bg-opacity-5 rounded-xl"></div>
-              <div className="relative z-10">
-                <h2 className="text-2xl font-bold text-gray-900 mb-3 font-hm-sans">
-                  {category.title}
-                </h2>
-                <p className="text-gray-600 text-sm mb-6 font-hm-sans">
-                  Découvrez notre collection exclusive d'articles de haute qualité
-                </p>
-                <div className="aspect-square w-32 mx-auto mb-4 rounded-lg overflow-hidden shadow-lg">
-                  <img 
-                    src={category.image} 
-                    alt={category.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
+      <div className="container mx-auto px-4 py-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {category.sections.map((section, sectionIndex) => (
+              <div key={sectionIndex} className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 font-hm-sans border-b border-gray-100 pb-2">
+                  {section.title}
+                </h3>
+                <div className="space-y-1">
+                  {section.items.map((item, itemIndex) => (
+                    <button
+                      key={itemIndex}
+                      className="group flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-md transition-all duration-200"
+                      onClick={() => {
+                        navigate(item.url);
+                        onClose();
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                        <img 
+                          src={item.image} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="font-medium text-gray-900 text-sm group-hover:text-black transition-colors font-hm-sans">
+                        {item.name}
+                      </span>
+                      <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-gray-600 ml-auto transition-colors" />
+                    </button>
+                  ))}
                 </div>
-                <button 
-                  onClick={() => {
-                    navigate(category.url);
-                    onClose();
-                  }}
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium text-sm font-hm-sans"
-                >
-                  Voir Toute la Collection
-                </button>
               </div>
-            </div>
+            ))}
           </div>
-
-          {/* Right Side - Products Grid */}
-          <div className="col-span-12 lg:col-span-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {category.sections.map((section, sectionIndex) => (
-                <div key={sectionIndex}>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 font-hm-sans border-b border-gray-200 pb-2">
-                    {section.title}
-                  </h3>
-                  <div className="space-y-2">
-                    {section.items.map((item, itemIndex) => (
-                      <button
-                        key={itemIndex}
-                        className="group flex items-center gap-4 w-full p-3 hover:bg-gray-50 rounded-lg transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm"
-                        onClick={() => {
-                          navigate(item.url);
-                          onClose();
-                        }}
-                      >
-                        <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                          <img 
-                            src={item.image} 
-                            alt={item.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                        <div className="flex-1 text-left">
-                          <span className="font-medium text-gray-900 text-sm group-hover:text-black transition-colors font-hm-sans">
-                            {item.name}
-                          </span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:translate-x-1" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="text-center">
-            <p className="text-sm text-gray-600 font-hm-sans mb-4">
-              Besoin d'aide pour trouver le produit parfait ?
-            </p>
-            <div className="flex justify-center gap-4">
-              <button 
-                onClick={() => {
-                  navigate('/contact');
-                  onClose();
-                }}
-                className="bg-white text-gray-900 border border-gray-300 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium font-hm-sans"
-              >
-                Contacter un Expert
-              </button>
-              <button 
-                onClick={() => {
-                  navigate('/');
-                  onClose();
-                }}
-                className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium font-hm-sans"
-              >
-                Voir Tous les Produits
-              </button>
-            </div>
+          
+          {/* Simple bottom section */}
+          <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+            <button 
+              onClick={() => {
+                navigate(category.url);
+                onClose();
+              }}
+              className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 text-sm font-medium font-hm-sans"
+            >
+              Voir Toute la Collection {category.title}
+            </button>
           </div>
         </div>
       </div>
