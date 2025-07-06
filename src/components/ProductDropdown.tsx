@@ -31,7 +31,7 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
   const handleMouseLeave = () => {
     const timeout = setTimeout(() => {
       onClose();
-    }, 300);
+    }, 500); // Increased timeout to 500ms
     setCloseTimeout(timeout);
   };
 
@@ -114,9 +114,10 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
 
   return (
     <div 
-      className="fixed top-[112px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in"
+      className="fixed top-[104px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      style={{ marginTop: '0px' }}
     >
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-5xl mx-auto">
