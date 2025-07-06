@@ -12,6 +12,15 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
   const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
+  const getCategoryImage = (categoryKey: string | null) => {
+    const categoryImages = {
+      surMesure: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=800&fit=crop&crop=center',
+      pretAPorter: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=800&fit=crop&crop=center', 
+      accessoires: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=800&fit=crop&crop=center'
+    };
+    return categoryImages[categoryKey as keyof typeof categoryImages] || categoryImages.surMesure;
+  };
+
   const handleMouseEnter = () => {
     if (closeTimeout) {
       clearTimeout(closeTimeout);
@@ -105,54 +114,78 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
 
   return (
     <div 
-      className="fixed top-[120px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in"
+      className="fixed top-[112px] left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <div className="container mx-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {category.sections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 font-hm-sans border-b border-gray-100 pb-2">
-                  {section.title}
-                </h3>
-                <div className="space-y-1">
-                  {section.items.map((item, itemIndex) => (
-                    <button
-                      key={itemIndex}
-                      className="group flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-md transition-all duration-200"
-                      onClick={() => {
-                        navigate(item.url);
-                        onClose();
-                      }}
-                    >
-                      <div className="w-8 h-8 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
-                        <img 
-                          src={item.image} 
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="font-medium text-gray-900 text-sm group-hover:text-black transition-colors font-hm-sans">
-                        {item.name}
-                      </span>
-                      <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-gray-600 ml-auto transition-colors" />
-                    </button>
-                  ))}
-                </div>
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-12 gap-8">
+            {/* Left Side - Items */}
+            <div className="col-span-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {category.sections.map((section, sectionIndex) => (
+                  <div key={sectionIndex} className="space-y-3">
+                    <h3 className="text-lg font-semibold text-gray-900 font-hm-sans border-b border-gray-100 pb-1">
+                      {section.title}
+                    </h3>
+                    <div className="space-y-1">
+                      {section.items.map((item, itemIndex) => (
+                        <button
+                          key={itemIndex}
+                          className="group flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-md transition-all duration-200"
+                          onClick={() => {
+                            navigate(item.url);
+                            onClose();
+                          }}
+                        >
+                          <div className="w-8 h-8 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                            <img 
+                              src={item.image} 
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="font-medium text-gray-900 text-sm group-hover:text-black transition-colors font-hm-sans">
+                            {item.name}
+                          </span>
+                          <ChevronRight className="w-3 h-3 text-gray-400 group-hover:text-gray-600 ml-auto transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            
+            {/* Right Side - Category Image */}
+            <div className="col-span-4">
+              <div className="bg-gray-50 rounded-lg p-4 h-full flex flex-col items-center justify-center">
+                <div className="w-full aspect-square rounded-lg overflow-hidden mb-4 shadow-sm">
+                  <img 
+                    src={getCategoryImage(activeCategory)} 
+                    alt={category.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 font-hm-sans text-center mb-2">
+                  {category.title}
+                </h2>
+                <p className="text-gray-600 text-sm text-center font-hm-sans">
+                  Collection premium
+                </p>
+              </div>
+            </div>
           </div>
           
-          {/* Simple bottom section */}
+          {/* Centered bottom button */}
           <div className="mt-6 pt-4 border-t border-gray-100 text-center">
             <button 
               onClick={() => {
                 navigate(category.url);
                 onClose();
               }}
-              className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 text-sm font-medium font-hm-sans"
+              className="bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors duration-200 font-medium font-hm-sans"
             >
               Voir Toute la Collection {category.title}
             </button>
