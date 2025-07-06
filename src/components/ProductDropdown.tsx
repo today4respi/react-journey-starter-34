@@ -105,7 +105,7 @@ const ProductDropdown: React.FC<ProductDropdownProps> = ({ isOpen, activeCategor
 
   return (
     <div 
-      className="absolute top-full left-0 right-0 bg-white border-t border-gray-100 shadow-2xl z-50 animate-in slide-in-from-top-5 duration-300"
+      className="fixed top-[120px] left-0 right-0 bg-white border-t border-gray-100 shadow-2xl z-50 animate-fade-in"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
