@@ -10,10 +10,10 @@ import { WishlistProvider } from "@/contexts/WishlistContext";
 import { AdminAuthProvider } from "@/context/AdminAuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
-import ProductDetails from "./pages/ProductDetails";
-import Checkout from "./pages/Checkout";
 import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
+import ProductDetails from "./pages/ProductDetails";
+import Category from "./pages/Category";
+import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -39,6 +39,8 @@ const App = () => (
               <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/category/:category" element={<Category />} />
+                <Route path="/category/:category/:subcategory" element={<Category />} />
                 <Route path="/product/:id" element={<ProductDetails />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/contact" element={<Contact />} />
@@ -54,9 +56,6 @@ const App = () => (
                   <Route path="newsletter" element={<AdminNewsletter />} />
                   <Route path="visitors" element={<AdminVisitors />} />
                 </Route>
-                
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
             </WishlistProvider>
