@@ -57,7 +57,7 @@ const Header = () => {
   const handleMouseLeave = () => {
     const timeout = setTimeout(() => {
       setActiveDropdown(null);
-    }, 500); // Increased timeout to 500ms
+    }, 1000); // Increased timeout to 1000ms for better UX
     setCloseTimeout(timeout);
   };
 
