@@ -104,56 +104,81 @@ const Header = () => {
               </nav>
             </div>
 
-            {/* Right side - Icons */}
-            <div className="flex items-center space-x-0 md:space-x-1 pr-1">
-              {/* Favorites heart icon */}
-              <button 
-                className="p-2 hover:bg-gray-100 rounded-sm transition-colors relative"
-                onClick={() => setIsWishlistOpen(true)}
-              >
-                <Heart size={20} />
-                {getWishlistCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-hm-sans">
-                    {getWishlistCount()}
-                  </span>
-                )}
-              </button>
+            {/* Right side - Search Input (Desktop) + Icons */}
+            <div className="flex items-center space-x-4">
+              {/* Desktop Search Input */}
+              <div className="hidden md:flex relative">
+                <div className="relative flex items-center">
+                  <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm font-hm-sans bg-gray-50 hover:bg-white transition-colors"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <X className="h-3 w-3 text-gray-400" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
-              {/* Search */}
-              <button 
-                className="p-2 hover:bg-gray-100 rounded-sm transition-colors"
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-              >
-                <Search size={20} />
-              </button>
-
-              {/* Shopping cart */}
-              <div className="relative">
+              <div className="flex items-center space-x-0 md:space-x-1 pr-1">
+                {/* Favorites heart icon */}
                 <button 
                   className="p-2 hover:bg-gray-100 rounded-sm transition-colors relative"
-                  onClick={handleCartClick}
+                  onClick={() => setIsWishlistOpen(true)}
                 >
-                  <ShoppingBag size={20} />
-                  {state.itemCount > 0 && (
+                  <Heart size={20} />
+                  {getWishlistCount() > 0 && (
                     <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-hm-sans">
-                      {state.itemCount}
+                      {getWishlistCount()}
                     </span>
                   )}
                 </button>
 
-                <CartDropdown 
-                  isOpen={isCartOpen} 
-                  onClose={() => setIsCartOpen(false)} 
-                />
-              </div>
+                {/* Mobile Search Icon */}
+                <button 
+                  className="md:hidden p-2 hover:bg-gray-100 rounded-sm transition-colors"
+                  onClick={() => setIsSearchOpen(!isSearchOpen)}
+                >
+                  <Search size={20} />
+                </button>
 
-              {/* Mobile menu button - moved after shopping cart */}
-              <button
-                className="md:hidden p-2 hover:bg-gray-100 rounded-sm"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+                {/* Shopping cart */}
+                <div className="relative">
+                  <button 
+                    className="p-2 hover:bg-gray-100 rounded-sm transition-colors relative"
+                    onClick={handleCartClick}
+                  >
+                    <ShoppingBag size={20} />
+                    {state.itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-hm-sans">
+                        {state.itemCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <CartDropdown 
+                    isOpen={isCartOpen} 
+                    onClose={() => setIsCartOpen(false)} 
+                  />
+                </div>
+
+                {/* Mobile menu button - moved after shopping cart */}
+                <button
+                  className="md:hidden p-2 hover:bg-gray-100 rounded-sm"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                  {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+              </div>
             </div>
           </div>
 
