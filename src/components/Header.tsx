@@ -19,6 +19,7 @@ const Header = () => {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [closeTimeout, setCloseTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [currentLanguage, setCurrentLanguage] = useState<'fr' | 'en'>('fr');
   const { state } = useCart();
   const { getWishlistCount } = useWishlist();
   const { searchQuery, setSearchQuery } = useProducts();
@@ -115,7 +116,7 @@ const Header = () => {
                     placeholder="Rechercher..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm font-hm-sans bg-gray-50 hover:bg-white transition-colors"
+                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm font-hm-sans bg-gray-50 hover:bg-white transition-colors"
                   />
                   {searchQuery && (
                     <button
@@ -149,6 +150,19 @@ const Header = () => {
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
                 >
                   <Search size={20} />
+                </button>
+
+                {/* Language Switcher */}
+                <button 
+                  className="p-2 hover:bg-gray-100 rounded-sm transition-colors relative"
+                  onClick={() => setCurrentLanguage(currentLanguage === 'fr' ? 'en' : 'fr')}
+                  title={currentLanguage === 'fr' ? 'Switch to English' : 'Passer au français'}
+                >
+                  <img 
+                    src={currentLanguage === 'fr' ? '/lovable-uploads/5b964c5a-a240-4af1-8d12-2b158e954f38.png' : '/lovable-uploads/2577a206-a3fd-4051-a8f7-16b818fcf12b.png'} 
+                    alt={currentLanguage === 'fr' ? 'Français' : 'English'}
+                    className="w-5 h-4 object-cover rounded-sm"
+                  />
                 </button>
 
                 {/* Shopping cart */}
