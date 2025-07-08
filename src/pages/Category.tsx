@@ -26,6 +26,21 @@ interface Product {
   status_product: string;
   discount_product?: string;
   createdate_product: string;
+  // Size fields
+  xs_size?: string;
+  s_size?: string;
+  m_size?: string;
+  l_size?: string;
+  xl_size?: string;
+  xxl_size?: string;
+  '3xl_size'?: string;
+  '4xl_size'?: string;
+  '48_size'?: string;
+  '50_size'?: string;
+  '52_size'?: string;
+  '54_size'?: string;
+  '56_size'?: string;
+  '58_size'?: string;
 }
 
 const Category = () => {
@@ -293,7 +308,24 @@ const Category = () => {
                   description: product.description_product,
                   rating: 4.5, // Default rating
                   reviews: 12, // Default reviews
-                  stock: parseInt(product.qnty_product) || 10
+                  stock: parseInt(product.qnty_product) || 10,
+                  // Include size data and itemgroup for size logic
+                  itemgroup_product: product.itemgroup_product,
+                  xs_size: product.xs_size,
+                  s_size: product.s_size,
+                  m_size: product.m_size,
+                  l_size: product.l_size,
+                  xl_size: product.xl_size,
+                  xxl_size: product.xxl_size,
+                  '3xl_size': product['3xl_size'],
+                  '4xl_size': product['4xl_size'],
+                  '48_size': product['48_size'],
+                  '50_size': product['50_size'],
+                  '52_size': product['52_size'],
+                  '54_size': product['54_size'],
+                  '56_size': product['56_size'],
+                  '58_size': product['58_size'],
+                  qnty_product: product.qnty_product
                 };
                 
                 return <ProductCard key={product.id_product} product={adaptedProduct} />;

@@ -4,9 +4,27 @@ import { Product } from "@/context/ProductContext";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import HeartButton from "@/components/HeartButton";
+import { getItemGroupSizeType, getSizeFieldsForItemGroup, getSizeLabelsForItemGroup, needsSizeSelection } from "@/config/productSizeConfig";
 
 interface ProductCardProps {
-  product: Product;
+  product: Product & {
+    itemgroup_product?: string;
+    xs_size?: string;
+    s_size?: string;
+    m_size?: string;
+    l_size?: string;
+    xl_size?: string;
+    xxl_size?: string;
+    '3xl_size'?: string;
+    '4xl_size'?: string;
+    '48_size'?: string;
+    '50_size'?: string;
+    '52_size'?: string;
+    '54_size'?: string;
+    '56_size'?: string;
+    '58_size'?: string;
+    qnty_product?: string;
+  };
   onQuickView?: (product: Product) => void;
 }
 
@@ -17,11 +35,34 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
 
+  // Get available sizes based on product itemgroup
+  const getAvailableSizes = () => {
+    if (!product.itemgroup_product || !needsSizeSelection(product.itemgroup_product)) {
+      return [];
+    }
+
+    const sizeFields = getSizeFieldsForItemGroup(product.itemgroup_product);
+    const sizeLabels = getSizeLabelsForItemGroup(product.itemgroup_product);
+    const availableSizes: string[] = [];
+
+    sizeFields.forEach((field, index) => {
+      const sizeValue = product[field as keyof typeof product] as string;
+      if (sizeValue && parseInt(sizeValue) > 0) {
+        availableSizes.push(sizeLabels[index]);
+      }
+    });
+
+    return availableSizes;
+  };
+
+  const availableSizes = getAvailableSizes();
+  const productNeedsSize = product.itemgroup_product && needsSizeSelection(product.itemgroup_product);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!selectedSize) {
+    if (productNeedsSize && !selectedSize) {
       toast({
         title: "Taille requise",
         description: "Veuillez sélectionner une taille",
@@ -97,25 +138,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
           }`}
         >
           <div className="w-full space-y-2">
-            {/* Size selection */}
-            <div className="flex flex-wrap gap-1 justify-center">
-              {product.sizes.slice(0, 5).map((size) => (
-                <button
-                  key={size}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedSize(size);
-                  }}
-                  className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
-                    selectedSize === size
-                      ? "bg-white text-black"
-                      : "bg-gray-200 text-gray-700 hover:bg-white hover:text-black"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+            {/* Size selection - only show if product needs size and has available sizes */}
+            {productNeedsSize && availableSizes.length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center">
+                {availableSizes.slice(0, 6).map((size) => (
+                  <button
+                    key={size}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedSize(size);
+                    }}
+                    className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                      selectedSize === size
+                        ? "bg-white text-black"
+                        : "bg-gray-200 text-gray-700 hover:bg-white hover:text-black"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Add to cart button */}
             <button
@@ -123,7 +166,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
               className="w-full bg-white text-black py-2 px-4 rounded font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center gap-2"
             >
               <ShoppingBag size={16} />
-              Ajouter au panier
+              {productNeedsSize ? "Ajouter au panier" : "Ajouter au panier"}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getItemGroupSizeType, getSizeFieldsForItemGroup, getSizeLabelsForItemGroup, needsSizeSelection } from '@/config/productSizeConfig';
 
 export interface Product {
   id: string;
@@ -17,6 +18,23 @@ export interface Product {
   rating: number;
   reviews: number;
   stock: number;
+  // Additional fields for size logic
+  itemgroup_product?: string;
+  xs_size?: string;
+  s_size?: string;
+  m_size?: string;
+  l_size?: string;
+  xl_size?: string;
+  xxl_size?: string;
+  '3xl_size'?: string;
+  '4xl_size'?: string;
+  '48_size'?: string;
+  '50_size'?: string;
+  '52_size'?: string;
+  '54_size'?: string;
+  '56_size'?: string;
+  '58_size'?: string;
+  qnty_product?: string;
 }
 
 interface ProductContextType {
@@ -53,33 +71,27 @@ const getProductImage = (imagePath: string, productId: string): string => {
   return `https://draminesaid.com/lucci/${imagePath}`;
 };
 
-// Helper function to get available sizes from size fields
+// Helper function to get available sizes from size fields using configuration
 const getAvailableSizes = (product: any): string[] => {
+  if (!product.itemgroup_product) {
+    return ['S', 'M', 'L', 'XL']; // Default fallback
+  }
+
+  if (!needsSizeSelection(product.itemgroup_product)) {
+    return []; // No sizes needed for quantity-only products
+  }
+
+  const sizeFields = getSizeFieldsForItemGroup(product.itemgroup_product);
+  const sizeLabels = getSizeLabelsForItemGroup(product.itemgroup_product);
   const availableSizes: string[] = [];
-  const sizeFields = [
-    { field: 'xs_size', display: 'XS' },
-    { field: 's_size', display: 'S' },
-    { field: 'm_size', display: 'M' },
-    { field: 'l_size', display: 'L' },
-    { field: 'xl_size', display: 'XL' },
-    { field: 'xxl_size', display: 'XXL' },
-    { field: '3xl_size', display: '3XL' },
-    { field: '4xl_size', display: '4XL' },
-    { field: '48_size', display: '48' },
-    { field: '50_size', display: '50' },
-    { field: '52_size', display: '52' },
-    { field: '54_size', display: '54' },
-    { field: '56_size', display: '56' },
-    { field: '58_size', display: '58' },
-  ];
-  
-  sizeFields.forEach(({ field, display }) => {
+
+  sizeFields.forEach((field, index) => {
     const sizeValue = product[field];
     if (sizeValue && parseInt(sizeValue) > 0) {
-      availableSizes.push(display);
+      availableSizes.push(sizeLabels[index]);
     }
   });
-  
+
   return availableSizes.length > 0 ? availableSizes : ['M', 'L', 'XL'];
 };
 
@@ -120,7 +132,24 @@ const fetchProducts = async (): Promise<Product[]> => {
           isOnSale: discountAmount > 0,
           rating: 4.8,
           reviews: Math.floor(Math.random() * 100) + 20,
-          stock: parseInt(item.qnty_product) || 10
+          stock: parseInt(item.qnty_product) || 10,
+          // Include all size and itemgroup data for size logic
+          itemgroup_product: item.itemgroup_product,
+          xs_size: item.xs_size,
+          s_size: item.s_size,
+          m_size: item.m_size,
+          l_size: item.l_size,
+          xl_size: item.xl_size,
+          xxl_size: item.xxl_size,
+          '3xl_size': item['3xl_size'],
+          '4xl_size': item['4xl_size'],
+          '48_size': item['48_size'],
+          '50_size': item['50_size'],
+          '52_size': item['52_size'],
+          '54_size': item['54_size'],
+          '56_size': item['56_size'],
+          '58_size': item['58_size'],
+          qnty_product: item.qnty_product
         };
       });
       
