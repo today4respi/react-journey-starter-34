@@ -37,8 +37,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
 
   // Get available sizes based on product itemgroup
   const getAvailableSizes = () => {
-    if (!product.itemgroup_product || !needsSizeSelection(product.itemgroup_product)) {
-      return [];
+    // If we don't have itemgroup data, fall back to the original sizes array
+    if (!product.itemgroup_product) {
+      return product.sizes || [];
+    }
+
+    if (!needsSizeSelection(product.itemgroup_product)) {
+      return []; // Quantity-only products don't show sizes
     }
 
     const sizeFields = getSizeFieldsForItemGroup(product.itemgroup_product);
@@ -52,11 +57,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickView }) => {
       }
     });
 
-    return availableSizes;
+    // If no sizes found from database but we have original sizes, use those
+    return availableSizes.length > 0 ? availableSizes : (product.sizes || []);
   };
 
   const availableSizes = getAvailableSizes();
-  const productNeedsSize = product.itemgroup_product && needsSizeSelection(product.itemgroup_product);
+  const productNeedsSize = !product.itemgroup_product || (product.itemgroup_product && needsSizeSelection(product.itemgroup_product));
+
+  // Debug logging
+  console.log('ProductCard Debug:', {
+    productName: product.name,
+    itemgroup: product.itemgroup_product,
+    productNeedsSize,
+    availableSizes,
+    productSizes: product.sizes,
+    sizeFields: product.itemgroup_product ? getSizeFieldsForItemGroup(product.itemgroup_product) : []
+  });
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
