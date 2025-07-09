@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Truck, CreditCard, ChevronRight, Minus, Plus, ArrowLeft, Shield, Clock, RotateCcw, Ruler } from 'lucide-react';
+import { Truck, CreditCard, ChevronRight, Minus, Plus, ArrowLeft, Shield, Clock, RotateCcw, Ruler, ShoppingBag } from 'lucide-react';
 import ProductImageGallery from './ProductImageGallery';
 import ProductSizeSelector from './ProductSizeSelector';
 import YouMayAlsoLike from './YouMayAlsoLike';
@@ -364,10 +364,11 @@ const ProductDetailsContent = ({ product }: ProductDetailsContentProps) => {
           {!isOutOfStock && (
             <Button 
               size="lg" 
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-4 text-base tracking-wide uppercase mb-6"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-6 text-base tracking-wide uppercase mb-6 flex items-center justify-center gap-3"
               disabled={productNeedsSize && !selectedSize}
               onClick={handleAddToCart}
             >
+              <ShoppingBag className="w-5 h-5" />
               {t('addToBag')}
             </Button>
           )}
