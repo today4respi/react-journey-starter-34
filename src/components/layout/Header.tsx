@@ -236,7 +236,7 @@ const Header = ({ onMenuClick, onContactOpen, onBookingOpen }: HeaderProps) => {
             ? (shouldUseTransparentHeader 
                 ? 'bg-transparent' 
                 : 'bg-white border-b border-gray-100 shadow-sm')
-            : 'fixed left-0 right-0 top-[42px] z-40 bg-white border-b border-gray-100 shadow-sm border-t-0'
+            : 'bg-white border-b border-gray-100 shadow-sm'
         }`}>
           {/* Main header */}
           <div className="px-4 md:px-6 py-4">
