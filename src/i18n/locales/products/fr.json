@@ -65,5 +65,11 @@
   "outOfStock": "Rupture de stock",
   "addToBag": "AJOUTER AU PANIER",
   "deliveryReturns": "LIVRAISON & RETOURS",
-  "paymentOptions": "OPTIONS DE PAIEMENT"
+  "paymentOptions": "OPTIONS DE PAIEMENT",
+  "emptyState": {
+    "title": "Aucun produit disponible",
+    "description": "Il n'y a actuellement aucun produit disponible dans cette catégorie.",
+    "suggestion": "Nous travaillons constamment pour enrichir notre collection. Revenez bientôt ou explorez nos autres catégories.",
+    "exploreOtherCategories": "Explorer d'autres catégories"
+  }
 }

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart } from 'lucide-react';
+import { Heart, Package, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getProductImage } from '@/utils/imageUtils';
 import { useWishlist } from '@/contexts/WishlistContext';
@@ -135,6 +135,37 @@ const CategoryProducts: React.FC<CategoryProductsProps> = ({
             <div className="h-4 bg-slate-200 rounded w-2/3"></div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  // Handle empty state
+  if (!loading && translatedProducts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+          <Package className="w-10 h-10 text-slate-400" />
+        </div>
+        
+        <h3 className="text-2xl font-serif text-slate-900 mb-4">
+          {t('products:emptyState.title')}
+        </h3>
+        
+        <p className="text-slate-600 mb-6 max-w-md leading-relaxed">
+          {t('products:emptyState.description')}
+        </p>
+        
+        <p className="text-slate-500 text-sm mb-8 max-w-lg leading-relaxed">
+          {t('products:emptyState.suggestion')}
+        </p>
+        
+        <Button 
+          onClick={() => navigate('/')}
+          className="bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2"
+        >
+          {t('products:emptyState.exploreOtherCategories')}
+          <ArrowRight className="w-4 h-4" />
+        </Button>
       </div>
     );
   }

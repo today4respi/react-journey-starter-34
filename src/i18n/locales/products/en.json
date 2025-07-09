@@ -65,5 +65,11 @@
   "outOfStock": "Out of Stock",
   "addToBag": "ADD TO BAG",
   "deliveryReturns": "DELIVERY & RETURNS",
-  "paymentOptions": "PAYMENT OPTIONS"
+  "paymentOptions": "PAYMENT OPTIONS",
+  "emptyState": {
+    "title": "No products available",
+    "description": "There are currently no products available in this category.",
+    "suggestion": "We are constantly working to enrich our collection. Please check back soon or explore our other categories.",
+    "exploreOtherCategories": "Explore other categories"
+  }
 }
