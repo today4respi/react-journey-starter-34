@@ -112,7 +112,7 @@ const Layout = ({ children }: LayoutProps) => {
       
       {/* Non-index pages - separate announcement bar and header */}
       {!isAdminPage && !isIndexPage && (
-        <div className="relative">
+        <div className="fixed top-0 left-0 right-0 z-50">
           <PageAnnouncementBar onStoreFinderOpen={handleStoreFinderOpen} />
           <Header 
             onMenuClick={handleMenuClick} 

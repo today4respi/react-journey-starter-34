@@ -10,7 +10,7 @@ const PageAnnouncementBar = ({ onStoreFinderOpen }: PageAnnouncementBarProps) =>
   const { t } = useTranslation();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-blue-800 text-white py-2 px-4 text-center text-xs font-medium">
+    <div className="bg-blue-800 text-white py-2 px-4 text-center text-xs font-medium">
       {/* Mobile: Find us button on left */}
       <div className="absolute left-4 top-1/2 transform -translate-y-1/2 md:hidden">
         <Button 
