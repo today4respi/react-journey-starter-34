@@ -265,7 +265,7 @@ const Index = () => {
                       {/* Left column - starts lower */}
                       <div className="flex flex-col gap-4 pt-12 py-0 my-[150px] ml-[4%]">
                         {/* Book 1 - Top left (lower start) */}
-                        <div ref={desktopBook1Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook1Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook1Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook1Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(0)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(251, 146, 60, 0.4))'
                         }}>
@@ -273,11 +273,11 @@ const Index = () => {
                           </div>
                         </div>
                         {/* Book 3 - Bottom left */}
-                        <div ref={desktopBook3Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook3Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook3Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook3Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(2)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(168, 85, 247, 0.4))'
                         }}>
-                            <img alt="The Magical Unicorn of Friendship" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/0fc670a6-d247-4ff6-a08f-892d9c684d76.png" />
+                            <img alt="The Magical Unicorn of Friendship" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/a31deb8f-2367-4b2f-9f45-dc71395ca637.png" />
                           </div>
                         </div>
                       </div>
@@ -285,7 +285,7 @@ const Index = () => {
                       {/* Center column - starts highest */}
                       <div className="flex flex-col gap-4 pt-0 my-[115px] ml-[2%]">
                         {/* Book 2 - Top center (highest start) */}
-                        <div ref={desktopBook2Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook2Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook2Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook2Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(1)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(59, 130, 246, 0.4))'
                         }}>
@@ -293,11 +293,11 @@ const Index = () => {
                           </div>
                         </div>
                         {/* Book 4 - Bottom center */}
-                        <div ref={desktopBook4Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook4Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook4Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook4Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(3)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(99, 102, 241, 0.4))'
                         }}>
-                            <img alt="James Space Flight" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/186808b1-7b98-47c8-8b2f-908ddaeb34dc.png" />
+                            <img alt="James Space Flight" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/ac211a5b-23aa-4b92-b8f2-12693406447c.png" />
                           </div>
                         </div>
                       </div>
@@ -305,27 +305,27 @@ const Index = () => {
                       {/* Right column - starts middle height */}
                       <div className="flex flex-col gap-4 pt-6 my-0">
                         {/* New Book - Top right (new addition) */}
-                        <div ref={desktopBook5Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook5Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook5Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook5Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(4)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(34, 197, 94, 0.4))'
                         }}>
-                            <img alt="The Magic Forest Adventure" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/31ec8bca-0162-41b7-af72-43c2321d4282.png" />
+                            <img alt="The Magic Forest Adventure" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/2aa94214-a9cb-4f40-b86d-34f78fbdc3d5.png" />
                           </div>
                         </div>
                         {/* Book 5 - Top right (middle start) */}
-                        <div ref={desktopBook6Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl ${desktopBook6Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        <div ref={desktopBook6Animation.ref} className={`transform hover:scale-105 transition-all duration-500 hover:shadow-2xl cursor-pointer ${desktopBook6Animation.isVisible ? 'animate-fade-in' : 'opacity-0'}`} onClick={() => openCarousel(5)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(234, 179, 8, 0.4))'
                         }}>
-                            <img alt="Cardboard the Brave Dinos Adventure" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/6bb1affc-16ed-4c1c-8385-7588a54d5023.png" />
+                            <img alt="Cardboard the Brave Dinos Adventure" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/dc8b5a6e-b2fb-4dd7-96e5-cf214ec005b4.png" />
                           </div>
                         </div>
                         {/* Book 6 - Bottom right */}
-                        <div className="transform hover:scale-105 transition-all duration-500">
+                        <div className="transform hover:scale-105 transition-all duration-500 cursor-pointer" onClick={() => openCarousel(5)}>
                           <div className="relative w-full h-[175px] rounded-lg" style={{
                           filter: 'drop-shadow(0 25px 25px rgba(236, 72, 153, 0.4))'
                         }}>
-                            <img alt="The Adventures of Lisa and the Unicorn" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/82cc4fa7-9d51-4011-9af1-2440343106f7.png" />
+                            <img alt="The Adventures of Lisa and the Unicorn" className="w-full h-full object-contain rounded-lg" src="/lovable-uploads/d5574267-4370-41e1-ae3d-52f3db0cac80.png" />
                           </div>
                         </div>
                       </div>
@@ -736,60 +736,105 @@ const Index = () => {
         </div>
       </CustomScrollbar>
 
-      {/* Book Carousel Modal */}
+      {/* Enhanced Book Carousel Modal */}
       <Dialog open={isCarouselOpen} onOpenChange={setIsCarouselOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-4xl w-full h-[100vh] sm:h-[85vh] p-0 bg-black/95 border-none z-[9999]">
+        <DialogContent className="max-w-[100vw] max-h-[100vh] w-full h-full p-0 bg-gradient-to-br from-purple-900/95 via-black/95 to-blue-900/95 border-none z-[9999] backdrop-blur-md">
           <DialogTitle className="sr-only">Book Gallery</DialogTitle>
           <div className="relative w-full h-full flex items-center justify-center">
-            {/* Simple Close Button */}
+            {/* Enhanced Close Button */}
             <button
               onClick={closeCarousel}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[10000] p-2 sm:p-3 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              className="absolute top-3 right-3 sm:top-6 sm:right-6 z-[10000] p-3 sm:p-4 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white hover:scale-110 transition-all duration-300 shadow-2xl group"
             >
-              <X size={20} className="text-black" />
+              <X size={18} className="text-black transition-transform group-hover:rotate-90 duration-300" />
             </button>
 
-            {/* Previous Button */}
+            {/* Book Title */}
+            <div className="absolute top-3 left-3 sm:top-6 sm:left-6 z-50">
+              <div className="bg-white/10 backdrop-blur-md text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full border border-white/20">
+                <h3 className="text-sm sm:text-lg font-bold truncate max-w-[200px] sm:max-w-[300px]">
+                  {bookImages[currentCarouselIndex]?.alt}
+                </h3>
+              </div>
+            </div>
+
+            {/* Enhanced Previous Button */}
             <button
               onClick={prevImage}
-              className="absolute left-2 sm:left-4 z-50 p-2 sm:p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              className="absolute left-2 sm:left-6 z-50 p-3 sm:p-4 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 hover:scale-110 transition-all duration-300 border border-white/20 shadow-xl group"
             >
-              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7 transition-transform group-hover:-translate-x-1 duration-300" />
             </button>
 
-            {/* Current Image */}
-            <div className="w-full h-full flex items-center justify-center p-4 sm:p-8">
-              <img
-                src={bookImages[currentCarouselIndex]?.src}
-                alt={bookImages[currentCarouselIndex]?.alt}
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
+            {/* Enhanced Current Image with Animation */}
+            <div className="w-full h-full flex items-center justify-center p-4 sm:p-12">
+              <div className="relative max-w-full max-h-full">
+                <img
+                  key={currentCarouselIndex}
+                  src={bookImages[currentCarouselIndex]?.src}
+                  alt={bookImages[currentCarouselIndex]?.alt}
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-fade-in border-4 border-white/20"
+                  style={{
+                    filter: 'drop-shadow(0 25px 50px rgba(0, 0, 0, 0.5))',
+                    animation: 'scale-in 0.4s ease-out'
+                  }}
+                />
+                {/* Glowing Effect */}
+                <div 
+                  className="absolute inset-0 rounded-2xl"
+                  style={{
+                    background: 'linear-gradient(45deg, rgba(168, 85, 247, 0.1), rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1))',
+                    filter: 'blur(20px)',
+                    transform: 'scale(1.1)',
+                    zIndex: -1
+                  }}
+                />
+              </div>
             </div>
 
-            {/* Next Button */}
+            {/* Enhanced Next Button */}
             <button
               onClick={nextImage}
-              className="absolute right-2 sm:right-4 z-50 p-2 sm:p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+              className="absolute right-2 sm:right-6 z-50 p-3 sm:p-4 bg-white/10 backdrop-blur-md text-white rounded-full hover:bg-white/20 hover:scale-110 transition-all duration-300 border border-white/20 shadow-xl group"
             >
-              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7 transition-transform group-hover:translate-x-1 duration-300" />
             </button>
 
-            {/* Image Counter */}
-            <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-black/50 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm">
-              {currentCarouselIndex + 1} / {bookImages.length}
+            {/* Enhanced Image Counter */}
+            <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-white/10 backdrop-blur-md text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full text-sm sm:text-base border border-white/20 shadow-xl">
+              <span className="font-bold text-purple-200">{currentCarouselIndex + 1}</span>
+              <span className="mx-2 text-white/60">/</span>
+              <span className="text-white/80">{bookImages.length}</span>
             </div>
 
-            {/* Dots Navigation */}
-            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-50 flex gap-2">
+            {/* Enhanced Dots Navigation */}
+            <div className="absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2 z-50 flex gap-3">
               {bookImages.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentCarouselIndex(index)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === currentCarouselIndex ? 'bg-white' : 'bg-white/50'
+                  className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300 hover:scale-125 ${
+                    index === currentCarouselIndex 
+                      ? 'bg-gradient-to-r from-purple-400 to-blue-400 shadow-lg scale-125 border-2 border-white/50' 
+                      : 'bg-white/30 hover:bg-white/50 border border-white/30'
                   }`}
                 />
               ))}
+            </div>
+
+            {/* Swipe Indicator for Mobile */}
+            <div className="sm:hidden absolute bottom-2 left-1/2 transform -translate-x-1/2 z-50">
+              <div className="flex items-center gap-2 text-white/60 text-xs bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                <span>👆</span>
+                <span>Balayez pour naviguer</span>
+              </div>
+            </div>
+
+            {/* Background Decorative Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+              <div className="absolute top-3/4 left-1/3 w-24 h-24 bg-pink-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
             </div>
           </div>
         </DialogContent>
