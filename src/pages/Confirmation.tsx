@@ -12,7 +12,7 @@ import ResponsiveFloatingElements from '@/components/ui/ResponsiveFloatingElemen
 const Confirmation = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const sessionId = searchParams.get('session_id');
   const [isProcessing, setIsProcessing] = useState(true);
   const [orderData, setOrderData] = useState<any>(null);
@@ -318,11 +318,11 @@ const Confirmation = () => {
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-4">
           <Button
-            onClick={() => navigate('/account')}
+            onClick={() => navigate(isAuthenticated ? '/account' : '/')}
             className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
           >
             <ArrowRight className="w-5 h-5 mr-2" />
-            Voir mes commandes
+            {isAuthenticated ? 'Voir mes commandes' : 'Continuer'}
           </Button>
           
           <Button

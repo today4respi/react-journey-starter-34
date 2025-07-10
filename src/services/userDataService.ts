@@ -65,6 +65,7 @@ export interface SubscriptionStatus {
 export const userDataService = {
   async getChildren(userId: string): Promise<UserDataResponse> {
     try {
+      console.log('Fetching children for user ID:', userId);
       const response = await axios.get(`${API_BASE_URL}/get_children.php?user_id=${userId}`, {
         headers: {
           'Accept': 'application/json',
@@ -72,6 +73,7 @@ export const userDataService = {
         }
       });
       
+      console.log('Children API response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching children:', error);
@@ -85,6 +87,7 @@ export const userDataService = {
 
   async getOrders(userId: string): Promise<UserDataResponse> {
     try {
+      console.log('Fetching orders for user ID:', userId);
       const response = await axios.get(`${API_BASE_URL}/get_orders.php?user_id=${userId}`, {
         headers: {
           'Accept': 'application/json',
@@ -92,6 +95,7 @@ export const userDataService = {
         }
       });
       
+      console.log('Orders API response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching orders:', error);

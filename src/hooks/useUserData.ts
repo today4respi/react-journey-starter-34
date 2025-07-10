@@ -12,11 +12,16 @@ export const useUserData = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchChildren = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available for fetching children');
+      return;
+    }
     
+    console.log('Fetching children for user ID:', user.id);
     setIsLoadingChildren(true);
     try {
       const response = await userDataService.getChildren(user.id);
+      console.log('Children fetch response:', response);
       if (response.success) {
         setChildren(response.data as Child[]);
       } else {
@@ -31,11 +36,16 @@ export const useUserData = () => {
   };
 
   const fetchOrders = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available for fetching orders');
+      return;
+    }
     
+    console.log('Fetching orders for user ID:', user.id);
     setIsLoadingOrders(true);
     try {
       const response = await userDataService.getOrders(user.id);
+      console.log('Orders fetch response:', response);
       if (response.success) {
         setOrders(response.data as Order[]);
       } else {
@@ -50,9 +60,15 @@ export const useUserData = () => {
   };
 
   useEffect(() => {
+    console.log('useUserData effect - user changed:', user?.id);
     if (user?.id) {
       fetchChildren();
       fetchOrders();
+    } else {
+      // Clear data when user logs out
+      setChildren([]);
+      setOrders([]);
+      setError(null);
     }
   }, [user?.id]);
 
