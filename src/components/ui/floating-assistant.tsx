@@ -128,9 +128,53 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
     }
   };
 
+  // Fetch all existing messages for session
+  const fetchExistingMessages = useCallback(async () => {
+    if (!sessionId) return;
+    
+    try {
+      const response = await fetch(`https://draminesaid.com/lucci/api/chat_messages.php?session_id=${sessionId}`);
+      const data = await response.json();
+      
+      if (data.success && data.messages?.length > 0) {
+        const agentMessages = data.messages.filter((msg: any) => msg.sender_type === 'agent');
+        
+        if (agentMessages.length > 0) {
+          const existingMessages = agentMessages.map((msg: any) => ({
+            text: msg.message_content,
+            isUser: false,
+            imageUrl: msg.image_url ? `https://draminesaid.com/lucci/${msg.image_url}` : undefined,
+            imageName: msg.image_name
+          }));
+          
+          setMessages(prev => {
+            // Only add messages that don't already exist
+            const newMessages = existingMessages.filter(newMsg => 
+              !prev.some(existingMsg => existingMsg.text === newMsg.text && !existingMsg.isUser)
+            );
+            
+            if (newMessages.length > 0) {
+              playNotificationSound();
+              if (!isOpen) {
+                setUnreadCount(prevCount => prevCount + newMessages.length);
+              }
+              return [...prev, ...newMessages];
+            }
+            return prev;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching existing messages:', error);
+    }
+  }, [sessionId, playNotificationSound, isOpen]);
+
   // Start polling for new messages
   const startMessagePolling = useCallback(() => {
     if (isPollingMessages || !sessionId) return;
+    
+    // First fetch existing messages
+    fetchExistingMessages();
     
     setIsPollingMessages(true);
     messagePollingRef.current = setInterval(async () => {
@@ -144,7 +188,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
           if (agentMessages.length > 0) {
             setMessages(prev => {
               const newMessages = agentMessages.filter((msg: any) => 
-                !prev.some(existingMsg => existingMsg.text === msg.message_content)
+                !prev.some(existingMsg => existingMsg.text === msg.message_content && !existingMsg.isUser)
               );
               
               if (newMessages.length === 0) return prev;
@@ -168,7 +212,7 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
         console.error('Error polling messages:', error);
       }
     }, 3000);
-  }, [sessionId, isPollingMessages, playNotificationSound, isOpen]);
+  }, [sessionId, isPollingMessages, fetchExistingMessages, playNotificationSound, isOpen]);
 
   const stopMessagePolling = useCallback(() => {
     if (messagePollingRef.current) {
@@ -274,7 +318,10 @@ export const FloatingAssistant: React.FC<FloatingAssistantProps> = ({
           });
         }
         
-        startMessagePolling();
+        // Start polling immediately to fetch any existing admin messages
+        setTimeout(() => {
+          startMessagePolling();
+        }, 500);
         
         setTimeout(() => {
           setMessages(prev => [...prev, {
