@@ -76,8 +76,7 @@ const ProductModalContent = ({
 }) => {
   const productTypes = {
     'sur mesure': {
-      'homme': ['blazers', 'blouson', 'manteau', 'djine', 'slack', 'pantalon'],
-      'femme': ['chemise', 'costume', 'blazer']
+      'homme': ['costume','blazers', 'blouson', 'manteau', 'djine', 'slack', 'pantalon']
     },
     'prêt à porter': ['chemise', 'tshirt', 'polo', 'chaussure', 'ceinture', 'maroquinerie'],
     'accessoires': ['cravate', 'pochette', 'maroquinerie', 'autre']
